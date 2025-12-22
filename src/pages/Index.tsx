@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import Header from "@/components/Header";
 import SearchFilters, { SearchFiltersType } from "@/components/SearchFilters";
@@ -9,6 +10,7 @@ import heroImage from "@/assets/hero-car.jpg";
 
 const Index = () => {
   const [cars, setCars] = useState(mockCars);
+  const navigate = useNavigate();
 
   const handleSearch = (filters: SearchFiltersType) => {
     let filtered = [...mockCars];
@@ -58,12 +60,12 @@ const Index = () => {
         <div className="container relative z-10 mx-auto px-4 text-center">
           <div className="mx-auto max-w-4xl animate-fade-in">
             <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-              Find Your Perfect
-              <span className="block text-gradient">Dream Car</span>
+              Rent Directly From
+              <span className="block text-gradient">Car Owners</span>
             </h1>
             <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-              Discover premium vehicles from trusted sellers. Browse thousands of listings
-              and connect directly with owners.
+              Skip the middleman. Connect directly with car owners and save on fees.
+              No commissions, just simple car rentals.
             </p>
 
             <div className="mx-auto max-w-4xl">
@@ -74,8 +76,8 @@ const Index = () => {
               <Button variant="hero" size="xl">
                 Browse All Cars
               </Button>
-              <Button variant="outline" size="xl">
-                Sell Your Car
+              <Button variant="outline" size="xl" onClick={() => navigate("/become-host")}>
+                Become a Host
               </Button>
             </div>
           </div>
@@ -135,20 +137,20 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid gap-8 text-center sm:grid-cols-2 lg:grid-cols-4">
             <div className="animate-fade-in" style={{ animationDelay: "0ms" }}>
-              <p className="text-4xl font-bold text-gradient">10K+</p>
-              <p className="mt-2 text-muted-foreground">Active Listings</p>
+              <p className="text-4xl font-bold text-gradient">0%</p>
+              <p className="mt-2 text-muted-foreground">Commission Fees</p>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
-              <p className="text-4xl font-bold text-gradient">5K+</p>
-              <p className="mt-2 text-muted-foreground">Verified Sellers</p>
+              <p className="text-4xl font-bold text-gradient">Direct</p>
+              <p className="mt-2 text-muted-foreground">Owner Contact</p>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
-              <p className="text-4xl font-bold text-gradient">98%</p>
-              <p className="mt-2 text-muted-foreground">Customer Satisfaction</p>
+              <p className="text-4xl font-bold text-gradient">$4.99</p>
+              <p className="mt-2 text-muted-foreground">Per Car / Month</p>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: "300ms" }}>
-              <p className="text-4xl font-bold text-gradient">24/7</p>
-              <p className="mt-2 text-muted-foreground">Support Available</p>
+              <p className="text-4xl font-bold text-gradient">100%</p>
+              <p className="mt-2 text-muted-foreground">Your Earnings</p>
             </div>
           </div>
         </div>
@@ -159,7 +161,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <p className="text-sm text-muted-foreground">
-              © 2024 AutoVault. All rights reserved.
+              © 2024 DiRent. All rights reserved.
             </p>
             <div className="flex gap-6">
               <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">

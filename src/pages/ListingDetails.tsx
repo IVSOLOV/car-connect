@@ -142,9 +142,19 @@ const ListingDetails = () => {
   const images = listing.images?.length > 0 
     ? listing.images 
     : ["https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80"];
-  const ownerName = owner?.show_company_as_owner && owner?.company_name 
-    ? owner.company_name 
-    : owner?.full_name || owner?.first_name || "Car Owner";
+  const getOwnerDisplayName = () => {
+    if (owner?.show_company_as_owner && owner?.company_name) {
+      return owner.company_name;
+    }
+    if (owner?.first_name || owner?.last_name) {
+      return `${owner.first_name || ""} ${owner.last_name || ""}`.trim();
+    }
+    if (owner?.full_name) {
+      return owner.full_name;
+    }
+    return "Car Owner";
+  };
+  const ownerName = getOwnerDisplayName();
   const ownerInitial = ownerName[0]?.toUpperCase() || "O";
   const memberSince = owner?.created_at 
     ? new Date(owner.created_at).getFullYear().toString()

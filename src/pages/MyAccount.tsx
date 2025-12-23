@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, Trash2, Pencil, Eye } from "lucide-react";
+import { Car, Plus, Trash2, Pencil, Eye, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
+import BookingCalendarModal from "@/components/BookingCalendarModal";
 
 interface Listing {
   id: string;
@@ -28,6 +29,8 @@ const MyAccount = () => {
   const { toast } = useToast();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loadingListings, setLoadingListings] = useState(true);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -178,14 +181,28 @@ const MyAccount = () => {
                           size="icon"
                           onClick={() => navigate(`/listing/${listing.id}`)}
                           className="text-muted-foreground hover:text-foreground"
+                          title="View listing"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="icon"
+                          onClick={() => {
+                            setSelectedListing(listing);
+                            setShowBookingModal(true);
+                          }}
+                          className="text-muted-foreground hover:text-primary"
+                          title="Manage bookings"
+                        >
+                          <CalendarDays className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
                           onClick={() => navigate(`/edit-listing/${listing.id}`)}
                           className="text-muted-foreground hover:text-primary"
+                          title="Edit listing"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -194,6 +211,7 @@ const MyAccount = () => {
                           size="icon"
                           onClick={() => handleDeleteListing(listing.id)}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          title="Delete listing"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -205,6 +223,19 @@ const MyAccount = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Booking Calendar Modal */}
+        {selectedListing && (
+          <BookingCalendarModal
+            listingId={selectedListing.id}
+            listingTitle={`${selectedListing.year} ${selectedListing.make} ${selectedListing.model}`}
+            isOpen={showBookingModal}
+            onClose={() => {
+              setShowBookingModal(false);
+              setSelectedListing(null);
+            }}
+          />
+        )}
       </main>
     </div>
   );

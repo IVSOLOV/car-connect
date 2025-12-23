@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      listing_bookings: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          listing_id: string
+          notes: string | null
+          renter_email: string | null
+          renter_name: string | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          listing_id: string
+          notes?: string | null
+          renter_email?: string | null
+          renter_name?: string | null
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          listing_id?: string
+          notes?: string | null
+          renter_email?: string | null
+          renter_name?: string | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_bookings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           city: string

@@ -452,7 +452,13 @@ const Dashboard = () => {
             ) : (
               <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredListings.map((listing, index) => (
-                  <ListingCard key={listing.id} listing={listing} index={index} />
+                  <ListingCard 
+                    key={listing.id} 
+                    listing={listing} 
+                    index={index}
+                    startDate={startDate ? format(startDate, "yyyy-MM-dd") : undefined}
+                    endDate={endDate ? format(endDate, "yyyy-MM-dd") : undefined}
+                  />
                 ))}
               </div>
             )}

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { MapPin, Calendar, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,9 +7,11 @@ import type { Listing } from "@/types/listing";
 interface ListingCardProps {
   listing: Listing;
   index?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
-const ListingCard = ({ listing, index = 0 }: ListingCardProps) => {
+const ListingCard = ({ listing, index = 0, startDate, endDate }: ListingCardProps) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -22,8 +24,13 @@ const ListingCard = ({ listing, index = 0 }: ListingCardProps) => {
   const location = `${listing.city}, ${listing.state}`;
   const image = listing.images?.[0] || "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80";
 
+  // Build URL with date params if available
+  const listingUrl = startDate && endDate 
+    ? `/listing/${listing.id}?startDate=${startDate}&endDate=${endDate}`
+    : `/listing/${listing.id}`;
+
   return (
-    <Link to={`/listing/${listing.id}`}>
+    <Link to={listingUrl}>
       <Card
         className="group cursor-pointer overflow-hidden animate-slide-up"
         style={{ animationDelay: `${index * 100}ms` }}

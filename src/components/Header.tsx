@@ -56,7 +56,7 @@ const Header = () => {
                 location.pathname === "/become-host" ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              Become a Host
+              List Your Car
             </Link>
           </nav>
 
@@ -124,7 +124,7 @@ const Header = () => {
                   Browse Cars
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/become-host")}>
-                  Become a Host
+                  List Your Car
                 </DropdownMenuItem>
                 {user && (role === "host" || role === "admin") && (
                   <DropdownMenuItem onClick={() => navigate("/dashboard")}>

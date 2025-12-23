@@ -1,43 +1,14 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import Header from "@/components/Header";
-import SearchFilters, { SearchFiltersType } from "@/components/SearchFilters";
 import CarCard from "@/components/CarCard";
 import { Button } from "@/components/ui/button";
 import { mockCars } from "@/data/cars";
 import heroImage from "@/assets/hero-car.jpg";
 
 const Index = () => {
-  const [cars, setCars] = useState(mockCars);
   const navigate = useNavigate();
 
-  const handleSearch = (filters: SearchFiltersType) => {
-    let filtered = [...mockCars];
-
-    if (filters.query) {
-      const query = filters.query.toLowerCase();
-      filtered = filtered.filter(
-        (car) =>
-          car.title.toLowerCase().includes(query) ||
-          car.brand.toLowerCase().includes(query) ||
-          car.model.toLowerCase().includes(query)
-      );
-    }
-
-    if (filters.brand && filters.brand !== "all") {
-      filtered = filtered.filter(
-        (car) => car.brand.toLowerCase() === filters.brand.toLowerCase()
-      );
-    }
-
-    if (filters.priceRange && filters.priceRange !== "all") {
-      const [min, max] = filters.priceRange.split("-").map((v) => parseInt(v) || Infinity);
-      filtered = filtered.filter((car) => car.price >= min && car.price <= max);
-    }
-
-    setCars(filtered);
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -68,9 +39,6 @@ const Index = () => {
               No commissions, just simple car rentals.
             </p>
 
-            <div className="mx-auto max-w-4xl">
-              <SearchFilters onSearch={handleSearch} />
-            </div>
 
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Button variant="hero" size="xl">
@@ -101,34 +69,17 @@ const Index = () => {
             </p>
           </div>
 
-          {cars.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {cars.map((car, index) => (
-                <CarCard key={car.id} car={car} index={index} />
-              ))}
-            </div>
-          ) : (
-            <div className="py-20 text-center">
-              <p className="text-lg text-muted-foreground">
-                No cars found matching your criteria
-              </p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setCars(mockCars)}
-              >
-                Clear Filters
-              </Button>
-            </div>
-          )}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {mockCars.map((car, index) => (
+              <CarCard key={car.id} car={car} index={index} />
+            ))}
+          </div>
 
-          {cars.length > 0 && (
-            <div className="mt-12 text-center">
-              <Button variant="outline" size="lg">
-                Load More Listings
-              </Button>
-            </div>
-          )}
+          <div className="mt-12 text-center">
+            <Button variant="outline" size="lg">
+              Load More Listings
+            </Button>
+          </div>
         </div>
       </section>
 

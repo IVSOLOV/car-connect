@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import ListingCard from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -19,9 +21,21 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import type { Listing } from "@/types/listing";
+
+interface Booking {
+  listing_id: string;
+  start_date: string;
+  end_date: string;
+}
 
 const CAR_MAKES = [
   "Acura", "Audi", "BMW", "Buick", "Cadillac", "Chevrolet", "Chrysler",
@@ -47,6 +61,7 @@ const PRICE_RANGES = [
 
 const Dashboard = () => {
   const [listings, setListings] = useState<Listing[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -57,17 +72,20 @@ const Dashboard = () => {
   const [selectedState, setSelectedState] = useState("");
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 15 }, (_, i) => (currentYear - i).toString());
 
   useEffect(() => {
     fetchListings();
+    fetchAllBookings();
   }, []);
 
   useEffect(() => {
     applyFilters();
-  }, [listings, searchQuery, selectedMake, selectedState, selectedPriceRange, selectedYear]);
+  }, [listings, bookings, searchQuery, selectedMake, selectedState, selectedPriceRange, selectedYear, startDate, endDate]);
 
   const fetchListings = async () => {
     try {
@@ -85,8 +103,45 @@ const Dashboard = () => {
     }
   };
 
+  const fetchAllBookings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("listing_bookings" as any)
+        .select("listing_id, start_date, end_date");
+
+      if (error) throw error;
+      setBookings((data as unknown as Booking[]) || []);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+    }
+  };
+
+  // Check if a listing has any booking that overlaps with selected date range
+  const isListingAvailable = (listingId: string): boolean => {
+    if (!startDate || !endDate) return true;
+
+    const listingBookings = bookings.filter((b) => b.listing_id === listingId);
+    
+    for (const booking of listingBookings) {
+      const bookingStart = new Date(booking.start_date);
+      const bookingEnd = new Date(booking.end_date);
+      
+      // Check for overlap: ranges overlap if one starts before the other ends
+      if (startDate <= bookingEnd && endDate >= bookingStart) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
   const applyFilters = () => {
     let results = [...listings];
+
+    // Date availability filter - exclude booked cars
+    if (startDate && endDate) {
+      results = results.filter((listing) => isListingAvailable(listing.id));
+    }
 
     // Search query filter
     if (searchQuery) {
@@ -142,9 +197,11 @@ const Dashboard = () => {
     setSelectedState("");
     setSelectedPriceRange("");
     setSelectedYear("");
+    setStartDate(undefined);
+    setEndDate(undefined);
   };
 
-  const hasActiveFilters = searchQuery || selectedMake || selectedState || selectedPriceRange || selectedYear;
+  const hasActiveFilters = searchQuery || selectedMake || selectedState || selectedPriceRange || selectedYear || startDate || endDate;
 
   const handleMakeChange = (value: string) => setSelectedMake(value === "all" ? "" : value);
   const handleStateChange = (value: string) => setSelectedState(value === "all" ? "" : value);
@@ -153,6 +210,63 @@ const Dashboard = () => {
 
   const FilterControls = () => (
     <div className="space-y-4">
+      {/* Date Range Filter */}
+      <div className="space-y-2">
+        <Label>Pickup Date</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !startDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {startDate ? format(startDate, "MMM d, yyyy") : "Select date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={startDate}
+              onSelect={setStartDate}
+              initialFocus
+              className="pointer-events-auto"
+              disabled={(date) => date < new Date()}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Return Date</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !endDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {endDate ? format(endDate, "MMM d, yyyy") : "Select date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={endDate}
+              onSelect={setEndDate}
+              initialFocus
+              className="pointer-events-auto"
+              disabled={(date) => (startDate ? date < startDate : date < new Date())}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
       <div className="space-y-2">
         <Label>Make</Label>
         <Select value={selectedMake || "all"} onValueChange={handleMakeChange}>
@@ -298,6 +412,11 @@ const Dashboard = () => {
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
                 {loading ? "Loading..." : `${filteredListings.length} cars available`}
+                {startDate && endDate && (
+                  <span className="ml-1">
+                    for {format(startDate, "MMM d")} - {format(endDate, "MMM d")}
+                  </span>
+                )}
               </p>
               {hasActiveFilters && (
                 <Button
@@ -321,7 +440,7 @@ const Dashboard = () => {
                 <p className="text-lg font-medium text-foreground mb-2">No cars found</p>
                 <p className="text-muted-foreground mb-4">
                   {hasActiveFilters
-                    ? "Try adjusting your filters"
+                    ? "Try adjusting your filters or dates"
                     : "No listings available yet"}
                 </p>
                 {hasActiveFilters && (

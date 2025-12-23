@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Building2, Camera } from "lucide-react";
-import logo from "@/assets/logo-dark.png";
+import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

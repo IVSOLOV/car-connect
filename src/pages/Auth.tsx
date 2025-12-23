@@ -248,8 +248,8 @@ const Auth = () => {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <img src={logo} alt="DiRent" className="h-16" />
+          <div className="flex justify-center mb-6">
+            <img src={logo} alt="DiRent" className="h-20" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">
             {getHeading()}

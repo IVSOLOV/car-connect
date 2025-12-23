@@ -85,11 +85,13 @@ const ListingDetails = () => {
       if (data) {
         setListing(data as unknown as Listing);
         // Fetch owner profile
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("first_name, last_name, full_name, avatar_url, created_at, company_name, show_company_as_owner")
           .eq("user_id", (data as any).user_id)
           .maybeSingle();
+        
+        console.log("Profile fetch result:", { profileData, profileError, userId: (data as any).user_id });
         
         if (profileData) {
           setOwner(profileData);

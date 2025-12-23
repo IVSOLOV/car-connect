@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   MapPin,
@@ -11,6 +11,7 @@ import {
   DollarSign,
   Send,
   X,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,7 @@ import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Listing } from "@/types/listing";
 
 interface OwnerProfile {
@@ -34,6 +36,8 @@ interface OwnerProfile {
 
 const ListingDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
   const [owner, setOwner] = useState<OwnerProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -122,6 +126,8 @@ const ListingDetails = () => {
   const memberSince = owner?.created_at 
     ? new Date(owner.created_at).getFullYear().toString()
     : "2024";
+  
+  const isOwner = user?.id === listing.user_id;
 
   return (
     <div className="min-h-screen bg-background">
@@ -152,6 +158,16 @@ const ListingDetails = () => {
                   className="h-full w-full object-cover"
                 />
                 <div className="absolute bottom-4 right-4 flex gap-2">
+                  {isOwner && (
+                    <Button 
+                      variant="secondary" 
+                      size="icon" 
+                      className="bg-background/80 backdrop-blur-sm"
+                      onClick={() => navigate(`/edit-listing/${id}`)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button variant="secondary" size="icon" className="bg-background/80 backdrop-blur-sm">
                     <Heart className="h-4 w-4" />
                   </Button>

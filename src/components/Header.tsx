@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo-dark.png";
 
 const Header = () => {
   const location = useLocation();

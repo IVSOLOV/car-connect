@@ -37,6 +37,14 @@ interface OwnerProfile {
   show_company_as_owner: boolean | null;
 }
 
+interface Message {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  message: string;
+  created_at: string;
+}
+
 const ListingDetails = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -48,6 +56,8 @@ const ListingDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageText, setMessageText] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [hasUserSentDefaultMessage, setHasUserSentDefaultMessage] = useState(false);
 
   // Get dates from URL params
   const startDateParam = searchParams.get("startDate");
@@ -99,6 +109,65 @@ const ListingDetails = () => {
       console.error("Error fetching listing:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    if (!user || !id || !listing) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("listing_id", id)
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .order("created_at", { ascending: true });
+      
+      if (error) throw error;
+      
+      if (data) {
+        setMessages(data as Message[]);
+        // Check if user already sent a message starting with the default intro
+        const defaultIntro = `Hi ${getOwnerDisplayName()}, I am interested in your`;
+        const hasSentDefault = data.some(
+          (msg) => msg.sender_id === user.id && msg.message.startsWith(defaultIntro)
+        );
+        setHasUserSentDefaultMessage(hasSentDefault);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (listing && user) {
+      fetchMessages();
+    }
+  }, [listing, user]);
+
+  const sendMessage = async () => {
+    if (!messageText || !user || !listing) {
+      toast.error("Please enter a message");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("messages").insert({
+        listing_id: id,
+        sender_id: user.id,
+        recipient_id: listing.user_id,
+        message: messageText,
+      });
+
+      if (error) throw error;
+
+      toast.success(`Message sent to ${getOwnerDisplayName()}!`);
+      setMessageText("");
+      setShowMessageModal(false);
+      fetchMessages(); // Refresh messages
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
     }
   };
 
@@ -297,8 +366,13 @@ const ListingDetails = () => {
                 <Separator className="my-5" />
 
                 <Button className="w-full mb-3" size="lg" onClick={() => {
-                  const defaultMessage = `Hi ${ownerName}, I am interested in your ${title}${formatDateRange()}.`;
-                  setMessageText(defaultMessage);
+                  // Only pre-fill default message if user hasn't sent one before
+                  if (!hasUserSentDefaultMessage) {
+                    const defaultMessage = `Hi ${ownerName}, I am interested in your ${title}${formatDateRange()}.`;
+                    setMessageText(defaultMessage);
+                  } else {
+                    setMessageText("");
+                  }
                   setShowMessageModal(true);
                 }}>
                   <MessageCircle className="mr-2 h-4 w-4" />
@@ -360,16 +434,32 @@ const ListingDetails = () => {
                 </div>
               </div>
 
+              {/* Message History */}
+              {messages.length > 0 && (
+                <div className="mb-4 max-h-48 overflow-y-auto space-y-3">
+                  <p className="text-sm font-medium text-muted-foreground">Previous messages</p>
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`p-3 rounded-lg text-sm ${
+                        msg.sender_id === user?.id
+                          ? "bg-primary/10 ml-4"
+                          : "bg-secondary mr-4"
+                      }`}
+                    >
+                      <p className="text-foreground">{msg.message}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(msg.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  if (!messageText) {
-                    toast.error("Please enter a message");
-                    return;
-                  }
-                  toast.success(`Message sent to ${ownerName}!`);
-                  setMessageText("");
-                  setShowMessageModal(false);
+                  sendMessage();
                 }}
                 className="space-y-4"
               >
@@ -387,12 +477,13 @@ const ListingDetails = () => {
                     onChange={(e) => setMessageText(e.target.value)}
                     rows={4}
                     className="resize-none"
+                    placeholder="Type your message..."
                   />
                 </div>
 
-                <Button type="submit" className="w-full" size="lg">
+                <Button type="submit" className="w-full" size="lg" disabled={!user}>
                   <Send className="mr-2 h-4 w-4" />
-                  Send Message
+                  {user ? "Send Message" : "Login to Send"}
                 </Button>
               </form>
             </div>

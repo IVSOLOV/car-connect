@@ -65,7 +65,7 @@ const Index = () => {
 
 
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Button variant="hero" size="xl">
+              <Button variant="hero" size="xl" onClick={() => navigate("/dashboard")}>
                 Browse All Cars
               </Button>
               <Button variant="outline" size="xl" onClick={() => navigate("/become-host")}>

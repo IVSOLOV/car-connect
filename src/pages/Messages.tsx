@@ -184,6 +184,18 @@ const Messages = () => {
 
       if (error) throw error;
 
+      // Mark unread messages as read
+      const unreadMessageIds = (data || [])
+        .filter(msg => msg.recipient_id === user.id && !msg.read_at)
+        .map(msg => msg.id);
+
+      if (unreadMessageIds.length > 0) {
+        await supabase
+          .from("messages")
+          .update({ read_at: new Date().toISOString() })
+          .in("id", unreadMessageIds);
+      }
+
       setSelectedConversation({
         listing_id: conv.listing_id,
         other_user_id: conv.other_user_id,

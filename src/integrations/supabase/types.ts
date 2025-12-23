@@ -116,6 +116,7 @@ export type Database = {
           id: string
           listing_id: string
           message: string
+          read_at: string | null
           recipient_id: string
           sender_id: string
         }
@@ -125,6 +126,7 @@ export type Database = {
           id?: string
           listing_id: string
           message: string
+          read_at?: string | null
           recipient_id: string
           sender_id: string
         }
@@ -134,6 +136,7 @@ export type Database = {
           id?: string
           listing_id?: string
           message?: string
+          read_at?: string | null
           recipient_id?: string
           sender_id?: string
         }

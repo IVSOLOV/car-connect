@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, MessageCircle, User, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,7 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, role, signOut, loading } = useAuth();
+  const { unreadCount } = useUnreadMessages();
 
   const handleSignOut = async () => {
     await signOut();
@@ -54,8 +56,13 @@ const Header = () => {
             </Button>
             
             {user && (
-              <Button variant="ghost" size="icon" onClick={() => navigate("/messages")}>
+              <Button variant="ghost" size="icon" onClick={() => navigate("/messages")} className="relative">
                 <MessageCircle className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs font-medium flex items-center justify-center">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </Button>
             )}
 

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, Car, User, ChevronRight, ArrowLeft } from "lucide-react";
+import { MessageCircle, Car, User, ChevronRight, ArrowLeft, Paperclip, Image, FileText, X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +11,13 @@ import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { format } from "date-fns";
 
+interface Attachment {
+  url: string;
+  name: string;
+  type: string;
+  size: number;
+}
+
 interface Message {
   id: string;
   listing_id: string;
@@ -18,6 +25,7 @@ interface Message {
   recipient_id: string;
   message: string;
   created_at: string;
+  attachments?: Attachment[];
 }
 
 interface Conversation {
@@ -48,6 +56,9 @@ const Messages = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -90,7 +101,10 @@ const Messages = () => {
         if (!conversationMap.has(key)) {
           conversationMap.set(key, { messages: [], otherUserId, listingId: msg.listing_id });
         }
-        conversationMap.get(key)!.messages.push(msg);
+        conversationMap.get(key)!.messages.push({
+          ...msg,
+          attachments: (msg.attachments as unknown as Attachment[]) || [],
+        });
       });
 
       // Get unique listing IDs and user IDs
@@ -173,7 +187,10 @@ const Messages = () => {
       setSelectedConversation({
         listing_id: conv.listing_id,
         other_user_id: conv.other_user_id,
-        messages: data || [],
+        messages: (data || []).map(msg => ({
+          ...msg,
+          attachments: (msg.attachments as unknown as Attachment[]) || [],
+        })),
       });
     } catch (error) {
       console.error("Error loading messages:", error);
@@ -187,19 +204,78 @@ const Messages = () => {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + pendingFiles.length > 5) {
+      toast({
+        title: "Too many files",
+        description: "You can only attach up to 5 files per message.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPendingFiles(prev => [...prev, ...files]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const removePendingFile = (index: number) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadFiles = async (): Promise<Attachment[]> => {
+    if (!user || pendingFiles.length === 0) return [];
+    
+    const attachments: Attachment[] = [];
+    
+    for (const file of pendingFiles) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('message-attachments')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError);
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('message-attachments')
+        .getPublicUrl(filePath);
+
+      attachments.push({
+        url: publicUrl,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      });
+    }
+
+    return attachments;
+  };
+
   const sendMessage = async () => {
-    if (!user || !selectedConversation || !newMessage.trim()) return;
+    if (!user || !selectedConversation || (!newMessage.trim() && pendingFiles.length === 0)) return;
     setSendingMessage(true);
+    setUploadingFiles(pendingFiles.length > 0);
 
     try {
+      // Upload files first
+      const attachments = await uploadFiles();
+
       const { error } = await supabase
         .from("messages")
-        .insert({
+        .insert([{
           listing_id: selectedConversation.listing_id,
           sender_id: user.id,
           recipient_id: selectedConversation.other_user_id,
-          message: newMessage.trim(),
-        });
+          message: newMessage.trim() || (attachments.length > 0 ? "Sent attachment(s)" : ""),
+          attachments: JSON.parse(JSON.stringify(attachments)),
+        }]);
 
       if (error) throw error;
 
@@ -209,8 +285,9 @@ const Messages = () => {
         listing_id: selectedConversation.listing_id,
         sender_id: user.id,
         recipient_id: selectedConversation.other_user_id,
-        message: newMessage.trim(),
+        message: newMessage.trim() || (attachments.length > 0 ? "Sent attachment(s)" : ""),
         created_at: new Date().toISOString(),
+        attachments: attachments,
       };
 
       setSelectedConversation(prev => prev ? {
@@ -219,6 +296,7 @@ const Messages = () => {
       } : null);
 
       setNewMessage("");
+      setPendingFiles([]);
       
       // Refresh conversations list
       fetchConversations();
@@ -231,7 +309,16 @@ const Messages = () => {
       });
     } finally {
       setSendingMessage(false);
+      setUploadingFiles(false);
     }
+  };
+
+  const isImageFile = (type: string) => type.startsWith('image/');
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   const getSelectedConversationInfo = () => {
@@ -324,7 +411,45 @@ const Messages = () => {
                                   : "bg-muted"
                               }`}
                             >
-                              <p className="text-sm">{msg.message}</p>
+                              {msg.message && msg.message !== "Sent attachment(s)" && (
+                                <p className="text-sm">{msg.message}</p>
+                              )}
+                              
+                              {/* Attachments */}
+                              {msg.attachments && msg.attachments.length > 0 && (
+                                <div className="mt-2 space-y-2">
+                                  {msg.attachments.map((attachment, idx) => (
+                                    <div key={idx}>
+                                      {isImageFile(attachment.type) ? (
+                                        <a href={attachment.url} target="_blank" rel="noopener noreferrer">
+                                          <img 
+                                            src={attachment.url} 
+                                            alt={attachment.name}
+                                            className="max-w-full rounded-md max-h-48 object-cover hover:opacity-90 transition-opacity"
+                                          />
+                                        </a>
+                                      ) : (
+                                        <a 
+                                          href={attachment.url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className={`flex items-center gap-2 p-2 rounded-md ${
+                                            msg.sender_id === user?.id ? "bg-primary-foreground/20" : "bg-background"
+                                          }`}
+                                        >
+                                          <FileText className="h-4 w-4 flex-shrink-0" />
+                                          <div className="min-w-0 flex-1">
+                                            <p className="text-sm truncate">{attachment.name}</p>
+                                            <p className="text-xs opacity-70">{formatFileSize(attachment.size)}</p>
+                                          </div>
+                                          <Download className="h-4 w-4 flex-shrink-0" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              
                               <p className={`text-xs mt-1 ${
                                 msg.sender_id === user?.id ? "text-primary-foreground/70" : "text-muted-foreground"
                               }`}>
@@ -338,7 +463,48 @@ const Messages = () => {
                   </ScrollArea>
                   
                   <div className="border-t p-4">
+                    {/* Pending files preview */}
+                    {pendingFiles.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {pendingFiles.map((file, idx) => (
+                          <div 
+                            key={idx}
+                            className="relative flex items-center gap-2 bg-muted rounded-md px-3 py-2"
+                          >
+                            {file.type.startsWith('image/') ? (
+                              <Image className="h-4 w-4" />
+                            ) : (
+                              <FileText className="h-4 w-4" />
+                            )}
+                            <span className="text-sm truncate max-w-[100px]">{file.name}</span>
+                            <button 
+                              onClick={() => removePendingFile(idx)}
+                              className="hover:bg-background rounded-full p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
                     <div className="flex gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        accept="image/*,.pdf,.doc,.docx,.txt"
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={sendingMessage}
+                      >
+                        <Paperclip className="h-5 w-5" />
+                      </Button>
                       <input
                         type="text"
                         value={newMessage}
@@ -349,9 +515,9 @@ const Messages = () => {
                       />
                       <Button 
                         onClick={sendMessage} 
-                        disabled={sendingMessage || !newMessage.trim()}
+                        disabled={sendingMessage || (!newMessage.trim() && pendingFiles.length === 0)}
                       >
-                        {sendingMessage ? "..." : "Send"}
+                        {uploadingFiles ? "Uploading..." : sendingMessage ? "..." : "Send"}
                       </Button>
                     </div>
                   </div>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Building2, Camera } from "lucide-react";
 import logo from "@/assets/logo.png";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -245,6 +246,11 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+      <SEO 
+        title="Sign In | DiRent - Direct Owner Car Rentals"
+        description="Sign in or create an account to rent cars directly from owners or list your car for rent."
+        canonicalUrl="/auth"
+      />
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">

@@ -3,6 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import ListingCard from "@/components/ListingCard";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-car.jpg";
@@ -36,6 +37,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="DiRent - Direct Owner Car Rentals | Zero Commission"
+        description="Rent cars directly from owners with zero commission fees. Skip the middleman and save on your next car rental. List your car for just $4.99/month."
+        canonicalUrl="/"
+      />
       <Header />
 
       {/* Hero Section */}

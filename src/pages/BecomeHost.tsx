@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Car, DollarSign, Users, MessageCircle, Check, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -75,6 +76,11 @@ const BecomeHost = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="List Your Car | DiRent - Earn Money Renting Your Car"
+        description="List your car on DiRent for just $4.99/month. Keep 100% of your rental income with zero commission fees. Direct communication with renters."
+        canonicalUrl="/become-host"
+      />
       <Header />
 
       {/* Hero */}

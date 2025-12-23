@@ -27,13 +27,11 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center group">
-            <span className="text-2xl font-bold tracking-tight">
+            <span className="text-2xl font-bold tracking-tight relative">
               <span className="text-foreground">D</span>
-              <span className="relative inline-block">
-                <span className="text-foreground">i</span>
-                <ArrowRight className="absolute -top-0.5 left-0 h-3 w-3 text-primary" />
-              </span>
+              <span className="text-foreground" style={{ fontVariant: 'small-caps', textTransform: 'lowercase' }}>ı</span>
               <span className="text-primary">Rent</span>
+              <ArrowRight className="absolute top-0 left-2 h-4 w-6 text-primary" strokeWidth={2.5} />
             </span>
           </Link>
 

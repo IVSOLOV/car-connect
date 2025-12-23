@@ -90,7 +90,7 @@ const BecomeHost = () => {
               Unlike other platforms, we don't take a cut of your rentals.
             </p>
             <Button variant="hero" size="xl" onClick={handleBecomeHost}>
-              {role === "host" || role === "admin" ? "Go to Dashboard" : user ? "List Your Car" : "Get Started"}
+              {user ? "List Your Car" : "Get Started"}
               <ArrowRight className="h-5 w-5" />
             </Button>
           </div>
@@ -153,7 +153,7 @@ const BecomeHost = () => {
               </ul>
               
               <Button variant="hero" className="w-full" onClick={handleBecomeHost}>
-                {role === "host" || role === "admin" ? "Go to Dashboard" : user ? "List Your Car" : "Sign Up to List"}
+                {user ? "List Your Car" : "Sign Up to List"}
               </Button>
             </div>
           </div>

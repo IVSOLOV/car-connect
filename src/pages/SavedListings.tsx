@@ -140,7 +140,8 @@ const SavedListings = () => {
                   {savedListings.map((listing) => (
                     <div 
                       key={listing.id} 
-                      className="flex items-center gap-4 p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                      onClick={() => navigate(`/listing/${listing.id}`)}
+                      className="flex items-center gap-4 p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
                     >
                       <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                         {listing.images && listing.images.length > 0 ? (

@@ -384,40 +384,40 @@ const Auth = () => {
                     </div>
                   </div>
 
-                  {/* Company Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="companyName">Company Name (Optional)</Label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="companyName"
-                        type="text"
-                        placeholder="Your Company LLC"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        className="pl-10"
-                        disabled={isLoading}
-                      />
+                  {/* Company Name with Checkbox */}
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="companyName">Company Name (Optional)</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="companyName"
+                          type="text"
+                          placeholder="Your Company LLC"
+                          value={companyName}
+                          onChange={(e) => setCompanyName(e.target.value)}
+                          className="pl-10"
+                          disabled={isLoading}
+                        />
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Show Company as Owner Checkbox */}
-                  {companyName && (
+                    
+                    {/* Show Company as Owner Checkbox */}
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="showCompanyAsOwner"
                         checked={showCompanyAsOwner}
                         onCheckedChange={(checked) => setShowCompanyAsOwner(checked === true)}
-                        disabled={isLoading}
+                        disabled={isLoading || !companyName}
                       />
                       <Label 
                         htmlFor="showCompanyAsOwner" 
-                        className="text-sm font-normal cursor-pointer"
+                        className={`text-sm font-normal cursor-pointer ${!companyName ? 'text-muted-foreground' : ''}`}
                       >
                         Display company name instead of my name on listings
                       </Label>
                     </div>
-                  )}
+                  </div>
                 </>
               )}
 

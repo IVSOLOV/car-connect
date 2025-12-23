@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { format, parseISO } from "date-fns";
 import {
   ArrowLeft,
   MapPin,
@@ -36,6 +37,7 @@ interface OwnerProfile {
 
 const ListingDetails = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
@@ -44,6 +46,23 @@ const ListingDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageForm, setMessageForm] = useState({ name: "", email: "", message: "" });
+
+  // Get dates from URL params
+  const startDateParam = searchParams.get("startDate");
+  const endDateParam = searchParams.get("endDate");
+  
+  const formatDateRange = () => {
+    if (startDateParam && endDateParam) {
+      try {
+        const start = parseISO(startDateParam);
+        const end = parseISO(endDateParam);
+        return ` for ${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`;
+      } catch {
+        return "";
+      }
+    }
+    return "";
+  };
 
   useEffect(() => {
     if (id) {
@@ -365,7 +384,7 @@ const ListingDetails = () => {
                     Message
                   </label>
                   <Textarea
-                    placeholder={`Hi ${ownerName}, I'm interested in your ${title}...`}
+                    placeholder={`Hi ${ownerName}, I am interested in your ${title}${formatDateRange()}.`}
                     value={messageForm.message}
                     onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
                     rows={4}

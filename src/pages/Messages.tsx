@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { format } from "date-fns";
@@ -50,6 +51,7 @@ const Messages = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { toast } = useToast();
+  const { refetch: refetchUnreadCount } = useUnreadMessages();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState<ConversationDetail | null>(null);
@@ -194,6 +196,9 @@ const Messages = () => {
           .from("messages")
           .update({ read_at: new Date().toISOString() })
           .in("id", unreadMessageIds);
+        
+        // Refresh unread count in header
+        refetchUnreadCount();
       }
 
       setSelectedConversation({

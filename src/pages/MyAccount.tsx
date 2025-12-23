@@ -26,6 +26,9 @@ interface Listing {
 interface Profile {
   first_name: string | null;
   last_name: string | null;
+  company_name: string | null;
+  show_company_as_owner: boolean | null;
+  avatar_url: string | null;
 }
 
 const MyAccount = () => {
@@ -55,7 +58,7 @@ const MyAccount = () => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("first_name, last_name")
+        .select("first_name, last_name, company_name, show_company_as_owner, avatar_url")
         .eq("user_id", user?.id)
         .single();
 
@@ -113,6 +116,9 @@ const MyAccount = () => {
   };
 
   const getDisplayName = () => {
+    if (profile?.show_company_as_owner && profile?.company_name) {
+      return profile.company_name;
+    }
     if (profile?.first_name || profile?.last_name) {
       return `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
     }
@@ -139,8 +145,12 @@ const MyAccount = () => {
         <div className="max-w-4xl mx-auto">
           {/* User Info Section */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="h-7 w-7 text-primary" />
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User className="h-7 w-7 text-primary" />
+              )}
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">{getDisplayName()}</h1>

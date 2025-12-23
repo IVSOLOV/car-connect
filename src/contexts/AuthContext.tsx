@@ -4,12 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "guest" | "host" | "admin";
 
+interface SignUpData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  companyName?: string;
+  showCompanyAsOwner?: boolean;
+  avatarFile?: File;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   role: AppRole | null;
   loading: boolean;
-  signUp: (email: string, password: string, firstName: string, lastName: string, phone: string) => Promise<{ error: Error | null }>;
+  signUp: (data: SignUpData) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   upgradeToHost: () => Promise<{ error: Error | null }>;
@@ -80,10 +91,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string, phone: string) => {
+  const signUp = async (data: SignUpData) => {
+    const { email, password, firstName, lastName, phone, companyName, showCompanyAsOwner, avatarFile } = data;
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -92,9 +104,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           first_name: firstName,
           last_name: lastName,
           phone: phone,
+          company_name: companyName || null,
+          show_company_as_owner: showCompanyAsOwner || false,
         },
       },
     });
+    
+    // If signup successful and there's an avatar file, upload it
+    if (!error && signUpData.user && avatarFile) {
+      const fileExt = avatarFile.name.split('.').pop();
+      const filePath = `${signUpData.user.id}/avatar.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, avatarFile, { upsert: true });
+      
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+        
+        // Update the profile with avatar URL
+        await supabase
+          .from('profiles')
+          .update({ avatar_url: urlData.publicUrl })
+          .eq('user_id', signUpData.user.id);
+      }
+    }
     
     return { error: error as Error | null };
   };

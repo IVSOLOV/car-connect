@@ -76,7 +76,7 @@ const Header = () => {
                   </div>
                   <DropdownMenuSeparator />
                   {(role === "host" || role === "admin") && (
-                    <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    <DropdownMenuItem onClick={() => navigate("/my-account")}>
                       My Listings
                     </DropdownMenuItem>
                   )}

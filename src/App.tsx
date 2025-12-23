@@ -11,6 +11,7 @@ import BecomeHost from "./pages/BecomeHost";
 import CarDetails from "./pages/CarDetails";
 import ListingDetails from "./pages/ListingDetails";
 import CreateListing from "./pages/CreateListing";
+import Dashboard from "./pages/Dashboard";
 import MyAccount from "./pages/MyAccount";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/car/:id" element={<CarDetails />} />
               <Route path="/listing/:id" element={<ListingDetails />} />
               <Route path="/create-listing" element={<CreateListing />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/my-account" element={<MyAccount />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

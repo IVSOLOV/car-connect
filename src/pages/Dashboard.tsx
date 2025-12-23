@@ -146,16 +146,21 @@ const Dashboard = () => {
 
   const hasActiveFilters = searchQuery || selectedMake || selectedState || selectedPriceRange || selectedYear;
 
+  const handleMakeChange = (value: string) => setSelectedMake(value === "all" ? "" : value);
+  const handleStateChange = (value: string) => setSelectedState(value === "all" ? "" : value);
+  const handleYearChange = (value: string) => setSelectedYear(value === "all" ? "" : value);
+  const handlePriceChange = (value: string) => setSelectedPriceRange(value === "all" ? "" : value);
+
   const FilterControls = () => (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Make</Label>
-        <Select value={selectedMake} onValueChange={setSelectedMake}>
+        <Select value={selectedMake || "all"} onValueChange={handleMakeChange}>
           <SelectTrigger>
             <SelectValue placeholder="All Makes" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Makes</SelectItem>
+            <SelectItem value="all">All Makes</SelectItem>
             {CAR_MAKES.map((make) => (
               <SelectItem key={make} value={make}>
                 {make}
@@ -167,12 +172,12 @@ const Dashboard = () => {
 
       <div className="space-y-2">
         <Label>State</Label>
-        <Select value={selectedState} onValueChange={setSelectedState}>
+        <Select value={selectedState || "all"} onValueChange={handleStateChange}>
           <SelectTrigger>
             <SelectValue placeholder="All States" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All States</SelectItem>
+            <SelectItem value="all">All States</SelectItem>
             {US_STATES.map((state) => (
               <SelectItem key={state} value={state}>
                 {state}
@@ -184,12 +189,12 @@ const Dashboard = () => {
 
       <div className="space-y-2">
         <Label>Year</Label>
-        <Select value={selectedYear} onValueChange={setSelectedYear}>
+        <Select value={selectedYear || "all"} onValueChange={handleYearChange}>
           <SelectTrigger>
             <SelectValue placeholder="All Years" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Years</SelectItem>
+            <SelectItem value="all">All Years</SelectItem>
             {years.map((year) => (
               <SelectItem key={year} value={year}>
                 {year}
@@ -201,12 +206,12 @@ const Dashboard = () => {
 
       <div className="space-y-2">
         <Label>Price Range</Label>
-        <Select value={selectedPriceRange} onValueChange={setSelectedPriceRange}>
+        <Select value={selectedPriceRange || "all"} onValueChange={handlePriceChange}>
           <SelectTrigger>
             <SelectValue placeholder="Any Price" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any Price</SelectItem>
+            <SelectItem value="all">Any Price</SelectItem>
             {PRICE_RANGES.map((range) => (
               <SelectItem key={range.value} value={range.value}>
                 {range.label}

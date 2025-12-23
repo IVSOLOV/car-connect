@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User } from "lucide-react";
+import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +42,12 @@ const MyAccount = () => {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -125,6 +133,112 @@ const MyAccount = () => {
     return "User";
   };
 
+  const handleStartEditing = () => {
+    setEditFirstName(profile?.first_name || "");
+    setEditLastName(profile?.last_name || "");
+    setIsEditing(true);
+  };
+
+  const handleCancelEditing = () => {
+    setIsEditing(false);
+    setEditFirstName("");
+    setEditLastName("");
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          first_name: editFirstName,
+          last_name: editLastName,
+          full_name: `${editFirstName} ${editLastName}`.trim(),
+        })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      setProfile((prev) => prev ? {
+        ...prev,
+        first_name: editFirstName,
+        last_name: editLastName,
+      } : null);
+      setIsEditing(false);
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : null);
+      toast({
+        title: "Avatar Updated",
+        description: "Your profile picture has been updated.",
+      });
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload avatar.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -144,19 +258,88 @@ const MyAccount = () => {
       <main className="container mx-auto px-4 py-8 pt-24">
         <div className="max-w-4xl mx-auto">
           {/* User Info Section */}
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <User className="h-7 w-7 text-primary" />
-              )}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">{getDisplayName()}</h1>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
-            </div>
-          </div>
+          <Card className="mb-8">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-6">
+                {/* Avatar with edit button */}
+                <div className="relative">
+                  <div 
+                    onClick={handleAvatarClick}
+                    className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden cursor-pointer group relative"
+                  >
+                    {uploadingAvatar ? (
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    ) : profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="h-10 w-10 text-primary" />
+                    )}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                      <Camera className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Name and email */}
+                <div className="flex-1">
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="firstName">First Name</Label>
+                          <Input
+                            id="firstName"
+                            value={editFirstName}
+                            onChange={(e) => setEditFirstName(e.target.value)}
+                            placeholder="First name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="lastName">Last Name</Label>
+                          <Input
+                            id="lastName"
+                            value={editLastName}
+                            onChange={(e) => setEditLastName(e.target.value)}
+                            placeholder="Last name"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={handleSaveProfile} disabled={saving} size="sm">
+                          {saving ? "Saving..." : "Save"}
+                        </Button>
+                        <Button onClick={handleCancelEditing} variant="outline" size="sm">
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-foreground">{getDisplayName()}</h1>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={handleStartEditing}
+                          className="h-8 w-8"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* My Listings Section */}
           <Card>

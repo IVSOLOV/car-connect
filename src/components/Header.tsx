@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MessageCircle, User, LogOut, Menu, ArrowRight } from "lucide-react";
+import { MessageCircle, User, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import logo from "@/assets/logo.png";
 
 const Header = () => {
   const location = useLocation();
@@ -26,13 +27,8 @@ const Header = () => {
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center group">
-            <span className="text-2xl font-bold tracking-tight relative">
-              <span className="text-foreground">D</span>
-              <span className="text-foreground" style={{ fontVariant: 'small-caps', textTransform: 'lowercase' }}>ı</span>
-              <span className="text-primary">Rent</span>
-              <ArrowRight className="absolute top-0 left-2 h-4 w-6 text-primary" strokeWidth={2.5} />
-            </span>
+          <Link to="/" className="flex items-center">
+            <img src={logo} alt="DiRent" className="h-8" />
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">

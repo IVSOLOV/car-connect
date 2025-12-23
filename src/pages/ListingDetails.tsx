@@ -9,14 +9,19 @@ import {
   Heart,
   FileCheck,
   DollarSign,
+  Send,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { Listing } from "@/types/listing";
 
 interface OwnerProfile {
@@ -33,6 +38,8 @@ const ListingDetails = () => {
   const [owner, setOwner] = useState<OwnerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageForm, setMessageForm] = useState({ name: "", email: "", message: "" });
 
   useEffect(() => {
     if (id) {
@@ -240,7 +247,7 @@ const ListingDetails = () => {
 
                 <Separator className="my-5" />
 
-                <Button className="w-full mb-3" size="lg">
+                <Button className="w-full mb-3" size="lg" onClick={() => setShowMessageModal(true)}>
                   <MessageCircle className="mr-2 h-4 w-4" />
                   Message Owner
                 </Button>
@@ -269,6 +276,95 @@ const ListingDetails = () => {
             </div>
           </div>
         </div>
+
+        {/* Message Owner Modal */}
+        {showMessageModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in">
+            <div className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-card-hover animate-scale-in mx-4">
+              <button
+                onClick={() => setShowMessageModal(false)}
+                className="absolute right-4 top-4 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-foreground">Contact Owner</h2>
+                <p className="text-sm text-muted-foreground">
+                  Send a message about {title}
+                </p>
+              </div>
+
+              <div className="mb-6 flex items-center gap-4 rounded-xl bg-secondary/50 p-4">
+                <Avatar className="h-12 w-12 border-2 border-primary/20">
+                  <AvatarFallback>{ownerInitial}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold text-foreground">{ownerName}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Member since {memberSince}
+                  </p>
+                </div>
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!messageForm.name || !messageForm.email || !messageForm.message) {
+                    toast.error("Please fill in all fields");
+                    return;
+                  }
+                  toast.success(`Message sent to ${ownerName}!`);
+                  setMessageForm({ name: "", email: "", message: "" });
+                  setShowMessageModal(false);
+                }}
+                className="space-y-4"
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-foreground">
+                      Your Name
+                    </label>
+                    <Input
+                      placeholder="John Doe"
+                      value={messageForm.name}
+                      onChange={(e) => setMessageForm({ ...messageForm, name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-foreground">
+                      Your Email
+                    </label>
+                    <Input
+                      type="email"
+                      placeholder="john@example.com"
+                      value={messageForm.email}
+                      onChange={(e) => setMessageForm({ ...messageForm, email: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-foreground">
+                    Message
+                  </label>
+                  <Textarea
+                    placeholder={`Hi ${ownerName}, I'm interested in your ${title}...`}
+                    value={messageForm.message}
+                    onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
+                    rows={4}
+                    className="resize-none"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full" size="lg">
+                  <Send className="mr-2 h-4 w-4" />
+                  Send Message
+                </Button>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -18,7 +18,7 @@ const BecomeHost = () => {
     }
 
     if (role === "host" || role === "admin") {
-      navigate("/dashboard");
+      navigate("/create-listing");
       return;
     }
 
@@ -34,7 +34,7 @@ const BecomeHost = () => {
         title: "Welcome, Host!",
         description: "You can now list your cars for rent.",
       });
-      navigate("/dashboard");
+      navigate("/create-listing");
     }
   };
 

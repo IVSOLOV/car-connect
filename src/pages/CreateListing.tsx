@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, X } from "lucide-react";
+import { ArrowLeft, Upload, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 
@@ -99,6 +100,7 @@ const CreateListing = () => {
   const [dailyPrice, setDailyPrice] = useState("");
   const [monthlyPrice, setMonthlyPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1929 }, (_, i) => currentYear - i);
@@ -184,7 +186,7 @@ const CreateListing = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!year || !make || !model || !city || !state || !dailyPrice) {
@@ -196,12 +198,76 @@ const CreateListing = () => {
       return;
     }
 
-    toast({
-      title: "Listing Created",
-      description: "Your vehicle has been listed successfully!",
-    });
-    
-    navigate("/");
+    if (!user) {
+      toast({
+        title: "Not Authenticated",
+        description: "Please sign in to create a listing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Upload images to storage
+      const uploadedImageUrls: string[] = [];
+      
+      for (const image of images) {
+        const fileExt = image.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('car-photos')
+          .upload(fileName, image);
+        
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          continue;
+        }
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('car-photos')
+          .getPublicUrl(fileName);
+        
+        uploadedImageUrls.push(publicUrl);
+      }
+
+      // Create listing in database
+      const { error } = await supabase
+        .from('listings' as any)
+        .insert({
+          user_id: user.id,
+          year: parseInt(year),
+          make,
+          model,
+          city,
+          state,
+          title_status: titleStatus,
+          daily_price: parseInt(dailyPrice),
+          monthly_price: monthlyPrice ? parseInt(monthlyPrice) : null,
+          description: description || null,
+          images: uploadedImageUrls,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "Your car listed successfully.",
+      });
+      
+      navigate("/my-account");
+    } catch (error) {
+      console.error("Error creating listing:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create listing. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -412,8 +478,15 @@ const CreateListing = () => {
             </div>
 
             {/* Submit Button */}
-            <Button type="submit" variant="hero" size="lg" className="w-full">
-              Create Listing
+            <Button type="submit" variant="hero" size="lg" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Listing"
+              )}
             </Button>
           </form>
         </div>

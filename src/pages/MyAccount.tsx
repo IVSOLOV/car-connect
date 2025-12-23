@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, Trash2 } from "lucide-react";
+import { Car, Plus, Trash2, Pencil, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -172,14 +172,32 @@ const MyAccount = () => {
                         </p>
                       </div>
                       
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDeleteListing(listing.id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => navigate(`/listing/${listing.id}`)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => navigate(`/edit-listing/${listing.id}`)}
+                          className="text-muted-foreground hover:text-primary"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleDeleteListing(listing.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, Trash2, Pencil, Eye, CalendarDays } from "lucide-react";
+import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +23,11 @@ interface Listing {
   created_at: string;
 }
 
+interface Profile {
+  first_name: string | null;
+  last_name: string | null;
+}
+
 const MyAccount = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -31,6 +36,7 @@ const MyAccount = () => {
   const [loadingListings, setLoadingListings] = useState(true);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -41,8 +47,24 @@ const MyAccount = () => {
   useEffect(() => {
     if (user) {
       fetchListings();
+      fetchProfile();
     }
   }, [user]);
+
+  const fetchProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("user_id", user?.id)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
 
   const fetchListings = async () => {
     try {
@@ -90,6 +112,13 @@ const MyAccount = () => {
     }
   };
 
+  const getDisplayName = () => {
+    if (profile?.first_name || profile?.last_name) {
+      return `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
+    }
+    return "User";
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -108,8 +137,15 @@ const MyAccount = () => {
       
       <main className="container mx-auto px-4 py-8 pt-24">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-foreground">My Account</h1>
+          {/* User Info Section */}
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+              <User className="h-7 w-7 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">{getDisplayName()}</h1>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+            </div>
           </div>
 
           {/* My Listings Section */}

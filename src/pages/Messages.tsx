@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, Car, User, ChevronRight, ArrowLeft, Paperclip, Image, FileText, X, Download } from "lucide-react";
+import { MessageCircle, Car, User, ChevronRight, ArrowLeft, Paperclip, Image, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
+import AttachmentRenderer from "@/components/AttachmentRenderer";
 import { format } from "date-fns";
 
 interface Attachment {
@@ -262,12 +263,9 @@ const Messages = () => {
         continue;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('message-attachments')
-        .getPublicUrl(filePath);
-
+      // Store the file path (not URL) for later signed URL generation
       attachments.push({
-        url: publicUrl,
+        url: filePath, // Store path, we'll generate signed URLs when displaying
         name: file.name,
         type: file.type,
         size: file.size,
@@ -275,6 +273,28 @@ const Messages = () => {
     }
 
     return attachments;
+  };
+
+  // Helper to get signed URL for an attachment
+  const getSignedUrl = async (filePath: string): Promise<string | null> => {
+    // Check if it's already a full URL (legacy data)
+    if (filePath.startsWith('http')) {
+      // Extract path from old public URL format
+      const match = filePath.match(/message-attachments\/(.+)$/);
+      if (match) {
+        const { data, error } = await supabase.storage
+          .from('message-attachments')
+          .createSignedUrl(match[1], 3600); // 1 hour expiry
+        return error ? null : data.signedUrl;
+      }
+      return filePath;
+    }
+    
+    const { data, error } = await supabase.storage
+      .from('message-attachments')
+      .createSignedUrl(filePath, 3600); // 1 hour expiry
+    
+    return error ? null : data.signedUrl;
   };
 
   const sendMessage = async () => {
@@ -438,33 +458,11 @@ const Messages = () => {
                               {msg.attachments && msg.attachments.length > 0 && (
                                 <div className="mt-2 space-y-2">
                                   {msg.attachments.map((attachment, idx) => (
-                                    <div key={idx}>
-                                      {isImageFile(attachment.type) ? (
-                                        <a href={attachment.url} target="_blank" rel="noopener noreferrer">
-                                          <img 
-                                            src={attachment.url} 
-                                            alt={attachment.name}
-                                            className="max-w-full rounded-md max-h-48 object-cover hover:opacity-90 transition-opacity"
-                                          />
-                                        </a>
-                                      ) : (
-                                        <a 
-                                          href={attachment.url} 
-                                          target="_blank" 
-                                          rel="noopener noreferrer"
-                                          className={`flex items-center gap-2 p-2 rounded-md ${
-                                            msg.sender_id === user?.id ? "bg-primary-foreground/20" : "bg-background"
-                                          }`}
-                                        >
-                                          <FileText className="h-4 w-4 flex-shrink-0" />
-                                          <div className="min-w-0 flex-1">
-                                            <p className="text-sm truncate">{attachment.name}</p>
-                                            <p className="text-xs opacity-70">{formatFileSize(attachment.size)}</p>
-                                          </div>
-                                          <Download className="h-4 w-4 flex-shrink-0" />
-                                        </a>
-                                      )}
-                                    </div>
+                                    <AttachmentRenderer 
+                                      key={idx}
+                                      attachment={attachment}
+                                      isSender={msg.sender_id === user?.id}
+                                    />
                                   ))}
                                 </div>
                               )}

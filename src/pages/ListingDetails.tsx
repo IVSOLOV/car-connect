@@ -161,9 +161,8 @@ const ListingDetails = () => {
 
       if (error) throw error;
 
-      toast.success(`Message sent to ${getOwnerDisplayName()}!`);
+      toast.success("Message sent!");
       setMessageText("");
-      setShowMessageModal(false);
       fetchMessages(); // Refresh messages
     } catch (error) {
       console.error("Error sending message:", error);

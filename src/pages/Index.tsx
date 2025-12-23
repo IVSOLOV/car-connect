@@ -1,14 +1,38 @@
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
 import Header from "@/components/Header";
-import CarCard from "@/components/CarCard";
+import ListingCard from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
-import { mockCars } from "@/data/cars";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-car.jpg";
+import type { Listing } from "@/types/listing";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  const fetchListings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("listings" as any)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(6);
+
+      if (error) throw error;
+      setListings((data as unknown as Listing[]) || []);
+    } catch (error) {
+      console.error("Error fetching listings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,21 +89,40 @@ const Index = () => {
               Featured Listings
             </h2>
             <p className="mx-auto max-w-2xl text-muted-foreground">
-              Explore our handpicked selection of premium vehicles from verified sellers
+              Explore our handpicked selection of vehicles available for rent
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {mockCars.map((car, index) => (
-              <CarCard key={car.id} car={car} index={index} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : listings.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>No listings available yet. Be the first to list your car!</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => navigate("/become-host")}
+              >
+                List Your Car
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {listings.map((listing, index) => (
+                <ListingCard key={listing.id} listing={listing} index={index} />
+              ))}
+            </div>
+          )}
 
-          <div className="mt-12 text-center">
-            <Button variant="outline" size="lg">
-              Load More Listings
-            </Button>
-          </div>
+          {listings.length > 0 && (
+            <div className="mt-12 text-center">
+              <Button variant="outline" size="lg">
+                Load More Listings
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 

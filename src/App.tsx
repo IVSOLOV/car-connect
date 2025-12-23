@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BecomeHost from "./pages/BecomeHost";
 import CarDetails from "./pages/CarDetails";
+import ListingDetails from "./pages/ListingDetails";
 import CreateListing from "./pages/CreateListing";
 import MyAccount from "./pages/MyAccount";
 import NotFound from "./pages/NotFound";
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/become-host" element={<BecomeHost />} />
               <Route path="/car/:id" element={<CarDetails />} />
+              <Route path="/listing/:id" element={<ListingDetails />} />
               <Route path="/create-listing" element={<CreateListing />} />
               <Route path="/my-account" element={<MyAccount />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

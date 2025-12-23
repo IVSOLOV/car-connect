@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, MessageCircle, User, LogOut, Menu } from "lucide-react";
+import { MessageCircle, User, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -51,9 +51,6 @@ const Header = () => {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <Search className="h-5 w-5" />
-            </Button>
             
             {user && (
               <Button variant="ghost" size="icon" onClick={() => navigate("/messages")} className="relative">

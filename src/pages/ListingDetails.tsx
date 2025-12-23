@@ -47,7 +47,7 @@ const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [showMessageModal, setShowMessageModal] = useState(false);
-  const [messageForm, setMessageForm] = useState({ message: "" });
+  const [messageText, setMessageText] = useState("");
 
   // Get dates from URL params
   const startDateParam = searchParams.get("startDate");
@@ -85,13 +85,11 @@ const ListingDetails = () => {
       if (data) {
         setListing(data as unknown as Listing);
         // Fetch owner profile
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData } = await supabase
           .from("profiles")
           .select("first_name, last_name, full_name, avatar_url, created_at, company_name, show_company_as_owner")
           .eq("user_id", (data as any).user_id)
           .maybeSingle();
-        
-        console.log("Profile fetch result:", { profileData, profileError, userId: (data as any).user_id });
         
         if (profileData) {
           setOwner(profileData);
@@ -298,7 +296,11 @@ const ListingDetails = () => {
 
                 <Separator className="my-5" />
 
-                <Button className="w-full mb-3" size="lg" onClick={() => setShowMessageModal(true)}>
+                <Button className="w-full mb-3" size="lg" onClick={() => {
+                  const defaultMessage = `Hi ${ownerName}, I am interested in your ${title}${formatDateRange()}.`;
+                  setMessageText(defaultMessage);
+                  setShowMessageModal(true);
+                }}>
                   <MessageCircle className="mr-2 h-4 w-4" />
                   Message Owner
                 </Button>
@@ -361,12 +363,12 @@ const ListingDetails = () => {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  if (!messageForm.message) {
+                  if (!messageText) {
                     toast.error("Please enter a message");
                     return;
                   }
                   toast.success(`Message sent to ${ownerName}!`);
-                  setMessageForm({ message: "" });
+                  setMessageText("");
                   setShowMessageModal(false);
                 }}
                 className="space-y-4"
@@ -381,9 +383,8 @@ const ListingDetails = () => {
                     Message
                   </label>
                   <Textarea
-                    placeholder={`Hi ${ownerName}, I am interested in your ${title}${formatDateRange()}.`}
-                    value={messageForm.message}
-                    onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
                     rows={4}
                     className="resize-none"
                   />

@@ -80,17 +80,17 @@ const Messages = () => {
         return;
       }
 
-      // Group messages by listing + other user
-      const conversationMap = new Map<string, Message[]>();
+      // Group messages by listing + other user (use ::: as separator since UUIDs contain dashes)
+      const conversationMap = new Map<string, { messages: Message[]; otherUserId: string; listingId: string }>();
       
       messagesData.forEach((msg) => {
         const otherUserId = msg.sender_id === user.id ? msg.recipient_id : msg.sender_id;
-        const key = `${msg.listing_id}-${otherUserId}`;
+        const key = `${msg.listing_id}:::${otherUserId}`;
         
         if (!conversationMap.has(key)) {
-          conversationMap.set(key, []);
+          conversationMap.set(key, { messages: [], otherUserId, listingId: msg.listing_id });
         }
-        conversationMap.get(key)!.push(msg);
+        conversationMap.get(key)!.messages.push(msg);
       });
 
       // Get unique listing IDs and user IDs
@@ -112,18 +112,18 @@ const Messages = () => {
       // Build conversation list
       const convList: Conversation[] = [];
       
-      conversationMap.forEach((messages, key) => {
-        const [listingId, otherUserId] = key.split("-");
+      conversationMap.forEach((convData) => {
+        const { messages, otherUserId, listingId } = convData;
         const lastMsg = messages[0];
         
         const listing = listingsData?.find(l => l.id === listingId);
         const profile = profilesData?.find(p => p.user_id === otherUserId);
 
         const getUserName = () => {
-          if (profile?.company_name) return profile.company_name;
           if (profile?.first_name || profile?.last_name) {
             return `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
           }
+          if (profile?.company_name) return profile.company_name;
           return "Unknown User";
         };
 

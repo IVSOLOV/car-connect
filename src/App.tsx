@@ -15,6 +15,7 @@ import EditListing from "./pages/EditListing";
 import Dashboard from "./pages/Dashboard";
 import MyAccount from "./pages/MyAccount";
 import SavedListings from "./pages/SavedListings";
+import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/my-account" element={<MyAccount />} />
               <Route path="/saved" element={<SavedListings />} />
+              <Route path="/messages" element={<Messages />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

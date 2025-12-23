@@ -1,0 +1,425 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Upload, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import Header from "@/components/Header";
+import SEO from "@/components/SEO";
+
+const carMakes = [
+  "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Buick",
+  "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ferrari", "Fiat", "Ford",
+  "Genesis", "GMC", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia",
+  "Lamborghini", "Land Rover", "Lexus", "Lincoln", "Lotus", "Maserati",
+  "Mazda", "McLaren", "Mercedes-Benz", "Mini", "Mitsubishi", "Nissan",
+  "Porsche", "Ram", "Rolls-Royce", "Subaru", "Tesla", "Toyota", "Volkswagen", "Volvo"
+];
+
+const modelsByMake: Record<string, string[]> = {
+  "Acura": ["ILX", "TLX", "RLX", "MDX", "RDX", "NSX", "Integra"],
+  "Alfa Romeo": ["Giulia", "Stelvio", "Tonale", "4C Spider"],
+  "Aston Martin": ["DB11", "DBS", "Vantage", "DBX"],
+  "Audi": ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q5", "Q7", "Q8", "e-tron", "RS6", "RS7", "R8", "TT"],
+  "Bentley": ["Continental GT", "Flying Spur", "Bentayga"],
+  "BMW": ["2 Series", "3 Series", "4 Series", "5 Series", "7 Series", "8 Series", "X1", "X3", "X5", "X7", "Z4", "M3", "M4", "M5", "i4", "iX"],
+  "Buick": ["Encore", "Envision", "Enclave", "Encore GX"],
+  "Cadillac": ["CT4", "CT5", "Escalade", "XT4", "XT5", "XT6", "Lyriq"],
+  "Chevrolet": ["Spark", "Malibu", "Camaro", "Corvette", "Trax", "Equinox", "Blazer", "Traverse", "Tahoe", "Suburban", "Colorado", "Silverado", "Bolt EV"],
+  "Chrysler": ["300", "Pacifica", "Voyager"],
+  "Dodge": ["Charger", "Challenger", "Durango", "Hornet"],
+  "Ferrari": ["Roma", "Portofino", "F8 Tributo", "SF90 Stradale", "812 Superfast", "296 GTB", "Purosangue"],
+  "Fiat": ["500", "500X"],
+  "Ford": ["Mustang", "Fusion", "Escape", "Edge", "Explorer", "Expedition", "Bronco", "Ranger", "F-150", "F-250", "Maverick", "Mustang Mach-E"],
+  "Genesis": ["G70", "G80", "G90", "GV60", "GV70", "GV80"],
+  "GMC": ["Terrain", "Acadia", "Yukon", "Canyon", "Sierra", "Hummer EV"],
+  "Honda": ["Civic", "Accord", "Insight", "HR-V", "CR-V", "Passport", "Pilot", "Odyssey", "Ridgeline"],
+  "Hyundai": ["Accent", "Elantra", "Sonata", "Venue", "Kona", "Tucson", "Santa Fe", "Palisade", "Ioniq 5", "Ioniq 6"],
+  "Infiniti": ["Q50", "Q60", "QX50", "QX55", "QX60", "QX80"],
+  "Jaguar": ["XE", "XF", "F-Type", "E-Pace", "F-Pace", "I-Pace"],
+  "Jeep": ["Renegade", "Compass", "Cherokee", "Grand Cherokee", "Wrangler", "Gladiator", "Wagoneer"],
+  "Kia": ["Rio", "Forte", "K5", "Stinger", "Seltos", "Sportage", "Sorento", "Telluride", "Carnival", "EV6"],
+  "Lamborghini": ["Huracán", "Urus", "Revuelto"],
+  "Land Rover": ["Defender", "Discovery", "Discovery Sport", "Range Rover", "Range Rover Sport", "Range Rover Velar", "Range Rover Evoque"],
+  "Lexus": ["IS", "ES", "LS", "RC", "LC", "UX", "NX", "RX", "GX", "LX", "RZ"],
+  "Lincoln": ["Corsair", "Nautilus", "Aviator", "Navigator"],
+  "Lotus": ["Emira", "Evija", "Eletre"],
+  "Maserati": ["Ghibli", "Quattroporte", "MC20", "Grecale", "Levante"],
+  "Mazda": ["Mazda3", "Mazda6", "CX-30", "CX-5", "CX-50", "CX-9", "MX-5 Miata"],
+  "McLaren": ["Artura", "GT", "720S", "765LT"],
+  "Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "S-Class", "CLA", "CLS", "GLA", "GLB", "GLC", "GLE", "GLS", "G-Class", "AMG GT", "EQS", "EQE"],
+  "Mini": ["Cooper", "Clubman", "Countryman", "Convertible"],
+  "Mitsubishi": ["Mirage", "Outlander", "Outlander Sport", "Eclipse Cross"],
+  "Nissan": ["Versa", "Sentra", "Altima", "Maxima", "Leaf", "Kicks", "Rogue", "Murano", "Pathfinder", "Armada", "Frontier", "Titan", "Z"],
+  "Porsche": ["718 Boxster", "718 Cayman", "911", "Panamera", "Taycan", "Macan", "Cayenne"],
+  "Ram": ["1500", "2500", "3500", "ProMaster"],
+  "Rolls-Royce": ["Ghost", "Phantom", "Wraith", "Dawn", "Cullinan", "Spectre"],
+  "Subaru": ["Impreza", "Legacy", "WRX", "BRZ", "Crosstrek", "Forester", "Outback", "Ascent", "Solterra"],
+  "Tesla": ["Model 3", "Model S", "Model X", "Model Y", "Cybertruck"],
+  "Toyota": ["Corolla", "Camry", "Avalon", "Prius", "GR86", "Supra", "C-HR", "RAV4", "Venza", "Highlander", "4Runner", "Sequoia", "Tacoma", "Tundra", "Land Cruiser"],
+  "Volkswagen": ["Jetta", "Passat", "Arteon", "Golf GTI", "Golf R", "ID.4", "Taos", "Tiguan", "Atlas"],
+  "Volvo": ["S60", "S90", "V60", "V90", "XC40", "XC60", "XC90", "C40 Recharge"]
+};
+
+const usStates = [
+  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
+  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
+  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+  "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
+  "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
+  "Wisconsin", "Wyoming"
+];
+
+const CreateListing = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [year, setYear] = useState("");
+  const [make, setMake] = useState("");
+  const [model, setModel] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [titleStatus, setTitleStatus] = useState("clear");
+  const [dailyPrice, setDailyPrice] = useState("");
+  const [monthlyPrice, setMonthlyPrice] = useState("");
+  const [description, setDescription] = useState("");
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1929 }, (_, i) => currentYear - i);
+
+  const availableModels = make ? modelsByMake[make] || [] : [];
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    if (make) {
+      setModel("");
+    }
+  }, [make]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + images.length > 10) {
+      toast({
+        title: "Too many images",
+        description: "You can upload up to 10 images.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setImages((prev) => [...prev, ...files]);
+    
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePriceChange = (value: string, setter: (val: string) => void) => {
+    const numericValue = value.replace(/[^0-9]/g, "");
+    setter(numericValue);
+  };
+
+  const handleGetLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`
+            );
+            const data = await response.json();
+            if (data.address) {
+              setCity(data.address.city || data.address.town || data.address.village || "");
+              const stateAbbr = data.address.state;
+              if (stateAbbr && usStates.includes(stateAbbr)) {
+                setState(stateAbbr);
+              }
+            }
+          } catch (error) {
+            toast({
+              title: "Location Error",
+              description: "Could not get location details. Please enter manually.",
+              variant: "destructive",
+            });
+          }
+        },
+        () => {
+          toast({
+            title: "Location Access Denied",
+            description: "Please enable location access or enter your city manually.",
+            variant: "destructive",
+          });
+        }
+      );
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!year || !make || !model || !city || !state || !dailyPrice) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Listing Created",
+      description: "Your vehicle has been listed successfully!",
+    });
+    
+    navigate("/");
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SEO 
+        title="Create Listing | List Your Car"
+        description="List your vehicle for rent"
+      />
+      <Header />
+      
+      <main className="container mx-auto px-4 py-8 pt-24">
+        <div className="max-w-2xl mx-auto">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+
+          <h1 className="text-3xl font-bold text-foreground mb-8">Vehicle Details</h1>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Image Upload */}
+            <div className="space-y-2">
+              <Label>Upload Pictures/Images</Label>
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label 
+                  htmlFor="image-upload" 
+                  className="cursor-pointer flex flex-col items-center gap-2"
+                >
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                  <span className="text-muted-foreground">Click to upload images (max 10)</span>
+                </label>
+              </div>
+              
+              {imagePreviews.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-4">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative aspect-square">
+                      <img 
+                        src={preview} 
+                        alt={`Preview ${index + 1}`} 
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Year */}
+            <div className="space-y-2">
+              <Label htmlFor="year">Year *</Label>
+              <Select value={year} onValueChange={setYear}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((y) => (
+                    <SelectItem key={y} value={y.toString()}>
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Make */}
+            <div className="space-y-2">
+              <Label htmlFor="make">Make *</Label>
+              <Select value={make} onValueChange={setMake}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select make" />
+                </SelectTrigger>
+                <SelectContent>
+                  {carMakes.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {m}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Model */}
+            <div className="space-y-2">
+              <Label htmlFor="model">Model *</Label>
+              <Select value={model} onValueChange={setModel} disabled={!make}>
+                <SelectTrigger>
+                  <SelectValue placeholder={make ? "Select model" : "Select make first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableModels.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {m}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Location */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">City *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Enter city"
+                  />
+                  <Button type="button" variant="outline" onClick={handleGetLocation} className="shrink-0">
+                    Use Location
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="state">State *</Label>
+                <Select value={state} onValueChange={setState}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {usStates.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Title Status */}
+            <div className="space-y-2">
+              <Label>Title Status *</Label>
+              <RadioGroup value={titleStatus} onValueChange={setTitleStatus} className="flex gap-6">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="clear" id="clear" />
+                  <Label htmlFor="clear" className="cursor-pointer">Clear</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="rebuild" id="rebuild" />
+                  <Label htmlFor="rebuild" className="cursor-pointer">Rebuild</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Pricing */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="dailyPrice">Daily Price *</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="dailyPrice"
+                    value={dailyPrice}
+                    onChange={(e) => handlePriceChange(e.target.value, setDailyPrice)}
+                    placeholder="0"
+                    className="pl-7"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="monthlyPrice">Monthly Price</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="monthlyPrice"
+                    value={monthlyPrice}
+                    onChange={(e) => handlePriceChange(e.target.value, setMonthlyPrice)}
+                    placeholder="0"
+                    className="pl-7"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe your vehicle..."
+                rows={4}
+              />
+            </div>
+
+            {/* Submit Button */}
+            <Button type="submit" variant="hero" size="lg" className="w-full">
+              Create Listing
+            </Button>
+          </form>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default CreateListing;

@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BecomeHost from "./pages/BecomeHost";
 import CarDetails from "./pages/CarDetails";
+import CreateListing from "./pages/CreateListing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/become-host" element={<BecomeHost />} />
               <Route path="/car/:id" element={<CarDetails />} />
+              <Route path="/create-listing" element={<CreateListing />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

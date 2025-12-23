@@ -33,6 +33,8 @@ interface OwnerProfile {
   full_name: string | null;
   avatar_url: string | null;
   created_at: string;
+  company_name: string | null;
+  show_company_as_owner: boolean | null;
 }
 
 const ListingDetails = () => {
@@ -45,7 +47,7 @@ const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [showMessageModal, setShowMessageModal] = useState(false);
-  const [messageForm, setMessageForm] = useState({ name: "", email: "", message: "" });
+  const [messageForm, setMessageForm] = useState({ message: "" });
 
   // Get dates from URL params
   const startDateParam = searchParams.get("startDate");
@@ -85,7 +87,7 @@ const ListingDetails = () => {
         // Fetch owner profile
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("first_name, last_name, full_name, avatar_url, created_at")
+          .select("first_name, last_name, full_name, avatar_url, created_at, company_name, show_company_as_owner")
           .eq("user_id", (data as any).user_id)
           .maybeSingle();
         
@@ -140,7 +142,9 @@ const ListingDetails = () => {
   const images = listing.images?.length > 0 
     ? listing.images 
     : ["https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80"];
-  const ownerName = owner?.full_name || owner?.first_name || "Car Owner";
+  const ownerName = owner?.show_company_as_owner && owner?.company_name 
+    ? owner.company_name 
+    : owner?.full_name || owner?.first_name || "Car Owner";
   const ownerInitial = ownerName[0]?.toUpperCase() || "O";
   const memberSince = owner?.created_at 
     ? new Date(owner.created_at).getFullYear().toString()
@@ -345,38 +349,19 @@ const ListingDetails = () => {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  if (!messageForm.name || !messageForm.email || !messageForm.message) {
-                    toast.error("Please fill in all fields");
+                  if (!messageForm.message) {
+                    toast.error("Please enter a message");
                     return;
                   }
                   toast.success(`Message sent to ${ownerName}!`);
-                  setMessageForm({ name: "", email: "", message: "" });
+                  setMessageForm({ message: "" });
                   setShowMessageModal(false);
                 }}
                 className="space-y-4"
               >
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-foreground">
-                      Your Name
-                    </label>
-                    <Input
-                      placeholder="John Doe"
-                      value={messageForm.name}
-                      onChange={(e) => setMessageForm({ ...messageForm, name: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-foreground">
-                      Your Email
-                    </label>
-                    <Input
-                      type="email"
-                      placeholder="john@example.com"
-                      value={messageForm.email}
-                      onChange={(e) => setMessageForm({ ...messageForm, email: e.target.value })}
-                    />
-                  </div>
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">To:</p>
+                  <p className="font-semibold text-foreground">{ownerName}</p>
                 </div>
 
                 <div>

@@ -75,6 +75,9 @@ const Header = () => {
                     <p className="text-xs text-muted-foreground capitalize">{role || "Guest"}</p>
                   </div>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/my-account")}>
+                    My Account
+                  </DropdownMenuItem>
                   {(role === "host" || role === "admin") && (
                     <DropdownMenuItem onClick={() => navigate("/my-account")}>
                       My Listings

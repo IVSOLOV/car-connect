@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { Car, Mail, Lock, User, Phone, ArrowRight, ArrowLeft } from "lucide-react";
+import { Car, Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Building2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,9 +32,14 @@ const Auth = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [showCompanyAsOwner, setShowCompanyAsOwner] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resetSent, setResetSent] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -79,6 +85,26 @@ const Auth = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image under 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,7 +177,16 @@ const Auth = () => {
           navigate("/");
         }
       } else {
-        const { error } = await signUp(email, password, firstName, lastName, phone);
+        const { error } = await signUp({
+          email,
+          password,
+          firstName,
+          lastName,
+          phone,
+          companyName: companyName || undefined,
+          showCompanyAsOwner,
+          avatarFile: avatarFile || undefined,
+        });
         if (error) {
           if (error.message.includes("already registered")) {
             toast({
@@ -312,6 +347,77 @@ const Auth = () => {
                       <p className="text-sm text-destructive">{errors.phone}</p>
                     )}
                   </div>
+
+                  {/* Avatar Upload */}
+                  <div className="space-y-2">
+                    <Label>Profile Photo (Optional)</Label>
+                    <div className="flex items-center gap-4">
+                      <div 
+                        className="w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden cursor-pointer border-2 border-dashed border-border hover:border-primary transition-colors"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        {avatarPreview ? (
+                          <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <Camera className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isLoading}
+                        >
+                          {avatarPreview ? "Change Photo" : "Upload Photo"}
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG or PNG</p>
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleAvatarChange}
+                        className="hidden"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Company Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName">Company Name (Optional)</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="companyName"
+                        type="text"
+                        placeholder="Your Company LLC"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        className="pl-10"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Show Company as Owner Checkbox */}
+                  {companyName && (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="showCompanyAsOwner"
+                        checked={showCompanyAsOwner}
+                        onCheckedChange={(checked) => setShowCompanyAsOwner(checked === true)}
+                        disabled={isLoading}
+                      />
+                      <Label 
+                        htmlFor="showCompanyAsOwner" 
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        Display company name instead of my name on listings
+                      </Label>
+                    </div>
+                  )}
                 </>
               )}
 

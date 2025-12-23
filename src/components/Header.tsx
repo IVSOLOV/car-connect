@@ -33,23 +33,13 @@ const Header = () => {
 
           <nav className="hidden items-center gap-6 md:flex">
             <Link
-              to="/"
+              to="/dashboard"
               className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname === "/" ? "text-primary" : "text-muted-foreground"
+                location.pathname === "/dashboard" ? "text-primary" : "text-muted-foreground"
               }`}
             >
               Browse Cars
             </Link>
-            {user && (role === "host" || role === "admin") && (
-              <Link
-                to="/dashboard"
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  location.pathname === "/dashboard" ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                Dashboard
-              </Link>
-            )}
             <Link
               to="/become-host"
               className={`text-sm font-medium transition-colors hover:text-primary ${
@@ -120,17 +110,12 @@ const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => navigate("/")}>
+                <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                   Browse Cars
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/become-host")}>
                   List Your Car
                 </DropdownMenuItem>
-                {user && (role === "host" || role === "admin") && (
-                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                    Dashboard
-                  </DropdownMenuItem>
-                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

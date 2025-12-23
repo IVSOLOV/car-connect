@@ -77,7 +77,7 @@ const Index = () => {
                 Browse All Cars
               </Button>
               <Button variant="outline" size="xl" onClick={() => navigate("/become-host")}>
-                Become a Host
+                List Your Car
               </Button>
             </div>
           </div>

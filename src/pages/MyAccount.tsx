@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera } from "lucide-react";
+import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -45,6 +46,8 @@ const MyAccount = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
+  const [editCompanyName, setEditCompanyName] = useState("");
+  const [editShowCompany, setEditShowCompany] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -136,6 +139,8 @@ const MyAccount = () => {
   const handleStartEditing = () => {
     setEditFirstName(profile?.first_name || "");
     setEditLastName(profile?.last_name || "");
+    setEditCompanyName(profile?.company_name || "");
+    setEditShowCompany(profile?.show_company_as_owner || false);
     setIsEditing(true);
   };
 
@@ -143,6 +148,8 @@ const MyAccount = () => {
     setIsEditing(false);
     setEditFirstName("");
     setEditLastName("");
+    setEditCompanyName("");
+    setEditShowCompany(false);
   };
 
   const handleSaveProfile = async () => {
@@ -155,6 +162,8 @@ const MyAccount = () => {
           first_name: editFirstName,
           last_name: editLastName,
           full_name: `${editFirstName} ${editLastName}`.trim(),
+          company_name: editCompanyName,
+          show_company_as_owner: editShowCompany,
         })
         .eq("user_id", user.id);
 
@@ -164,6 +173,8 @@ const MyAccount = () => {
         ...prev,
         first_name: editFirstName,
         last_name: editLastName,
+        company_name: editCompanyName,
+        show_company_as_owner: editShowCompany,
       } : null);
       setIsEditing(false);
       toast({
@@ -311,6 +322,29 @@ const MyAccount = () => {
                           />
                         </div>
                       </div>
+                      <div>
+                        <Label htmlFor="companyName">Company Name (LLC)</Label>
+                        <div className="relative">
+                          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="companyName"
+                            value={editCompanyName}
+                            onChange={(e) => setEditCompanyName(e.target.value)}
+                            placeholder="Your company name"
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="showCompany"
+                          checked={editShowCompany}
+                          onCheckedChange={(checked) => setEditShowCompany(checked === true)}
+                        />
+                        <Label htmlFor="showCompany" className="text-sm font-normal cursor-pointer">
+                          Display company name as owner on listings
+                        </Label>
+                      </div>
                       <div className="flex gap-2">
                         <Button onClick={handleSaveProfile} disabled={saving} size="sm">
                           {saving ? "Saving..." : "Save"}
@@ -334,6 +368,12 @@ const MyAccount = () => {
                         </Button>
                       </div>
                       <p className="text-sm text-muted-foreground">{user?.email}</p>
+                      {profile?.company_name && !profile?.show_company_as_owner && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                          <Building2 className="h-3 w-3" />
+                          {profile.company_name}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>

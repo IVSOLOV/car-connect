@@ -16,6 +16,8 @@ import Dashboard from "./pages/Dashboard";
 import MyAccount from "./pages/MyAccount";
 import SavedListings from "./pages/SavedListings";
 import Messages from "./pages/Messages";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +42,8 @@ const App = () => (
               <Route path="/my-account" element={<MyAccount />} />
               <Route path="/saved" element={<SavedListings />} />
               <Route path="/messages" element={<Messages />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

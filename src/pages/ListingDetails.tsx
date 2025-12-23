@@ -463,11 +463,6 @@ const ListingDetails = () => {
                 }}
                 className="space-y-4"
               >
-                <div className="p-3 bg-muted/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground">To:</p>
-                  <p className="font-semibold text-foreground">{ownerName}</p>
-                </div>
-
                 <div>
                   <label className="mb-2 block text-sm font-medium text-foreground">
                     Message

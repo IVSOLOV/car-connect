@@ -146,11 +146,11 @@ const ListingDetails = () => {
     if (owner?.show_company_as_owner && owner?.company_name) {
       return owner.company_name;
     }
-    if (owner?.first_name || owner?.last_name) {
-      return `${owner.first_name || ""} ${owner.last_name || ""}`.trim();
-    }
     if (owner?.full_name) {
       return owner.full_name;
+    }
+    if (owner?.first_name || owner?.last_name) {
+      return `${owner.first_name || ""} ${owner.last_name || ""}`.trim();
     }
     return "Car Owner";
   };

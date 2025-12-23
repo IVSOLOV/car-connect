@@ -192,13 +192,15 @@ const Messages = () => {
         .map(msg => msg.id);
 
       if (unreadMessageIds.length > 0) {
-        await supabase
+        const { error: updateError } = await supabase
           .from("messages")
           .update({ read_at: new Date().toISOString() })
           .in("id", unreadMessageIds);
         
-        // Refresh unread count in header
-        refetchUnreadCount();
+        if (!updateError) {
+          // Refresh unread count in header after successful update
+          await refetchUnreadCount();
+        }
       }
 
       setSelectedConversation({

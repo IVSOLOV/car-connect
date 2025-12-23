@@ -58,6 +58,7 @@ const ListingDetails = () => {
   const [messageText, setMessageText] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasUserSentDefaultMessage, setHasUserSentDefaultMessage] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   // Get dates from URL params
   const startDateParam = searchParams.get("startDate");
@@ -142,8 +143,58 @@ const ListingDetails = () => {
   useEffect(() => {
     if (listing && user) {
       fetchMessages();
+      checkIfSaved();
     }
   }, [listing, user]);
+
+  const checkIfSaved = async () => {
+    if (!user || !id) return;
+    
+    try {
+      const { data } = await supabase
+        .from("saved_listings")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("listing_id", id)
+        .maybeSingle();
+      
+      setIsSaved(!!data);
+    } catch (error) {
+      console.error("Error checking saved status:", error);
+    }
+  };
+
+  const toggleSaveListing = async () => {
+    if (!user || !id) {
+      toast.error("Please login to save listings");
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        const { error } = await supabase
+          .from("saved_listings")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("listing_id", id);
+        
+        if (error) throw error;
+        setIsSaved(false);
+        toast.success("Removed from saved listings");
+      } else {
+        const { error } = await supabase
+          .from("saved_listings")
+          .insert({ user_id: user.id, listing_id: id });
+        
+        if (error) throw error;
+        setIsSaved(true);
+        toast.success("Added to saved listings");
+      }
+    } catch (error) {
+      console.error("Error toggling save:", error);
+      toast.error("Failed to update saved listings");
+    }
+  };
 
   const sendMessage = async () => {
     if (!messageText || !user || !listing) {
@@ -378,9 +429,15 @@ const ListingDetails = () => {
                   Message Owner
                 </Button>
 
-                <Button variant="outline" className="w-full" size="lg">
-                  <Heart className="mr-2 h-4 w-4" />
-                  Save Listing
+                <Button 
+                  variant={isSaved ? "default" : "outline"} 
+                  className="w-full" 
+                  size="lg"
+                  onClick={toggleSaveListing}
+                  disabled={!user}
+                >
+                  <Heart className={`mr-2 h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
+                  {isSaved ? "Saved" : "Save Listing"}
                 </Button>
               </div>
 

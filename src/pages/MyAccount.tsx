@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User } from "lucide-react";
+import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,7 +36,9 @@ const MyAccount = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const [listings, setListings] = useState<Listing[]>([]);
+  const [savedListings, setSavedListings] = useState<Listing[]>([]);
   const [loadingListings, setLoadingListings] = useState(true);
+  const [loadingSaved, setLoadingSaved] = useState(true);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -51,8 +53,62 @@ const MyAccount = () => {
     if (user) {
       fetchListings();
       fetchProfile();
+      fetchSavedListings();
     }
   }, [user]);
+
+  const fetchSavedListings = async () => {
+    try {
+      const { data: savedData, error: savedError } = await supabase
+        .from("saved_listings")
+        .select("listing_id")
+        .eq("user_id", user?.id);
+
+      if (savedError) throw savedError;
+
+      if (savedData && savedData.length > 0) {
+        const listingIds = savedData.map((s) => s.listing_id);
+        const { data: listingsData, error: listingsError } = await supabase
+          .from("listings" as any)
+          .select("*")
+          .in("id", listingIds);
+
+        if (listingsError) throw listingsError;
+        setSavedListings((listingsData as unknown as Listing[]) || []);
+      } else {
+        setSavedListings([]);
+      }
+    } catch (error) {
+      console.error("Error fetching saved listings:", error);
+    } finally {
+      setLoadingSaved(false);
+    }
+  };
+
+  const handleUnsaveListing = async (listingId: string) => {
+    try {
+      const { error } = await supabase
+        .from("saved_listings")
+        .delete()
+        .eq("user_id", user?.id)
+        .eq("listing_id", listingId);
+
+      if (error) throw error;
+
+      setSavedListings((prev) => prev.filter((l) => l.id !== listingId));
+      toast({
+        title: "Removed",
+        description: "Listing removed from saved.",
+      });
+    } catch (error) {
+      console.error("Error unsaving listing:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove listing.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -258,6 +314,92 @@ const MyAccount = () => {
                           onClick={() => handleDeleteListing(listing.id)}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           title="Delete listing"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Saved Listings Section */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5" />
+                My Saved Listings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingSaved ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : savedListings.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Heart className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>You haven't saved any listings yet.</p>
+                  <Button 
+                    onClick={() => navigate("/")} 
+                    variant="outline" 
+                    className="mt-4"
+                  >
+                    Browse Listings
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {savedListings.map((listing) => (
+                    <div 
+                      key={listing.id} 
+                      className="flex items-center gap-4 p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                        {listing.images && listing.images.length > 0 ? (
+                          <img 
+                            src={listing.images[0]} 
+                            alt={`${listing.year} ${listing.make} ${listing.model}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Car className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground truncate">
+                          {listing.year} {listing.make} {listing.model}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {listing.city}, {listing.state}
+                        </p>
+                        <p className="text-sm font-medium text-primary">
+                          ${listing.daily_price}/day
+                          {listing.monthly_price && ` · $${listing.monthly_price}/month`}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => navigate(`/listing/${listing.id}`)}
+                          className="text-muted-foreground hover:text-foreground"
+                          title="View listing"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleUnsaveListing(listing.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          title="Remove from saved"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

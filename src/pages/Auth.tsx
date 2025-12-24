@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { z } from "zod";
 import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Building2, Camera } from "lucide-react";
 import logo from "@/assets/logo.png";
@@ -41,6 +41,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resetSent, setResetSent] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { user, signIn, signUp } = useAuth();
@@ -82,6 +83,10 @@ const Auth = () => {
       const phoneResult = phoneSchema.safeParse(phone);
       if (!phoneResult.success) {
         newErrors.phone = phoneResult.error.errors[0].message;
+      }
+
+      if (!agreedToTerms) {
+        newErrors.terms = "You must agree to the Privacy Policy and Terms of Service";
       }
     }
 
@@ -477,6 +482,36 @@ const Auth = () => {
                   >
                     Forgot password?
                   </button>
+                </div>
+              )}
+
+              {mode === "signup" && (
+                <div className="space-y-2">
+                  <div className="flex items-start space-x-2">
+                    <Checkbox
+                      id="agreedToTerms"
+                      checked={agreedToTerms}
+                      onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                      disabled={isLoading}
+                      className="mt-0.5"
+                    />
+                    <Label 
+                      htmlFor="agreedToTerms" 
+                      className="text-sm font-normal cursor-pointer leading-relaxed"
+                    >
+                      I agree to the{" "}
+                      <Link to="/privacy-policy" className="text-primary hover:underline" target="_blank">
+                        Privacy Policy
+                      </Link>{" "}
+                      and{" "}
+                      <Link to="/terms-of-service" className="text-primary hover:underline" target="_blank">
+                        Terms of Service
+                      </Link>
+                    </Label>
+                  </div>
+                  {errors.terms && (
+                    <p className="text-sm text-destructive">{errors.terms}</p>
+                  )}
                 </div>
               )}
 

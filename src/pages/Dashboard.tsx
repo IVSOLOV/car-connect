@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import ListingCard from "@/components/ListingCard";
+import ListingCardSkeleton from "@/components/ListingCardSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -432,8 +433,8 @@ const Dashboard = () => {
             </div>
 
             {loading ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                <ListingCardSkeleton count={6} />
               </div>
             ) : filteredListings.length === 0 ? (
               <div className="text-center py-16 rounded-xl border border-border bg-card">

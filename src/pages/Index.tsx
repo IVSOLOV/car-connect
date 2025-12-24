@@ -3,6 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import ListingCard from "@/components/ListingCard";
+import ListingCardSkeleton from "@/components/ListingCardSkeleton";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,8 +101,8 @@ const Index = () => {
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <ListingCardSkeleton count={6} />
             </div>
           ) : listings.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">

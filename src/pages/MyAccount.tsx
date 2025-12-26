@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera, Building2 } from "lucide-react";
+import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera, Building2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -347,7 +347,14 @@ const MyAccount = () => {
                       </div>
                       <div className="flex gap-2">
                         <Button onClick={handleSaveProfile} disabled={saving} size="sm">
-                          {saving ? "Saving..." : "Save"}
+                          {saving ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            "Save"
+                          )}
                         </Button>
                         <Button onClick={handleCancelEditing} variant="outline" size="sm">
                           Cancel

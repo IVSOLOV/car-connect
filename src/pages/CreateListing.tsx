@@ -253,8 +253,8 @@ const CreateListing = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Your car listed successfully.",
+        title: "Listing Submitted!",
+        description: "Your listing has been submitted for admin approval. You'll be notified once it's approved.",
       });
       
       navigate("/my-account");

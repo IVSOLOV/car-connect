@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard";
 import MyAccount from "./pages/MyAccount";
 import SavedListings from "./pages/SavedListings";
 import Messages from "./pages/Messages";
+import ApprovalRequests from "./pages/ApprovalRequests";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/my-account" element={<MyAccount />} />
                 <Route path="/saved" element={<SavedListings />} />
                 <Route path="/messages" element={<Messages />} />
+                <Route path="/approval-requests" element={<ApprovalRequests />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

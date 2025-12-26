@@ -26,6 +26,7 @@ interface Listing {
   images: string[];
   created_at: string;
   approval_status: "pending" | "approved" | "rejected";
+  rejection_reason: string | null;
 }
 
 interface Profile {
@@ -461,6 +462,11 @@ const MyAccount = () => {
                             </Badge>
                           )}
                         </div>
+                        {listing.approval_status === "rejected" && listing.rejection_reason && (
+                          <p className="text-sm text-destructive mt-1">
+                            Reason: {listing.rejection_reason}
+                          </p>
+                        )}
                         <p className="text-sm text-muted-foreground">
                           {listing.city}, {listing.state}
                         </p>

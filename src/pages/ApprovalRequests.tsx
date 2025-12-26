@@ -4,6 +4,16 @@ import { Check, X, Eye, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +34,9 @@ const ApprovalRequests = () => {
   const { user, role, loading: authLoading } = useAuth();
   const [listings, setListings] = useState<ListingWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectingListing, setRejectingListing] = useState<ListingWithProfile | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   useEffect(() => {
     if (!authLoading && (!user || role !== "admin")) {
@@ -80,20 +93,56 @@ const ApprovalRequests = () => {
     }
   };
 
-  const handleApproval = async (listingId: string, status: "approved" | "rejected") => {
+  const handleApprove = async (listingId: string) => {
     try {
       const { error } = await supabase
         .from("listings")
-        .update({ approval_status: status })
+        .update({ approval_status: "approved", rejection_reason: null })
         .eq("id", listingId);
 
       if (error) throw error;
 
-      toast.success(`Listing ${status === "approved" ? "approved" : "rejected"} successfully`);
+      toast.success("Listing approved successfully");
       setListings((prev) => prev.filter((l) => l.id !== listingId));
     } catch (error) {
-      console.error("Error updating listing status:", error);
-      toast.error("Failed to update listing status");
+      console.error("Error approving listing:", error);
+      toast.error("Failed to approve listing");
+    }
+  };
+
+  const openRejectDialog = (listing: ListingWithProfile) => {
+    setRejectingListing(listing);
+    setRejectionReason("");
+    setRejectDialogOpen(true);
+  };
+
+  const handleReject = async () => {
+    if (!rejectingListing) return;
+    
+    if (!rejectionReason.trim()) {
+      toast.error("Please provide a reason for rejection");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .update({ 
+          approval_status: "rejected",
+          rejection_reason: rejectionReason.trim()
+        })
+        .eq("id", rejectingListing.id);
+
+      if (error) throw error;
+
+      toast.success("Listing rejected");
+      setListings((prev) => prev.filter((l) => l.id !== rejectingListing.id));
+      setRejectDialogOpen(false);
+      setRejectingListing(null);
+      setRejectionReason("");
+    } catch (error) {
+      console.error("Error rejecting listing:", error);
+      toast.error("Failed to reject listing");
     }
   };
 
@@ -219,7 +268,7 @@ const ApprovalRequests = () => {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => handleApproval(listing.id, "approved")}
+                          onClick={() => handleApprove(listing.id)}
                         >
                           <Check className="h-4 w-4 mr-1" />
                           Approve
@@ -227,7 +276,7 @@ const ApprovalRequests = () => {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => handleApproval(listing.id, "rejected")}
+                          onClick={() => openRejectDialog(listing)}
                         >
                           <X className="h-4 w-4 mr-1" />
                           Reject
@@ -241,6 +290,40 @@ const ApprovalRequests = () => {
           </div>
         )}
       </main>
+
+      {/* Rejection Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Listing</DialogTitle>
+            <DialogDescription>
+              {rejectingListing && (
+                <>Rejecting: {rejectingListing.year} {rejectingListing.make} {rejectingListing.model}</>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rejection-reason">Reason for Rejection</Label>
+              <Textarea
+                id="rejection-reason"
+                placeholder="Please explain why this listing is being rejected..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleReject}>
+              Reject Listing
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

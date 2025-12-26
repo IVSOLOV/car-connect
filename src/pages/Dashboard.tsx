@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import ListingCard from "@/components/ListingCard";
 import ListingCardSkeleton from "@/components/ListingCardSkeleton";
+import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -437,18 +438,12 @@ const Dashboard = () => {
                 <ListingCardSkeleton count={6} />
               </div>
             ) : filteredListings.length === 0 ? (
-              <div className="text-center py-16 rounded-xl border border-border bg-card">
-                <p className="text-lg font-medium text-foreground mb-2">No cars found</p>
-                <p className="text-muted-foreground mb-4">
-                  {hasActiveFilters
-                    ? "Try adjusting your filters or dates"
-                    : "No listings available yet"}
-                </p>
-                {hasActiveFilters && (
-                  <Button variant="outline" onClick={clearFilters}>
-                    Clear Filters
-                  </Button>
-                )}
+              <div className="rounded-xl border border-border bg-card">
+                <EmptyState
+                  variant={hasActiveFilters ? "search" : "listings"}
+                  actionLabel={hasActiveFilters ? "Clear Filters" : undefined}
+                  onAction={hasActiveFilters ? clearFilters : undefined}
+                />
               </div>
             ) : (
               <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">

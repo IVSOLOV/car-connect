@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import ListingCard from "@/components/ListingCard";
 import ListingCardSkeleton from "@/components/ListingCardSkeleton";
+import EmptyState from "@/components/EmptyState";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -105,15 +106,12 @@ const Index = () => {
               <ListingCardSkeleton count={6} />
             </div>
           ) : listings.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No listings available yet. Be the first to list your car!</p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => navigate("/become-host")}
-              >
-                List Your Car
-              </Button>
+            <div className="rounded-xl border border-border bg-card">
+              <EmptyState
+                variant="listings"
+                actionLabel="List Your Car"
+                onAction={() => navigate("/become-host")}
+              />
             </div>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

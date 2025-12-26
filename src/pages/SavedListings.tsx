@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
+import EmptyState from "@/components/EmptyState";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Listing {
   id: string;
@@ -96,7 +98,7 @@ const SavedListings = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="lg" text="Loading..." />
       </div>
     );
   }
@@ -121,20 +123,14 @@ const SavedListings = () => {
             <CardContent>
               {loadingSaved ? (
                 <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <LoadingSpinner text="Loading saved listings..." />
                 </div>
               ) : savedListings.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Heart className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>You haven't saved any listings yet.</p>
-                  <Button 
-                    onClick={() => navigate("/dashboard")} 
-                    variant="outline" 
-                    className="mt-4"
-                  >
-                    Browse Listings
-                  </Button>
-                </div>
+                <EmptyState
+                  variant="saved"
+                  actionLabel="Browse Listings"
+                  onAction={() => navigate("/dashboard")}
+                />
               ) : (
                 <div className="space-y-4">
                   {savedListings.map((listing) => (

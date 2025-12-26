@@ -254,7 +254,7 @@ const CreateListing = () => {
 
       toast({
         title: "Listing Submitted!",
-        description: "Your listing has been submitted for admin approval. You'll be notified once it's approved.",
+        description: "Your listing will be posted after review.",
       });
       
       navigate("/my-account");

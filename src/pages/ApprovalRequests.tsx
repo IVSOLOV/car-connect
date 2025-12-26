@@ -38,17 +38,40 @@ const ApprovalRequests = () => {
 
   const fetchPendingListings = async () => {
     try {
-      const { data, error } = await supabase
+      // First fetch pending listings
+      const { data: listingsData, error: listingsError } = await supabase
         .from("listings")
-        .select(`
-          *,
-          profiles:user_id (first_name, last_name, company_name)
-        `)
+        .select("*")
         .eq("approval_status", "pending")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setListings((data as unknown as ListingWithProfile[]) || []);
+      if (listingsError) throw listingsError;
+
+      if (!listingsData || listingsData.length === 0) {
+        setListings([]);
+        return;
+      }
+
+      // Get unique user IDs and fetch their profiles
+      const userIds = [...new Set(listingsData.map((l) => l.user_id))];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, first_name, last_name, company_name")
+        .in("user_id", userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Map profiles to listings
+      const profilesMap = new Map(
+        profilesData?.map((p) => [p.user_id, p]) || []
+      );
+
+      const listingsWithProfiles: ListingWithProfile[] = listingsData.map((listing) => ({
+        ...listing,
+        profiles: profilesMap.get(listing.user_id) || undefined,
+      }));
+
+      setListings(listingsWithProfiles);
     } catch (error) {
       console.error("Error fetching pending listings:", error);
       toast.error("Failed to fetch pending listings");

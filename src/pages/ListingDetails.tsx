@@ -431,16 +431,27 @@ const ListingDetails = () => {
                   </Button>
                 )}
 
-                <Button 
-                  variant={isSaved ? "default" : "outline"} 
-                  className="w-full" 
-                  size="lg"
-                  onClick={toggleSaveListing}
-                  disabled={!user}
-                >
-                  <Heart className={`mr-2 h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
-                  {isSaved ? "Saved" : "Save Listing"}
-                </Button>
+                {isOwner ? (
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={() => navigate(`/edit-listing/${id}`)}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Update Listing
+                  </Button>
+                ) : (
+                  <Button 
+                    variant={isSaved ? "default" : "outline"} 
+                    className="w-full" 
+                    size="lg"
+                    onClick={toggleSaveListing}
+                    disabled={!user}
+                  >
+                    <Heart className={`mr-2 h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
+                    {isSaved ? "Saved" : "Save Listing"}
+                  </Button>
+                )}
               </div>
 
               {/* Owner Card */}

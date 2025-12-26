@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MessageCircle, User, LogOut, Menu } from "lucide-react";
+import { MessageCircle, User, LogOut, Menu, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { usePendingApprovals } from "@/hooks/usePendingApprovals";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ const Header = () => {
   const navigate = useNavigate();
   const { user, role, signOut, loading } = useAuth();
   const { unreadCount } = useUnreadMessages();
+  const { pendingCount } = usePendingApprovals();
 
   const handleSignOut = async () => {
     await signOut();
@@ -51,6 +53,17 @@ const Header = () => {
           </nav>
 
           <div className="flex items-center gap-3">
+            {/* Admin Approval Requests */}
+            {user && role === "admin" && (
+              <Button variant="ghost" size="icon" onClick={() => navigate("/approval-requests")} className="relative">
+                <Bell className="h-5 w-5" />
+                {pendingCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs font-medium flex items-center justify-center">
+                    {pendingCount > 9 ? "9+" : pendingCount}
+                  </span>
+                )}
+              </Button>
+            )}
             
             {user && (
               <Button variant="ghost" size="icon" onClick={() => navigate("/messages")} className="relative">
@@ -93,6 +106,17 @@ const Header = () => {
                   <DropdownMenuItem onClick={() => navigate("/saved")}>
                     Saved Listings
                   </DropdownMenuItem>
+                  {role === "admin" && (
+                    <DropdownMenuItem onClick={() => navigate("/approval-requests")}>
+                      <Bell className="h-4 w-4 mr-2" />
+                      Approval Requests
+                      {pendingCount > 0 && (
+                        <span className="ml-auto bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 rounded-full">
+                          {pendingCount}
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                     <LogOut className="h-4 w-4 mr-2" />

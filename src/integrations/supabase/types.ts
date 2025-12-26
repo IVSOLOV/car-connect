@@ -60,6 +60,7 @@ export type Database = {
       }
       listings: {
         Row: {
+          approval_status: string
           city: string
           created_at: string
           daily_price: number
@@ -76,6 +77,7 @@ export type Database = {
           year: number
         }
         Insert: {
+          approval_status?: string
           city: string
           created_at?: string
           daily_price: number
@@ -92,6 +94,7 @@ export type Database = {
           year: number
         }
         Update: {
+          approval_status?: string
           city?: string
           created_at?: string
           daily_price?: number

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send, X } from "lucide-react";
+import { Send, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,8 +17,9 @@ const MessageOwnerModal = ({ car, isOpen, onClose }: MessageOwnerModalProps) => 
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !email || !message) {
@@ -26,11 +27,16 @@ const MessageOwnerModal = ({ car, isOpen, onClose }: MessageOwnerModalProps) => 
       return;
     }
 
-    // Simulate sending message
+    setIsSending(true);
+    
+    // Simulate sending message with delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     toast.success(`Message sent to ${car.owner.name}!`);
     setMessage("");
     setName("");
     setEmail("");
+    setIsSending(false);
     onClose();
   };
 
@@ -104,9 +110,18 @@ const MessageOwnerModal = ({ car, isOpen, onClose }: MessageOwnerModalProps) => 
             />
           </div>
 
-          <Button type="submit" className="w-full" size="lg">
-            <Send className="mr-2 h-4 w-4" />
-            Send Message
+          <Button type="submit" className="w-full" size="lg" disabled={isSending}>
+            {isSending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                <Send className="mr-2 h-4 w-4" />
+                Send Message
+              </>
+            )}
           </Button>
         </form>
       </div>

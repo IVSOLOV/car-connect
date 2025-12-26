@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { z } from "zod";
-import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Building2, Camera } from "lucide-react";
+import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Building2, Camera, Loader2 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
@@ -517,13 +517,16 @@ const Auth = () => {
 
               <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
                 {isLoading ? (
-                  "Please wait..."
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Please wait...
+                  </>
                 ) : (
                   <>
                     {mode === "login" && "Sign In"}
                     {mode === "signup" && "Create Account"}
                     {mode === "forgot" && "Send Reset Link"}
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4 ml-2" />
                   </>
                 )}
               </Button>

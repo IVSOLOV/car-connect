@@ -415,19 +415,21 @@ const ListingDetails = () => {
 
                 <Separator className="my-5" />
 
-                <Button className="w-full mb-3" size="lg" onClick={() => {
-                  // Only pre-fill default message if user hasn't sent one before
-                  if (!hasUserSentDefaultMessage) {
-                    const defaultMessage = `Hi ${ownerName}, I am interested in your ${title}${formatDateRange()}.`;
-                    setMessageText(defaultMessage);
-                  } else {
-                    setMessageText("");
-                  }
-                  setShowMessageModal(true);
-                }}>
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Message Owner
-                </Button>
+                {!isOwner && (
+                  <Button className="w-full mb-3" size="lg" onClick={() => {
+                    // Only pre-fill default message if user hasn't sent one before
+                    if (!hasUserSentDefaultMessage) {
+                      const defaultMessage = `Hi ${ownerName}, I am interested in your ${title}${formatDateRange()}.`;
+                      setMessageText(defaultMessage);
+                    } else {
+                      setMessageText("");
+                    }
+                    setShowMessageModal(true);
+                  }}>
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Message Owner
+                  </Button>
+                )}
 
                 <Button 
                   variant={isSaved ? "default" : "outline"} 

@@ -70,6 +70,7 @@ export type Database = {
           make: string
           model: string
           monthly_price: number | null
+          rejection_reason: string | null
           state: string
           title_status: string
           updated_at: string
@@ -87,6 +88,7 @@ export type Database = {
           make: string
           model: string
           monthly_price?: number | null
+          rejection_reason?: string | null
           state: string
           title_status?: string
           updated_at?: string
@@ -104,6 +106,7 @@ export type Database = {
           make?: string
           model?: string
           monthly_price?: number | null
+          rejection_reason?: string | null
           state?: string
           title_status?: string
           updated_at?: string

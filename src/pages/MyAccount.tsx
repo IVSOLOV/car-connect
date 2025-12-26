@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +25,7 @@ interface Listing {
   monthly_price: number | null;
   images: string[];
   created_at: string;
+  approval_status: "pending" | "approved" | "rejected";
 }
 
 interface Profile {
@@ -439,9 +441,26 @@ const MyAccount = () => {
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground truncate">
-                          {listing.year} {listing.make} {listing.model}
-                        </h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-foreground truncate">
+                            {listing.year} {listing.make} {listing.model}
+                          </h3>
+                          {listing.approval_status === "approved" && (
+                            <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-xs">
+                              Listed
+                            </Badge>
+                          )}
+                          {listing.approval_status === "pending" && (
+                            <Badge variant="secondary" className="text-xs">
+                              Pending Review
+                            </Badge>
+                          )}
+                          {listing.approval_status === "rejected" && (
+                            <Badge variant="destructive" className="text-xs">
+                              Rejected
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {listing.city}, {listing.state}
                         </p>

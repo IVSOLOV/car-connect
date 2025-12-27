@@ -14,6 +14,7 @@ import {
   X,
   Pencil,
   Ban,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +73,7 @@ const ListingDetails = () => {
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [deactivationReason, setDeactivationReason] = useState("");
   const [deactivating, setDeactivating] = useState(false);
+  const [ownerRating, setOwnerRating] = useState<{ average: number; count: number } | null>(null);
 
   // Get dates from URL params
   const startDateParam = searchParams.get("startDate");
@@ -108,15 +110,31 @@ const ListingDetails = () => {
       
       if (data) {
         setListing(data as unknown as Listing);
+        const ownerId = (data as any).user_id;
+        
         // Fetch owner profile
         const { data: profileData } = await supabase
           .from("profiles")
           .select("first_name, last_name, full_name, avatar_url, created_at, company_name, show_company_as_owner")
-          .eq("user_id", (data as any).user_id)
+          .eq("user_id", ownerId)
           .maybeSingle();
         
         if (profileData) {
           setOwner(profileData);
+        }
+
+        // Fetch owner's average rating
+        const { data: reviewsData } = await supabase
+          .from("user_reviews")
+          .select("rating")
+          .eq("reviewed_id", ownerId);
+        
+        if (reviewsData && reviewsData.length > 0) {
+          const total = reviewsData.reduce((sum, r) => sum + r.rating, 0);
+          setOwnerRating({
+            average: total / reviewsData.length,
+            count: reviewsData.length
+          });
         }
       }
     } catch (error) {
@@ -526,7 +544,16 @@ const ListingDetails = () => {
                     <AvatarFallback>{ownerInitial}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-semibold text-foreground">{ownerName}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-foreground">{ownerName}</p>
+                      {ownerRating && (
+                        <div className="flex items-center gap-1 text-amber-500">
+                          <Star className="h-4 w-4 fill-current" />
+                          <span className="text-sm font-medium">{ownerRating.average.toFixed(1)}</span>
+                          <span className="text-xs text-muted-foreground">({ownerRating.count})</span>
+                        </div>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       Member since {memberSince}
                     </p>

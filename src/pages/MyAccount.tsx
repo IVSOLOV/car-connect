@@ -7,6 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -46,6 +56,8 @@ const MyAccount = () => {
   const [loadingListings, setLoadingListings] = useState(true);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editFirstName, setEditFirstName] = useState("");
@@ -106,16 +118,23 @@ const MyAccount = () => {
     }
   };
 
-  const handleDeleteListing = async (id: string) => {
+  const handleDeleteClick = (listing: Listing) => {
+    setListingToDelete(listing);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!listingToDelete) return;
+    
     try {
       const { error } = await supabase
         .from("listings" as any)
         .delete()
-        .eq("id", id);
+        .eq("id", listingToDelete.id);
 
       if (error) throw error;
 
-      setListings((prev) => prev.filter((listing) => listing.id !== id));
+      setListings((prev) => prev.filter((listing) => listing.id !== listingToDelete.id));
       toast({
         title: "Listing Deleted",
         description: "Your listing has been removed.",
@@ -127,6 +146,9 @@ const MyAccount = () => {
         description: "Failed to delete listing.",
         variant: "destructive",
       });
+    } finally {
+      setDeleteConfirmOpen(false);
+      setListingToDelete(null);
     }
   };
 
@@ -534,7 +556,7 @@ const MyAccount = () => {
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          onClick={() => handleDeleteListing(listing.id)}
+                          onClick={() => handleDeleteClick(listing)}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           title="Delete listing"
                         >
@@ -561,6 +583,32 @@ const MyAccount = () => {
             }}
           />
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure you want to delete this listing?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {listingToDelete && (
+                  <>
+                    You are about to delete <strong>{listingToDelete.year} {listingToDelete.make} {listingToDelete.model}</strong>. 
+                    This action cannot be undone.
+                  </>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>No, keep it</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleConfirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Yes, delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );

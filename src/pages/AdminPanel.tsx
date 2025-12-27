@@ -425,6 +425,7 @@ const AdminPanel = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead>ID</TableHead>
                           <TableHead>Vehicle</TableHead>
                           <TableHead>Owner</TableHead>
                           <TableHead>Location</TableHead>
@@ -437,6 +438,9 @@ const AdminPanel = () => {
                       <TableBody>
                         {filteredListings.map((listing) => (
                           <TableRow key={listing.id}>
+                            <TableCell className="font-mono text-xs text-muted-foreground">
+                              {listing.id.slice(0, 8)}...
+                            </TableCell>
                             <TableCell className="font-medium">
                               {listing.year} {listing.make} {listing.model}
                             </TableCell>
@@ -527,6 +531,7 @@ const AdminPanel = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead>User ID</TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>Company</TableHead>
                           <TableHead>Phone</TableHead>
@@ -538,6 +543,9 @@ const AdminPanel = () => {
                       <TableBody>
                         {filteredUsers.map((user) => (
                           <TableRow key={user.id}>
+                            <TableCell className="font-mono text-xs text-muted-foreground">
+                              {user.user_id.slice(0, 8)}...
+                            </TableCell>
                             <TableCell className="font-medium">
                               {user.full_name || `${user.first_name || ""} ${user.last_name || ""}`.trim() || "—"}
                             </TableCell>

@@ -77,6 +77,7 @@ const AdminPanel = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [priceSort, setPriceSort] = useState<"none" | "asc" | "desc">("none");
 
   // Users state
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -211,8 +212,18 @@ const AdminPanel = () => {
       filtered = filtered.filter(l => new Date(l.created_at) <= new Date(dateTo + "T23:59:59"));
     }
 
+    // Sort by price
+    if (priceSort !== "none") {
+      filtered.sort((a, b) => {
+        if (priceSort === "asc") {
+          return a.daily_price - b.daily_price;
+        }
+        return b.daily_price - a.daily_price;
+      });
+    }
+
     setFilteredListings(filtered);
-  }, [listings, ownerFilter, makeFilter, modelFilter, yearFilter, statusFilter, dateFrom, dateTo]);
+  }, [listings, ownerFilter, makeFilter, modelFilter, yearFilter, statusFilter, dateFrom, dateTo, priceSort]);
 
   // Filter and sort users
   useEffect(() => {
@@ -262,6 +273,7 @@ const AdminPanel = () => {
     setStatusFilter("all");
     setDateFrom("");
     setDateTo("");
+    setPriceSort("none");
   };
 
   const getStatusBadge = (status: string) => {
@@ -429,7 +441,23 @@ const AdminPanel = () => {
                           <TableHead>Vehicle</TableHead>
                           <TableHead>Owner</TableHead>
                           <TableHead>Location</TableHead>
-                          <TableHead>Price/Day</TableHead>
+                          <TableHead>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto p-0 font-medium hover:bg-transparent"
+                              onClick={() => {
+                                if (priceSort === "none") setPriceSort("asc");
+                                else if (priceSort === "asc") setPriceSort("desc");
+                                else setPriceSort("none");
+                              }}
+                            >
+                              Price/Day
+                              <ArrowUpDown className={`ml-1 h-3 w-3 ${priceSort !== "none" ? "text-primary" : ""}`} />
+                              {priceSort === "asc" && <span className="text-xs text-primary ml-1">↑</span>}
+                              {priceSort === "desc" && <span className="text-xs text-primary ml-1">↓</span>}
+                            </Button>
+                          </TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Created</TableHead>
                           <TableHead>Actions</TableHead>

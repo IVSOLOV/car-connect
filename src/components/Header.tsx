@@ -1,11 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MessageCircle, User, LogOut, Menu, Bell, Shield, HelpCircle } from "lucide-react";
+import { MessageCircle, User, LogOut, Menu, Bell, Shield, HelpCircle, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { usePendingApprovals } from "@/hooks/usePendingApprovals";
 import { useOpenTickets } from "@/hooks/useOpenTickets";
-import ReportIssueDialog from "@/components/ReportIssueDialog";
+import { useUserTicketResponses } from "@/hooks/useUserTicketResponses";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +22,7 @@ const Header = () => {
   const { unreadCount } = useUnreadMessages();
   const { pendingCount } = usePendingApprovals();
   const { openCount } = useOpenTickets();
+  const { responseCount } = useUserTicketResponses();
 
   const handleSignOut = async () => {
     await signOut();
@@ -121,9 +122,14 @@ const Header = () => {
                   <DropdownMenuItem onClick={() => navigate("/saved")}>
                     Saved Listings
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/support-tickets")}>
-                    <HelpCircle className="h-4 w-4 mr-2" />
-                    My Support Tickets
+                  <DropdownMenuItem onClick={() => navigate("/write-to-support")}>
+                    <Headphones className="h-4 w-4 mr-2" />
+                    Write to Support
+                    {responseCount > 0 && (
+                      <span className="ml-auto bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
+                        {responseCount}
+                      </span>
+                    )}
                   </DropdownMenuItem>
                   {role === "admin" && (
                     <>

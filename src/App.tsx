@@ -23,6 +23,7 @@ import TermsOfService from "./pages/TermsOfService";
 import OwnerProfile from "./pages/OwnerProfile";
 import AdminPanel from "./pages/AdminPanel";
 import SupportTickets from "./pages/SupportTickets";
+import WriteToSupport from "./pages/WriteToSupport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => (
                 <Route path="/owner/:userId" element={<OwnerProfile />} />
                 <Route path="/admin" element={<AdminPanel />} />
                 <Route path="/support-tickets" element={<SupportTickets />} />
+                <Route path="/write-to-support" element={<WriteToSupport />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

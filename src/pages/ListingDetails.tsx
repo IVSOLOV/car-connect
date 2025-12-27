@@ -539,7 +539,10 @@ const ListingDetails = () => {
               </div>
 
               {/* Owner Card */}
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+              <Link 
+                to={`/owner/${listing.user_id}`}
+                className="block rounded-2xl border border-border bg-card p-6 shadow-card transition-all hover:shadow-card-hover hover:border-primary/30"
+              >
                 <h3 className="mb-4 font-semibold text-foreground">Listed by</h3>
                 <div className="flex items-center gap-4">
                   <Avatar className="h-14 w-14 border-2 border-primary/20">
@@ -561,7 +564,7 @@ const ListingDetails = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </div>

@@ -423,7 +423,10 @@ const Messages = () => {
                     >
                       <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    <div className="flex items-center gap-3">
+                    <div 
+                      className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => convInfo && navigate(`/owner/${convInfo.other_user_id}`)}
+                    >
                       {convInfo?.other_user_avatar ? (
                         <img 
                           src={convInfo.other_user_avatar} 
@@ -436,7 +439,7 @@ const Messages = () => {
                         </div>
                       )}
                       <div>
-                        <p className="font-semibold">{convInfo?.other_user_name}</p>
+                        <p className="font-semibold hover:text-primary transition-colors">{convInfo?.other_user_name}</p>
                         <p className="text-sm text-muted-foreground">{convInfo?.listing_title}</p>
                       </div>
                     </div>

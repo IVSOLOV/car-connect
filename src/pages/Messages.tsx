@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, Car, User, ChevronRight, ArrowLeft, Paperclip, Image, FileText, X } from "lucide-react";
+import { MessageCircle, Car, User, ChevronRight, ArrowLeft, Paperclip, Image, FileText, X, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +11,7 @@ import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import AttachmentRenderer from "@/components/AttachmentRenderer";
+import ReviewDialog from "@/components/ReviewDialog";
 import { format } from "date-fns";
 
 interface Attachment {
@@ -61,6 +62,8 @@ const Messages = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [hasExistingReview, setHasExistingReview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -212,6 +215,17 @@ const Messages = () => {
           attachments: (msg.attachments as unknown as Attachment[]) || [],
         })),
       });
+
+      // Check if user already reviewed this person for this listing
+      const { data: existingReview } = await supabase
+        .from("user_reviews")
+        .select("id")
+        .eq("reviewer_id", user.id)
+        .eq("reviewed_id", conv.other_user_id)
+        .eq("listing_id", conv.listing_id)
+        .maybeSingle();
+      
+      setHasExistingReview(!!existingReview);
     } catch (error) {
       console.error("Error loading messages:", error);
       toast({
@@ -478,6 +492,23 @@ const Messages = () => {
                       </div>
                     )}
                   </ScrollArea>
+
+                  {/* Review Prompt - Show after 5+ messages */}
+                  {selectedConversation.messages.length >= 5 && !hasExistingReview && convInfo && (
+                    <div className="border-t border-b bg-accent/30 p-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Star className="h-5 w-5 text-yellow-500" />
+                        <span className="text-sm">How was your experience with {convInfo.other_user_name}?</span>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setShowReviewDialog(true)}
+                      >
+                        Rate User
+                      </Button>
+                    </div>
+                  )}
                   
                   <div className="border-t p-4">
                     {/* Pending files preview */}
@@ -604,6 +635,19 @@ const Messages = () => {
           </Card>
         </div>
       </main>
+
+      {/* Review Dialog */}
+      {selectedConversation && convInfo && user && (
+        <ReviewDialog
+          open={showReviewDialog}
+          onOpenChange={setShowReviewDialog}
+          reviewedUserId={selectedConversation.other_user_id}
+          reviewedUserName={convInfo.other_user_name}
+          listingId={selectedConversation.listing_id}
+          reviewerId={user.id}
+          onReviewSubmitted={() => setHasExistingReview(true)}
+        />
+      )}
     </div>
   );
 };

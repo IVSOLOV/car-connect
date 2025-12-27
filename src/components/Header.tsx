@@ -1,9 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MessageCircle, User, LogOut, Menu, Bell, Shield } from "lucide-react";
+import { MessageCircle, User, LogOut, Menu, Bell, Shield, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { usePendingApprovals } from "@/hooks/usePendingApprovals";
+import { useOpenTickets } from "@/hooks/useOpenTickets";
+import ReportIssueDialog from "@/components/ReportIssueDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +21,7 @@ const Header = () => {
   const { user, role, signOut, loading } = useAuth();
   const { unreadCount } = useUnreadMessages();
   const { pendingCount } = usePendingApprovals();
+  const { openCount } = useOpenTickets();
 
   const handleSignOut = async () => {
     await signOut();
@@ -53,6 +56,18 @@ const Header = () => {
           </nav>
 
           <div className="flex items-center gap-3">
+            {/* Admin Support Tickets */}
+            {user && role === "admin" && (
+              <Button variant="ghost" size="icon" onClick={() => navigate("/support-tickets")} className="relative">
+                <HelpCircle className="h-5 w-5" />
+                {openCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs font-medium flex items-center justify-center">
+                    {openCount > 9 ? "9+" : openCount}
+                  </span>
+                )}
+              </Button>
+            )}
+
             {/* Admin Approval Requests */}
             {user && role === "admin" && (
               <Button variant="ghost" size="icon" onClick={() => navigate("/approval-requests")} className="relative">
@@ -105,6 +120,10 @@ const Header = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/saved")}>
                     Saved Listings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/support-tickets")}>
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    My Support Tickets
                   </DropdownMenuItem>
                   {role === "admin" && (
                     <>

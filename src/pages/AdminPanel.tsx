@@ -78,6 +78,7 @@ const AdminPanel = () => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [priceSort, setPriceSort] = useState<"none" | "asc" | "desc">("none");
+  const [createdSort, setCreatedSort] = useState<"none" | "asc" | "desc">("none");
 
   // Users state
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -222,8 +223,20 @@ const AdminPanel = () => {
       });
     }
 
+    // Sort by created date
+    if (createdSort !== "none") {
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        if (createdSort === "asc") {
+          return dateA - dateB;
+        }
+        return dateB - dateA;
+      });
+    }
+
     setFilteredListings(filtered);
-  }, [listings, ownerFilter, makeFilter, modelFilter, yearFilter, statusFilter, dateFrom, dateTo, priceSort]);
+  }, [listings, ownerFilter, makeFilter, modelFilter, yearFilter, statusFilter, dateFrom, dateTo, priceSort, createdSort]);
 
   // Filter and sort users
   useEffect(() => {
@@ -274,6 +287,7 @@ const AdminPanel = () => {
     setDateFrom("");
     setDateTo("");
     setPriceSort("none");
+    setCreatedSort("none");
   };
 
   const getStatusBadge = (status: string) => {
@@ -459,7 +473,23 @@ const AdminPanel = () => {
                             </Button>
                           </TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead>Created</TableHead>
+                          <TableHead>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto p-0 font-medium hover:bg-transparent"
+                              onClick={() => {
+                                if (createdSort === "none") setCreatedSort("desc");
+                                else if (createdSort === "desc") setCreatedSort("asc");
+                                else setCreatedSort("none");
+                              }}
+                            >
+                              Created
+                              <ArrowUpDown className={`ml-1 h-3 w-3 ${createdSort !== "none" ? "text-primary" : ""}`} />
+                              {createdSort === "asc" && <span className="text-xs text-primary ml-1">↑</span>}
+                              {createdSort === "desc" && <span className="text-xs text-primary ml-1">↓</span>}
+                            </Button>
+                          </TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>

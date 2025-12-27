@@ -198,11 +198,14 @@ const OwnerProfile = () => {
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <h1 className="text-2xl font-bold text-foreground">{ownerName}</h1>
-                <div className="flex items-center gap-1 text-amber-500">
+                <button 
+                  onClick={() => document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="flex items-center gap-1 text-amber-500 hover:text-amber-400 transition-colors cursor-pointer"
+                >
                   <Star className="h-5 w-5 fill-current" />
                   <span className="font-medium">{averageRating.average.toFixed(1)}</span>
-                  <span className="text-sm text-muted-foreground">({averageRating.count} reviews)</span>
-                </div>
+                  <span className="text-sm text-muted-foreground hover:text-foreground hover:underline">({averageRating.count} reviews)</span>
+                </button>
               </div>
               <p className="text-muted-foreground">Member since {memberSince}</p>
             </div>
@@ -251,7 +254,7 @@ const OwnerProfile = () => {
         <Separator className="my-8" />
 
         {/* Reviews Section */}
-        <div className="animate-slide-up" style={{ animationDelay: "100ms" }}>
+        <div id="reviews-section" className="animate-slide-up" style={{ animationDelay: "100ms" }}>
           <h2 className="text-xl font-bold text-foreground mb-6">
             Reviews ({reviews.length})
           </h2>

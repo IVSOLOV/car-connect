@@ -13,6 +13,7 @@ import {
   Send,
   X,
   Pencil,
+  Ban,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,7 +59,7 @@ const ListingDetails = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
   const [owner, setOwner] = useState<OwnerProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,6 +69,9 @@ const ListingDetails = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasUserSentDefaultMessage, setHasUserSentDefaultMessage] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
+  const [deactivationReason, setDeactivationReason] = useState("");
+  const [deactivating, setDeactivating] = useState(false);
 
   // Get dates from URL params
   const startDateParam = searchParams.get("startDate");
@@ -280,6 +293,38 @@ const ListingDetails = () => {
     : "2024";
   
   const isOwner = user?.id === listing.user_id;
+  const isAdmin = role === "admin";
+
+  const handleDeactivateListing = async () => {
+    if (!deactivationReason.trim()) {
+      toast.error("Please provide a reason for deactivation");
+      return;
+    }
+
+    setDeactivating(true);
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .update({ 
+          approval_status: "deactivated",
+          deactivation_reason: deactivationReason.trim()
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Listing deactivated successfully");
+      setShowDeactivateDialog(false);
+      setDeactivationReason("");
+      // Refresh the listing data
+      fetchListing();
+    } catch (error) {
+      console.error("Error deactivating listing:", error);
+      toast.error("Failed to deactivate listing");
+    } finally {
+      setDeactivating(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -452,6 +497,25 @@ const ListingDetails = () => {
                     {isSaved ? "Saved" : "Save Listing"}
                   </Button>
                 )}
+
+                {/* Admin Deactivate Button */}
+                {isAdmin && !isOwner && listing.approval_status !== "deactivated" && (
+                  <Button 
+                    variant="destructive" 
+                    className="w-full mt-3" 
+                    size="lg"
+                    onClick={() => setShowDeactivateDialog(true)}
+                  >
+                    <Ban className="mr-2 h-4 w-4" />
+                    Deactivate Listing
+                  </Button>
+                )}
+
+                {listing.approval_status === "deactivated" && (
+                  <div className="mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                    <p className="text-sm font-medium text-destructive">This listing has been deactivated</p>
+                  </div>
+                )}
               </div>
 
               {/* Owner Card */}
@@ -553,6 +617,42 @@ const ListingDetails = () => {
             </div>
           </div>
         )}
+
+        {/* Deactivation Dialog */}
+        <Dialog open={showDeactivateDialog} onOpenChange={setShowDeactivateDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Deactivate Listing</DialogTitle>
+              <DialogDescription>
+                You are about to deactivate: {title}. Please provide a reason that will be sent to the owner.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="deactivation-reason">Reason for Deactivation</Label>
+                <Textarea
+                  id="deactivation-reason"
+                  placeholder="Please explain why this listing is being deactivated..."
+                  value={deactivationReason}
+                  onChange={(e) => setDeactivationReason(e.target.value)}
+                  rows={4}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeactivateDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeactivateListing}
+                disabled={deactivating}
+              >
+                {deactivating ? "Deactivating..." : "Deactivate Listing"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

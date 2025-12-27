@@ -135,6 +135,8 @@ const ListingDetails = () => {
             average: total / reviewsData.length,
             count: reviewsData.length
           });
+        } else {
+          setOwnerRating({ average: 0, count: 0 });
         }
       }
     } catch (error) {

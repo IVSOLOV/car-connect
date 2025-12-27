@@ -518,8 +518,8 @@ const ListingDetails = () => {
                   </Button>
                 )}
 
-                {/* Admin Deactivate Button */}
-                {isAdmin && !isOwner && listing.approval_status !== "deactivated" && (
+                {/* Admin Deactivate Button - admins can deactivate any listing including their own */}
+                {isAdmin && listing.approval_status !== "deactivated" && (
                   <Button 
                     variant="destructive" 
                     className="w-full mt-3" 

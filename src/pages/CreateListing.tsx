@@ -189,6 +189,15 @@ const CreateListing = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (images.length < 5) {
+      toast({
+        title: "Not Enough Images",
+        description: "Please upload at least 5 images of your vehicle.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!year || !make || !model || !city || !state || !dailyPrice) {
       toast({
         title: "Missing Fields",
@@ -293,8 +302,13 @@ const CreateListing = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Image Upload */}
             <div className="space-y-2">
-              <Label>Upload Pictures/Images</Label>
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+              <Label>Upload Pictures/Images *</Label>
+              <p className="text-sm text-muted-foreground">
+                Minimum 5 images required ({images.length}/5 uploaded)
+              </p>
+              <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                images.length < 5 ? "border-destructive/50" : "border-border"
+              }`}>
                 <input
                   type="file"
                   accept="image/*"
@@ -308,7 +322,9 @@ const CreateListing = () => {
                   className="cursor-pointer flex flex-col items-center gap-2"
                 >
                   <Upload className="h-8 w-8 text-muted-foreground" />
-                  <span className="text-muted-foreground">Click to upload images (max 10)</span>
+                  <span className="text-muted-foreground">
+                    Click to upload images (min 5, max 10)
+                  </span>
                 </label>
               </div>
               

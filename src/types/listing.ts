@@ -13,4 +13,7 @@ export interface Listing {
   images: string[];
   created_at: string;
   updated_at: string;
+  approval_status: string;
+  rejection_reason: string | null;
+  deactivation_reason: string | null;
 }

@@ -64,6 +64,7 @@ export type Database = {
           city: string
           created_at: string
           daily_price: number
+          deactivation_reason: string | null
           description: string | null
           id: string
           images: string[] | null
@@ -82,6 +83,7 @@ export type Database = {
           city: string
           created_at?: string
           daily_price: number
+          deactivation_reason?: string | null
           description?: string | null
           id?: string
           images?: string[] | null
@@ -100,6 +102,7 @@ export type Database = {
           city?: string
           created_at?: string
           daily_price?: number
+          deactivation_reason?: string | null
           description?: string | null
           id?: string
           images?: string[] | null

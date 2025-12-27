@@ -279,7 +279,7 @@ const EditListing = () => {
         uploadedImageUrls.push(publicUrl);
       }
 
-      // Update listing in database
+      // Update listing in database - reset to pending for admin approval
       const { error } = await supabase
         .from('listings' as any)
         .update({
@@ -293,17 +293,18 @@ const EditListing = () => {
           monthly_price: monthlyPrice ? parseInt(monthlyPrice) : null,
           description: description || null,
           images: uploadedImageUrls,
+          approval_status: "pending", // Reset to pending for admin review after any edit
         })
         .eq('id', id);
 
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Your listing has been updated.",
+        title: "Listing Updated",
+        description: "Your changes have been submitted for admin approval.",
       });
       
-      navigate(`/listing/${id}`);
+      navigate("/my-account");
     } catch (error) {
       console.error("Error updating listing:", error);
       toast({

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, AlertCircle, CheckCircle } from "lucide-react";
+import { ArrowLeft, Send, AlertCircle, CheckCircle, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,9 +86,13 @@ const WriteToSupport = () => {
                 <p className="text-muted-foreground max-w-md mx-auto">
                   Please allow us 12-24 hours to work on your request. We'll notify you as soon as we have an update.
                 </p>
-                <div className="flex gap-3 justify-center pt-4">
+                <div className="flex flex-wrap gap-3 justify-center pt-4">
                   <Button variant="outline" onClick={() => setSubmitted(false)}>
                     Submit Another Request
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate("/support-tickets")}>
+                    <History className="h-4 w-4 mr-2" />
+                    View My Issues
                   </Button>
                   <Button onClick={() => navigate("/")}>
                     Back to Home
@@ -112,11 +116,17 @@ const WriteToSupport = () => {
         </Button>
 
         <div className="max-w-2xl mx-auto space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold">Write to Support</h1>
-            <p className="text-muted-foreground mt-2">
-              We're here to help! Describe your issue and we'll get back to you as soon as possible.
-            </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Write to Support</h1>
+              <p className="text-muted-foreground mt-2">
+                We're here to help! Describe your issue and we'll get back to you as soon as possible.
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => navigate("/support-tickets")}>
+              <History className="h-4 w-4 mr-2" />
+              View My Issues
+            </Button>
           </div>
 
           <Alert>

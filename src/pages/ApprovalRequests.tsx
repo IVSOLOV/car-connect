@@ -50,7 +50,10 @@ const ApprovalRequests = () => {
   }, [user, role, authLoading, navigate]);
 
   const fetchPendingListings = async () => {
+    setLoading(true);
     try {
+      console.log("Fetching pending listings...");
+      
       // First fetch pending listings
       const { data: listingsData, error: listingsError } = await supabase
         .from("listings")
@@ -58,10 +61,14 @@ const ApprovalRequests = () => {
         .eq("approval_status", "pending")
         .order("created_at", { ascending: false });
 
+      console.log("Listings query result:", { listingsData, listingsError });
+
       if (listingsError) throw listingsError;
 
       if (!listingsData || listingsData.length === 0) {
+        console.log("No pending listings found");
         setListings([]);
+        setLoading(false);
         return;
       }
 
@@ -84,6 +91,7 @@ const ApprovalRequests = () => {
         profiles: profilesMap.get(listing.user_id) || undefined,
       }));
 
+      console.log("Setting listings:", listingsWithProfiles.length);
       setListings(listingsWithProfiles);
     } catch (error) {
       console.error("Error fetching pending listings:", error);

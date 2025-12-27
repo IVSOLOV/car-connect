@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MessageCircle, User, LogOut, Menu, Bell } from "lucide-react";
+import { MessageCircle, User, LogOut, Menu, Bell, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -107,15 +107,21 @@ const Header = () => {
                     Saved Listings
                   </DropdownMenuItem>
                   {role === "admin" && (
-                    <DropdownMenuItem onClick={() => navigate("/approval-requests")}>
-                      <Bell className="h-4 w-4 mr-2" />
-                      Approval Requests
-                      {pendingCount > 0 && (
-                        <span className="ml-auto bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 rounded-full">
-                          {pendingCount}
-                        </span>
-                      )}
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem onClick={() => navigate("/admin")}>
+                        <Shield className="h-4 w-4 mr-2" />
+                        Admin Panel
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/approval-requests")}>
+                        <Bell className="h-4 w-4 mr-2" />
+                        Approval Requests
+                        {pendingCount > 0 && (
+                          <span className="ml-auto bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 rounded-full">
+                            {pendingCount}
+                          </span>
+                        )}
+                      </DropdownMenuItem>
+                    </>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive">

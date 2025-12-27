@@ -165,7 +165,7 @@ const EditListing = () => {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const totalImages = existingImages.length + newImages.length + files.length;
     
@@ -177,10 +177,39 @@ const EditListing = () => {
       });
       return;
     }
+
+    // Check for duplicates by comparing file size and name with already added new images
+    const duplicates: string[] = [];
+    const uniqueFiles: File[] = [];
+
+    for (const file of files) {
+      const isDuplicateNew = newImages.some(
+        (existingFile) =>
+          existingFile.name === file.name &&
+          existingFile.size === file.size &&
+          existingFile.type === file.type
+      );
+
+      if (isDuplicateNew) {
+        duplicates.push(file.name);
+      } else {
+        uniqueFiles.push(file);
+      }
+    }
+
+    if (duplicates.length > 0) {
+      toast({
+        title: "Duplicate images detected",
+        description: `The following images were already added: ${duplicates.join(", ")}`,
+        variant: "destructive",
+      });
+    }
+
+    if (uniqueFiles.length === 0) return;
     
-    setNewImages((prev) => [...prev, ...files]);
+    setNewImages((prev) => [...prev, ...uniqueFiles]);
     
-    files.forEach((file) => {
+    uniqueFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setNewImagePreviews((prev) => [...prev, reader.result as string]);

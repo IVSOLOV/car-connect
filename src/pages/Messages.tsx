@@ -28,6 +28,7 @@ interface Message {
   recipient_id: string;
   message: string;
   created_at: string;
+  read_at?: string | null;
   attachments?: Attachment[];
 }
 
@@ -110,6 +111,8 @@ const Messages = () => {
         conversationMap.get(key)!.messages.push({
           ...msg,
           attachments: (msg.attachments as unknown as Attachment[]) || [],
+          read_at: msg.read_at,
+          recipient_id: msg.recipient_id,
         });
       });
 
@@ -147,6 +150,11 @@ const Messages = () => {
           return "Unknown User";
         };
 
+        // Calculate unread count for this conversation (messages where current user is recipient and read_at is null)
+        const unreadCount = messages.filter(
+          (msg) => msg.recipient_id === user.id && !msg.read_at
+        ).length;
+
         convList.push({
           listing_id: listingId,
           listing_title: listing ? `${listing.year} ${listing.make} ${listing.model}` : "Unknown Listing",
@@ -156,7 +164,7 @@ const Messages = () => {
           other_user_avatar: profile?.avatar_url || null,
           last_message: lastMsg.message,
           last_message_time: lastMsg.created_at,
-          unread_count: 0,
+          unread_count: unreadCount,
         });
       });
 
@@ -608,18 +616,18 @@ const Messages = () => {
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                              <p className="font-semibold text-foreground truncate">
+                              <p className={`text-foreground truncate ${conv.unread_count > 0 ? "font-bold" : "font-semibold"}`}>
                                 {conv.other_user_name}
                               </p>
-                              <span className="text-xs text-muted-foreground">
+                              <span className={`text-xs ${conv.unread_count > 0 ? "text-primary font-semibold" : "text-muted-foreground"}`}>
                                 {format(new Date(conv.last_message_time), "MMM d")}
                               </span>
                             </div>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <p className={`text-sm flex items-center gap-1 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                               <Car className="h-3 w-3 flex-shrink-0" />
                               <span className="truncate">{conv.listing_title}</span>
                             </p>
-                            <p className="text-sm text-muted-foreground truncate mt-1">
+                            <p className={`text-sm truncate mt-1 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                               {conv.last_message}
                             </p>
                           </div>

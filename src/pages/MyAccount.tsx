@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera, Building2, Loader2 } from "lucide-react";
+import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera, Building2, Loader2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import BookingCalendarModal from "@/components/BookingCalendarModal";
+import ReportIssueDialog from "@/components/ReportIssueDialog";
 
 interface Listing {
   id: string;
@@ -386,6 +387,29 @@ const MyAccount = () => {
                       )}
                     </div>
                   )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Report Issue Section */}
+          <Card className="mb-8">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5" />
+                    Need Help?
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Report any issues or get support from our team
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => navigate("/support-tickets")}>
+                    View Tickets
+                  </Button>
+                  <ReportIssueDialog />
                 </div>
               </div>
             </CardContent>

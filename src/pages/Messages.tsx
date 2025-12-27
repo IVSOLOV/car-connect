@@ -76,6 +76,8 @@ const Messages = () => {
   useEffect(() => {
     if (user) {
       fetchConversations();
+      // Sync the header unread count when viewing messages
+      refetchUnreadCount();
     }
   }, [user]);
 

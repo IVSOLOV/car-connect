@@ -238,6 +238,7 @@ export type Database = {
           id: string
           priority: string
           resolved_at: string | null
+          response_read_at: string | null
           status: string
           subject: string
           updated_at: string
@@ -250,6 +251,7 @@ export type Database = {
           id?: string
           priority?: string
           resolved_at?: string | null
+          response_read_at?: string | null
           status?: string
           subject: string
           updated_at?: string
@@ -262,6 +264,7 @@ export type Database = {
           id?: string
           priority?: string
           resolved_at?: string | null
+          response_read_at?: string | null
           status?: string
           subject?: string
           updated_at?: string

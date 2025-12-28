@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MapPin, Loader2, Navigation } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LocationPrediction {
   placeId: string;
@@ -17,116 +18,6 @@ interface LocationAutocompleteProps {
   initialState?: string;
   placeholder?: string;
 }
-
-// Common US cities for fallback autocomplete
-const usCities = [
-  { city: "New York", state: "New York" },
-  { city: "Los Angeles", state: "California" },
-  { city: "Chicago", state: "Illinois" },
-  { city: "Houston", state: "Texas" },
-  { city: "Phoenix", state: "Arizona" },
-  { city: "Philadelphia", state: "Pennsylvania" },
-  { city: "San Antonio", state: "Texas" },
-  { city: "San Diego", state: "California" },
-  { city: "Dallas", state: "Texas" },
-  { city: "San Jose", state: "California" },
-  { city: "Austin", state: "Texas" },
-  { city: "Jacksonville", state: "Florida" },
-  { city: "Fort Worth", state: "Texas" },
-  { city: "Columbus", state: "Ohio" },
-  { city: "Charlotte", state: "North Carolina" },
-  { city: "San Francisco", state: "California" },
-  { city: "Indianapolis", state: "Indiana" },
-  { city: "Seattle", state: "Washington" },
-  { city: "Denver", state: "Colorado" },
-  { city: "Washington", state: "District of Columbia" },
-  { city: "Boston", state: "Massachusetts" },
-  { city: "Nashville", state: "Tennessee" },
-  { city: "El Paso", state: "Texas" },
-  { city: "Portland", state: "Oregon" },
-  { city: "Las Vegas", state: "Nevada" },
-  { city: "Detroit", state: "Michigan" },
-  { city: "Memphis", state: "Tennessee" },
-  { city: "Louisville", state: "Kentucky" },
-  { city: "Baltimore", state: "Maryland" },
-  { city: "Milwaukee", state: "Wisconsin" },
-  { city: "Albuquerque", state: "New Mexico" },
-  { city: "Tucson", state: "Arizona" },
-  { city: "Fresno", state: "California" },
-  { city: "Sacramento", state: "California" },
-  { city: "Mesa", state: "Arizona" },
-  { city: "Kansas City", state: "Missouri" },
-  { city: "Atlanta", state: "Georgia" },
-  { city: "Miami", state: "Florida" },
-  { city: "Colorado Springs", state: "Colorado" },
-  { city: "Raleigh", state: "North Carolina" },
-  { city: "Omaha", state: "Nebraska" },
-  { city: "Long Beach", state: "California" },
-  { city: "Virginia Beach", state: "Virginia" },
-  { city: "Oakland", state: "California" },
-  { city: "Minneapolis", state: "Minnesota" },
-  { city: "Tampa", state: "Florida" },
-  { city: "Tulsa", state: "Oklahoma" },
-  { city: "Arlington", state: "Texas" },
-  { city: "New Orleans", state: "Louisiana" },
-  { city: "Wichita", state: "Kansas" },
-  { city: "Cleveland", state: "Ohio" },
-  { city: "Bakersfield", state: "California" },
-  { city: "Aurora", state: "Colorado" },
-  { city: "Anaheim", state: "California" },
-  { city: "Honolulu", state: "Hawaii" },
-  { city: "Santa Ana", state: "California" },
-  { city: "Riverside", state: "California" },
-  { city: "Corpus Christi", state: "Texas" },
-  { city: "Lexington", state: "Kentucky" },
-  { city: "Stockton", state: "California" },
-  { city: "St. Louis", state: "Missouri" },
-  { city: "Saint Paul", state: "Minnesota" },
-  { city: "Henderson", state: "Nevada" },
-  { city: "Pittsburgh", state: "Pennsylvania" },
-  { city: "Cincinnati", state: "Ohio" },
-  { city: "Anchorage", state: "Alaska" },
-  { city: "Greensboro", state: "North Carolina" },
-  { city: "Plano", state: "Texas" },
-  { city: "Newark", state: "New Jersey" },
-  { city: "Lincoln", state: "Nebraska" },
-  { city: "Orlando", state: "Florida" },
-  { city: "Irvine", state: "California" },
-  { city: "Toledo", state: "Ohio" },
-  { city: "Jersey City", state: "New Jersey" },
-  { city: "Chula Vista", state: "California" },
-  { city: "Durham", state: "North Carolina" },
-  { city: "Fort Wayne", state: "Indiana" },
-  { city: "St. Petersburg", state: "Florida" },
-  { city: "Laredo", state: "Texas" },
-  { city: "Buffalo", state: "New York" },
-  { city: "Madison", state: "Wisconsin" },
-  { city: "Lubbock", state: "Texas" },
-  { city: "Chandler", state: "Arizona" },
-  { city: "Scottsdale", state: "Arizona" },
-  { city: "Glendale", state: "Arizona" },
-  { city: "Reno", state: "Nevada" },
-  { city: "Norfolk", state: "Virginia" },
-  { city: "Winston-Salem", state: "North Carolina" },
-  { city: "North Las Vegas", state: "Nevada" },
-  { city: "Irving", state: "Texas" },
-  { city: "Chesapeake", state: "Virginia" },
-  { city: "Gilbert", state: "Arizona" },
-  { city: "Hialeah", state: "Florida" },
-  { city: "Garland", state: "Texas" },
-  { city: "Fremont", state: "California" },
-  { city: "Baton Rouge", state: "Louisiana" },
-  { city: "Richmond", state: "Virginia" },
-  { city: "Boise", state: "Idaho" },
-  { city: "San Bernardino", state: "California" },
-  { city: "Stone Harbor", state: "New Jersey" },
-  { city: "Atlantic City", state: "New Jersey" },
-  { city: "Cape May", state: "New Jersey" },
-  { city: "Wildwood", state: "New Jersey" },
-  { city: "Ocean City", state: "New Jersey" },
-  { city: "Avalon", state: "New Jersey" },
-  { city: "Sea Isle City", state: "New Jersey" },
-];
 
 const usStates = [
   "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
@@ -149,9 +40,11 @@ export function LocationAutocomplete({
     initialCity && initialState ? `${initialCity}, ${initialState}` : ''
   );
   const [predictions, setPredictions] = useState<LocationPrediction[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout>();
 
   // Update input when initial values change
   useEffect(() => {
@@ -171,34 +64,47 @@ export function LocationAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const filterCities = (input: string): LocationPrediction[] => {
-    if (input.length < 2) return [];
-    
-    const lowerInput = input.toLowerCase();
-    const filtered = usCities
-      .filter(item => 
-        item.city.toLowerCase().includes(lowerInput) ||
-        item.state.toLowerCase().includes(lowerInput)
-      )
-      .slice(0, 5)
-      .map((item, index) => ({
-        placeId: `local-${index}`,
-        description: `${item.city}, ${item.state}`,
-        city: item.city,
-        state: item.state,
-      }));
-    
-    return filtered;
+  const fetchPredictions = async (input: string) => {
+    if (input.length < 2) {
+      setPredictions([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('google-places', {
+        body: { input },
+      });
+
+      if (error) {
+        console.error('Error fetching places:', error);
+        return;
+      }
+
+      if (data?.predictions) {
+        setPredictions(data.predictions);
+        setShowDropdown(true);
+      }
+    } catch (error) {
+      console.error('Error fetching places:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputValue(value);
     setShowDropdown(true);
-    
-    // Use local filtering
-    const filtered = filterCities(value);
-    setPredictions(filtered);
+
+    // Debounce API calls
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      fetchPredictions(value);
+    }, 300);
   };
 
   const handleSelect = (prediction: LocationPrediction) => {
@@ -269,6 +175,9 @@ export function LocationAutocomplete({
             placeholder={placeholder}
             className="pl-10"
           />
+          {isLoading && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+          )}
         </div>
         <Button 
           type="button" 

@@ -506,6 +506,11 @@ const ListingDetails = () => {
 
                 {!isOwner && (
                   <Button className="w-full mb-3" size="lg" onClick={() => {
+                    if (!user) {
+                      toast.error("Please sign in to message the owner");
+                      navigate("/auth");
+                      return;
+                    }
                     // Only pre-fill default message if user hasn't sent one before
                     if (!hasUserSentDefaultMessage) {
                       const defaultMessage = `Hi ${ownerName}, I am interested in your ${title}${formatDateRange()}.`;
@@ -558,8 +563,14 @@ const ListingDetails = () => {
                     variant={isSaved ? "default" : "outline"} 
                     className="w-full" 
                     size="lg"
-                    onClick={toggleSaveListing}
-                    disabled={!user}
+                    onClick={() => {
+                      if (!user) {
+                        toast.error("Please sign in to save listings");
+                        navigate("/auth");
+                        return;
+                      }
+                      toggleSaveListing();
+                    }}
                   >
                     <Heart className={`mr-2 h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
                     {isSaved ? "Saved" : "Save Listing"}

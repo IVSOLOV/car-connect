@@ -19,6 +19,13 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { z } from "zod";
+
+// Validation schema for booking inputs
+const bookingSchema = z.object({
+  renterName: z.string().trim().max(100, "Name must be less than 100 characters").optional().or(z.literal("")),
+  renterEmail: z.string().trim().email("Please enter a valid email address").max(255, "Email must be less than 255 characters").optional().or(z.literal("")),
+});
 
 interface Booking {
   id: string;
@@ -86,15 +93,30 @@ const BookingCalendarModal = ({
       return;
     }
 
+    // Validate inputs with zod schema
+    const validationResult = bookingSchema.safeParse({
+      renterName,
+      renterEmail,
+    });
+
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast.error(firstError.message);
+      return;
+    }
+
     setIsAdding(true);
 
     try {
+      const trimmedName = renterName.trim();
+      const trimmedEmail = renterEmail.trim();
+      
       const { error } = await supabase.from("listing_bookings" as any).insert({
         listing_id: listingId,
         start_date: format(startDate, "yyyy-MM-dd"),
         end_date: format(endDate, "yyyy-MM-dd"),
-        renter_name: renterName || null,
-        renter_email: renterEmail || null,
+        renter_name: trimmedName || null,
+        renter_email: trimmedEmail || null,
       });
 
       if (error) throw error;

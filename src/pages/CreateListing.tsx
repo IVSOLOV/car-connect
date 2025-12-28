@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
-
+import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 const carMakes = [
   "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Buick",
   "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ferrari", "Fiat", "Ford",
@@ -431,37 +431,17 @@ const CreateListing = () => {
             </div>
 
             {/* Location */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">City *</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Enter city"
-                  />
-                  <Button type="button" variant="outline" onClick={handleGetLocation} className="shrink-0">
-                    Use Location
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="state">State *</Label>
-                <Select value={state} onValueChange={setState}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {usStates.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label>Location *</Label>
+              <LocationAutocomplete
+                onLocationSelect={(selectedCity, selectedState) => {
+                  setCity(selectedCity);
+                  setState(selectedState);
+                }}
+                initialCity={city}
+                initialState={state}
+                placeholder="Start typing a city..."
+              />
             </div>
 
             {/* Title Status */}

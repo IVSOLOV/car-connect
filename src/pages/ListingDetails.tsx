@@ -399,20 +399,23 @@ const ListingDetails = () => {
                   className="h-full w-full object-cover"
                 />
                 <div className="absolute bottom-4 right-4 flex gap-2">
-                  {isOwner && (
-                    <Button 
-                      variant="secondary" 
-                      size="icon" 
-                      className="bg-background/80 backdrop-blur-sm"
-                      onClick={() => navigate(`/edit-listing/${id}`)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="secondary" size="icon" className="bg-background/80 backdrop-blur-sm">
-                    <Heart className="h-4 w-4" />
+                  <Button 
+                    variant="secondary" 
+                    size="icon" 
+                    className="bg-background/80 backdrop-blur-sm"
+                    onClick={toggleSaveListing}
+                  >
+                    <Heart className={`h-4 w-4 ${isSaved ? "fill-red-500 text-red-500" : ""}`} />
                   </Button>
-                  <Button variant="secondary" size="icon" className="bg-background/80 backdrop-blur-sm">
+                  <Button 
+                    variant="secondary" 
+                    size="icon" 
+                    className="bg-background/80 backdrop-blur-sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast.success("Link copied to clipboard!");
+                    }}
+                  >
                     <Share2 className="h-4 w-4" />
                   </Button>
                 </div>

@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
+import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import type { Listing } from "@/types/listing";
 
 const carMakes = [
@@ -470,33 +471,17 @@ const EditListing = () => {
             </div>
 
             {/* Location */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">City *</Label>
-                <Input
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="Enter city"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="state">State *</Label>
-                <Select value={state} onValueChange={setState}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {usStates.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))
-                  }
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label>Location *</Label>
+              <LocationAutocomplete
+                onLocationSelect={(selectedCity, selectedState) => {
+                  setCity(selectedCity);
+                  setState(selectedState);
+                }}
+                initialCity={city}
+                initialState={state}
+                placeholder="Start typing a city..."
+              />
             </div>
 
             {/* Title Status */}

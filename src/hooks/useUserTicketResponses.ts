@@ -13,14 +13,14 @@ export const useUserTicketResponses = () => {
     }
 
     const fetchResponseCount = async () => {
-      // Count tickets that have admin_notes (meaning support responded) and user hasn't seen them
+      // Count tickets that have admin_notes AND user hasn't read the response yet
       const { count, error } = await supabase
         .from("support_tickets")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
         .not("admin_notes", "is", null)
         .neq("admin_notes", "")
-        .in("status", ["in_progress", "resolved"]);
+        .is("response_read_at", null);
 
       if (!error && count !== null) {
         setResponseCount(count);

@@ -45,6 +45,7 @@ interface Ticket {
   admin_notes: string | null;
   user_name?: string;
   user_email?: string;
+  response_read_at: string | null;
 }
 
 const SupportTickets = () => {
@@ -115,6 +116,7 @@ const SupportTickets = () => {
       const updateData: any = { 
         status: newStatus,
         admin_notes: adminNotes[ticketId] || null,
+        response_read_at: null, // Reset so user gets notified of new response
       };
       
       if (newStatus === "resolved") {
@@ -222,7 +224,20 @@ const SupportTickets = () => {
               <Collapsible
                 key={ticket.id}
                 open={expandedTicket === ticket.id}
-                onOpenChange={(open) => setExpandedTicket(open ? ticket.id : null)}
+                onOpenChange={async (open) => {
+                  setExpandedTicket(open ? ticket.id : null);
+                  // Mark as read when user expands a ticket with admin notes
+                  if (open && !isAdmin && ticket.admin_notes && !ticket.response_read_at) {
+                    await supabase
+                      .from("support_tickets")
+                      .update({ response_read_at: new Date().toISOString() })
+                      .eq("id", ticket.id);
+                    // Update local state
+                    setTickets(prev => prev.map(t => 
+                      t.id === ticket.id ? { ...t, response_read_at: new Date().toISOString() } : t
+                    ));
+                  }
+                }}
               >
                 <Card>
                   <CollapsibleTrigger asChild>

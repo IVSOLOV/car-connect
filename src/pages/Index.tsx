@@ -25,6 +25,7 @@ const Index = () => {
       const { data, error } = await supabase
         .from("listings" as any)
         .select("*")
+        .eq("approval_status", "approved")
         .order("created_at", { ascending: false })
         .limit(6);
 

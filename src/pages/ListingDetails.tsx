@@ -15,6 +15,7 @@ import {
   Pencil,
   Ban,
   Star,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +75,8 @@ const ListingDetails = () => {
   const [deactivationReason, setDeactivationReason] = useState("");
   const [deactivating, setDeactivating] = useState(false);
   const [ownerRating, setOwnerRating] = useState<{ average: number; count: number } | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Get dates from URL params
   const startDateParam = searchParams.get("startDate");
@@ -316,7 +319,8 @@ const ListingDetails = () => {
   const isAdmin = role === "admin";
 
   const handleDeactivateListing = async () => {
-    if (!deactivationReason.trim()) {
+    // Only require reason for admin deactivating someone else's listing
+    if (!isOwner && !deactivationReason.trim()) {
       toast.error("Please provide a reason for deactivation");
       return;
     }
@@ -343,6 +347,26 @@ const ListingDetails = () => {
       toast.error("Failed to deactivate listing");
     } finally {
       setDeactivating(false);
+    }
+  };
+
+  const handleDeleteListing = async () => {
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Listing deleted successfully");
+      navigate("/my-account");
+    } catch (error) {
+      console.error("Error deleting listing:", error);
+      toast.error("Failed to delete listing");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -497,14 +521,38 @@ const ListingDetails = () => {
                 )}
 
                 {isOwner ? (
-                  <Button 
-                    className="w-full" 
-                    size="lg"
-                    onClick={() => navigate(`/edit-listing/${id}`)}
-                  >
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Update Listing
-                  </Button>
+                  <>
+                    <Button 
+                      className="w-full" 
+                      size="lg"
+                      onClick={() => navigate(`/edit-listing/${id}`)}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Update Listing
+                    </Button>
+                    
+                    {listing.approval_status !== "deactivated" && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full mt-3" 
+                        size="lg"
+                        onClick={() => setShowDeactivateDialog(true)}
+                      >
+                        <Ban className="mr-2 h-4 w-4" />
+                        Deactivate Listing
+                      </Button>
+                    )}
+                    
+                    <Button 
+                      variant="destructive" 
+                      className="w-full mt-3" 
+                      size="lg"
+                      onClick={() => setShowDeleteDialog(true)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Listing
+                    </Button>
+                  </>
                 ) : (
                   <Button 
                     variant={isSaved ? "default" : "outline"} 
@@ -519,7 +567,7 @@ const ListingDetails = () => {
                 )}
 
                 {/* Admin Deactivate Button - admins can deactivate any listing including their own */}
-                {isAdmin && listing.approval_status !== "deactivated" && (
+                {isAdmin && !isOwner && listing.approval_status !== "deactivated" && (
                   <Button 
                     variant="destructive" 
                     className="w-full mt-3" 
@@ -656,7 +704,10 @@ const ListingDetails = () => {
             <DialogHeader>
               <DialogTitle>Deactivate Listing</DialogTitle>
               <DialogDescription>
-                You are about to deactivate: {title}. Please provide a reason that will be sent to the owner.
+                {isOwner 
+                  ? "You are about to deactivate this listing. It will no longer be visible to other users."
+                  : `You are about to deactivate: ${title}. Please provide a reason that will be sent to the owner.`
+                }
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -664,7 +715,7 @@ const ListingDetails = () => {
                 <Label htmlFor="deactivation-reason">Reason for Deactivation</Label>
                 <Textarea
                   id="deactivation-reason"
-                  placeholder="Please explain why this listing is being deactivated..."
+                  placeholder={isOwner ? "Optional: Why are you deactivating this listing?" : "Please explain why this listing is being deactivated..."}
                   value={deactivationReason}
                   onChange={(e) => setDeactivationReason(e.target.value)}
                   rows={4}
@@ -678,9 +729,33 @@ const ListingDetails = () => {
               <Button 
                 variant="destructive" 
                 onClick={handleDeactivateListing}
-                disabled={deactivating}
+                disabled={deactivating || (!isOwner && !deactivationReason.trim())}
               >
                 {deactivating ? "Deactivating..." : "Deactivate Listing"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Listing</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to permanently delete "{title}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteListing}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete Permanently"}
               </Button>
             </DialogFooter>
           </DialogContent>

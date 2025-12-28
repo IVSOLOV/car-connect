@@ -36,8 +36,9 @@ interface Listing {
   monthly_price: number | null;
   images: string[];
   created_at: string;
-  approval_status: "pending" | "approved" | "rejected";
+  approval_status: "pending" | "approved" | "rejected" | "deactivated";
   rejection_reason: string | null;
+  deactivation_reason: string | null;
 }
 
 interface Profile {
@@ -507,10 +508,20 @@ const MyAccount = () => {
                               Rejected
                             </Badge>
                           )}
+                          {listing.approval_status === "deactivated" && (
+                            <Badge variant="outline" className="text-xs border-orange-500 text-orange-500">
+                              Deactivated
+                            </Badge>
+                          )}
                         </div>
                         {listing.approval_status === "rejected" && listing.rejection_reason && (
                           <p className="text-sm text-destructive mt-1">
                             Reason: {listing.rejection_reason}
+                          </p>
+                        )}
+                        {listing.approval_status === "deactivated" && listing.deactivation_reason && (
+                          <p className="text-sm text-orange-500 mt-1">
+                            Reason: {listing.deactivation_reason}
                           </p>
                         )}
                         <p className="text-sm text-muted-foreground">

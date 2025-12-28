@@ -16,6 +16,11 @@ import {
   Ban,
   Star,
   Trash2,
+  Copy,
+  Mail,
+  MessageSquare,
+  Facebook,
+  Twitter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +36,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
@@ -407,17 +417,109 @@ const ListingDetails = () => {
                   >
                     <Heart className={`h-4 w-4 ${isSaved ? "fill-red-500 text-red-500" : ""}`} />
                   </Button>
-                  <Button 
-                    variant="secondary" 
-                    size="icon" 
-                    className="bg-background/80 backdrop-blur-sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(window.location.href);
-                      toast.success("Link copied to clipboard!");
-                    }}
-                  >
-                    <Share2 className="h-4 w-4" />
-                  </Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="secondary" 
+                        size="icon" 
+                        className="bg-background/80 backdrop-blur-sm"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-2" align="end">
+                      <div className="flex flex-col gap-1">
+                        {typeof navigator.share !== 'undefined' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="justify-start"
+                            onClick={async () => {
+                              try {
+                                await navigator.share({
+                                  title: title,
+                                  text: `Check out this ${title} for rent!`,
+                                  url: window.location.href,
+                                });
+                              } catch (err) {
+                                // User cancelled or error
+                              }
+                            }}
+                          >
+                            <Share2 className="mr-2 h-4 w-4" />
+                            Share...
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="justify-start"
+                          onClick={() => {
+                            navigator.clipboard.writeText(window.location.href);
+                            toast.success("Link copied to clipboard!");
+                          }}
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copy link
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="justify-start"
+                          onClick={() => {
+                            window.open(`sms:?body=Check out this ${encodeURIComponent(title)} for rent! ${encodeURIComponent(window.location.href)}`, '_blank');
+                          }}
+                        >
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Text message
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="justify-start"
+                          onClick={() => {
+                            window.open(`mailto:?subject=${encodeURIComponent(`Check out this ${title}`)}&body=${encodeURIComponent(`I found this car rental you might like:\n\n${title}\n${window.location.href}`)}`, '_blank');
+                          }}
+                        >
+                          <Mail className="mr-2 h-4 w-4" />
+                          Email
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="justify-start"
+                          onClick={() => {
+                            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this ${title} for rent! ${window.location.href}`)}`, '_blank');
+                          }}
+                        >
+                          <MessageCircle className="mr-2 h-4 w-4" />
+                          WhatsApp
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="justify-start"
+                          onClick={() => {
+                            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank', 'width=600,height=400');
+                          }}
+                        >
+                          <Facebook className="mr-2 h-4 w-4" />
+                          Facebook
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="justify-start"
+                          onClick={() => {
+                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this ${title} for rent!`)}&url=${encodeURIComponent(window.location.href)}`, '_blank', 'width=600,height=400');
+                          }}
+                        >
+                          <Twitter className="mr-2 h-4 w-4" />
+                          X (Twitter)
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 

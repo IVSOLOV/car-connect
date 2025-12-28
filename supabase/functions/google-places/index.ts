@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { input, types } = await req.json();
+    const { input } = await req.json();
     
     if (!input || input.length < 2) {
       return new Response(
@@ -30,40 +30,61 @@ serve(async (req) => {
       );
     }
 
-    // Use Places Autocomplete API - restrict to US cities
-    const url = new URL('https://maps.googleapis.com/maps/api/place/autocomplete/json');
-    url.searchParams.set('input', input);
-    url.searchParams.set('types', types || '(cities)');
-    url.searchParams.set('components', 'country:us');
-    url.searchParams.set('key', apiKey);
-
     console.log(`Fetching places for input: "${input}"`);
 
-    const response = await fetch(url.toString());
+    // Use the new Places API (New) endpoint
+    const response = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+      },
+      body: JSON.stringify({
+        input,
+        includedPrimaryTypes: ['locality', 'administrative_area_level_3', 'sublocality'],
+        includedRegionCodes: ['US'],
+      }),
+    });
+
     const data = await response.json();
 
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      console.error('Google Places API error:', data.status, data.error_message);
+    if (data.error) {
+      console.error('Google Places API error:', data.error.message);
       return new Response(
-        JSON.stringify({ error: data.error_message || 'API error', status: data.status }),
+        JSON.stringify({ error: data.error.message }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Parse predictions to extract city and state
-    const predictions = (data.predictions || []).map((prediction: any) => {
-      const terms = prediction.terms || [];
-      // Usually: [City, State, Country]
-      const city = terms[0]?.value || '';
-      const state = terms[1]?.value || '';
-      
-      return {
-        placeId: prediction.place_id,
-        description: prediction.description,
-        city,
-        state,
-      };
-    });
+    // Parse predictions from new API format
+    const predictions = (data.suggestions || [])
+      .filter((suggestion: any) => suggestion.placePrediction)
+      .map((suggestion: any) => {
+        const prediction = suggestion.placePrediction;
+        const fullText = prediction.text?.text || '';
+        
+        // Parse city and state from the description
+        // Format is typically "City, State, USA" or "City, County, State, USA"
+        const parts = fullText.split(', ');
+        const city = parts[0] || '';
+        
+        // Find the state - it's usually before "USA"
+        let state = '';
+        if (parts.length >= 3) {
+          // Check if second to last is a US state abbreviation or full name
+          const potentialState = parts[parts.length - 2];
+          if (potentialState && potentialState !== 'USA') {
+            state = potentialState;
+          }
+        }
+        
+        return {
+          placeId: prediction.placeId,
+          description: fullText,
+          city,
+          state,
+        };
+      });
 
     console.log(`Found ${predictions.length} predictions`);
 

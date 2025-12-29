@@ -106,6 +106,9 @@ const EditListing = () => {
   const [monthlyPrice, setMonthlyPrice] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Track original values to detect price-only changes
+  const [originalListing, setOriginalListing] = useState<Listing | null>(null);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1929 }, (_, i) => currentYear - i);
@@ -147,6 +150,9 @@ const EditListing = () => {
         return;
       }
 
+      // Store original listing for comparison
+      setOriginalListing(listing);
+      
       // Populate form
       setYear(listing.year.toString());
       setMake(listing.make);
@@ -280,29 +286,64 @@ const EditListing = () => {
         uploadedImageUrls.push(publicUrl);
       }
 
-      // Update listing in database - reset to pending for admin approval
+      // Determine if only price changed (and decreased)
+      const newDailyPrice = parseInt(dailyPrice);
+      const newMonthlyPrice = monthlyPrice ? parseInt(monthlyPrice) : null;
+      
+      const onlyPriceDecreased = originalListing && 
+        parseInt(year) === originalListing.year &&
+        make === originalListing.make &&
+        model === originalListing.model &&
+        city === originalListing.city &&
+        state === originalListing.state &&
+        titleStatus === originalListing.title_status &&
+        (description || null) === (originalListing.description || null) &&
+        JSON.stringify(uploadedImageUrls.sort()) === JSON.stringify((originalListing.images || []).sort()) &&
+        newDailyPrice <= originalListing.daily_price &&
+        (newMonthlyPrice === null || originalListing.monthly_price === null || newMonthlyPrice <= originalListing.monthly_price);
+
+      // Build update object
+      const updateData: Record<string, any> = {
+        year: parseInt(year),
+        make,
+        model,
+        city,
+        state,
+        title_status: titleStatus,
+        daily_price: newDailyPrice,
+        monthly_price: newMonthlyPrice,
+        description: description || null,
+        images: uploadedImageUrls,
+      };
+
+      // If only price decreased, keep current approval status and track original price
+      if (onlyPriceDecreased && originalListing.approval_status === "approved") {
+        // Set original price for showing discount (use existing original or current price)
+        const existingOriginalPrice = (originalListing as any).original_daily_price;
+        if (newDailyPrice < originalListing.daily_price) {
+          updateData.original_daily_price = existingOriginalPrice || originalListing.daily_price;
+        }
+        // Keep approved status - no admin review needed
+      } else {
+        // Other changes require admin approval
+        updateData.approval_status = "pending";
+        updateData.original_daily_price = null; // Reset original price on full update
+      }
+
       const { error } = await supabase
         .from('listings' as any)
-        .update({
-          year: parseInt(year),
-          make,
-          model,
-          city,
-          state,
-          title_status: titleStatus,
-          daily_price: parseInt(dailyPrice),
-          monthly_price: monthlyPrice ? parseInt(monthlyPrice) : null,
-          description: description || null,
-          images: uploadedImageUrls,
-          approval_status: "pending", // Reset to pending for admin review after any edit
-        })
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;
 
+      const successMessage = onlyPriceDecreased && originalListing?.approval_status === "approved"
+        ? "Your price has been updated and the listing is live."
+        : "Your changes have been submitted for admin approval.";
+
       toast({
         title: "Listing Updated",
-        description: "Your changes have been submitted for admin approval.",
+        description: successMessage,
       });
       
       navigate("/my-account");

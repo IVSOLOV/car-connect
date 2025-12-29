@@ -9,6 +9,7 @@ export interface Listing {
   title_status: string;
   daily_price: number;
   monthly_price: number | null;
+  original_daily_price: number | null;
   description: string | null;
   images: string[];
   created_at: string;

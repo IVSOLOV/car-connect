@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, Car, User, ChevronRight, ArrowLeft, Paperclip, Image, FileText, X, Star, Pencil, Check } from "lucide-react";
+import { MessageCircle, Car, User, ChevronRight, ArrowLeft, Paperclip, Image, FileText, X, Star, Pencil, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,6 +12,16 @@ import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import AttachmentRenderer from "@/components/AttachmentRenderer";
 import ReviewDialog from "@/components/ReviewDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 
 interface Attachment {
@@ -69,6 +79,8 @@ const Messages = () => {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -456,6 +468,52 @@ const Messages = () => {
     }
   };
 
+  const confirmDeleteMessage = (msgId: string) => {
+    setDeletingMessageId(msgId);
+    setShowDeleteDialog(true);
+  };
+
+  const deleteMessage = async () => {
+    if (!deletingMessageId || !user) return;
+    
+    try {
+      const { error } = await supabase
+        .from("messages")
+        .delete()
+        .eq("id", deletingMessageId)
+        .eq("sender_id", user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setSelectedConversation(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          messages: prev.messages.filter(m => m.id !== deletingMessageId)
+        };
+      });
+
+      toast({
+        title: "Message deleted",
+        description: "Your message has been removed.",
+      });
+
+      // Refresh conversations list
+      fetchConversations();
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete message.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingMessageId(null);
+      setShowDeleteDialog(false);
+    }
+  };
+
   const getSelectedConversationInfo = () => {
     if (!selectedConversation) return null;
     return conversations.find(
@@ -542,15 +600,26 @@ const Messages = () => {
                             key={msg.id}
                             className={`flex ${msg.sender_id === user?.id ? "justify-end" : "justify-start"} group`}
                           >
-                            {/* Edit button for own messages within 5 mins */}
-                            {msg.sender_id === user?.id && canEditMessage(msg) && editingMessageId !== msg.id && (
-                              <button
-                                onClick={() => startEditingMessage(msg)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 self-center p-1 hover:bg-muted rounded"
-                                title="Edit message"
-                              >
-                                <Pencil className="h-3 w-3 text-muted-foreground" />
-                              </button>
+                            {/* Edit and Delete buttons for own messages */}
+                            {msg.sender_id === user?.id && editingMessageId !== msg.id && (
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 self-center flex gap-1">
+                                {canEditMessage(msg) && (
+                                  <button
+                                    onClick={() => startEditingMessage(msg)}
+                                    className="p-1 hover:bg-muted rounded"
+                                    title="Edit message (within 5 min)"
+                                  >
+                                    <Pencil className="h-3 w-3 text-muted-foreground" />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => confirmDeleteMessage(msg.id)}
+                                  className="p-1 hover:bg-destructive/20 rounded"
+                                  title="Delete message"
+                                >
+                                  <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                                </button>
+                              </div>
                             )}
                             <div
                               className={`max-w-[85%] sm:max-w-[70%] rounded-lg px-3 py-2 sm:px-4 ${
@@ -788,6 +857,24 @@ const Messages = () => {
           onReviewSubmitted={() => setHasExistingReview(true)}
         />
       )}
+
+      {/* Delete Message Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete message?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The message will be permanently removed from the conversation.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeletingMessageId(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteMessage} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

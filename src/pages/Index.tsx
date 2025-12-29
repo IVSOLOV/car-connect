@@ -170,8 +170,8 @@ const Index = () => {
               <Link to="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Terms of Service
               </Link>
-              <a href="mailto:contact@dirent.com" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                Contact
+              <a href="mailto:support@dirent.app" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                support@dirent.app
               </a>
             </div>
           </div>

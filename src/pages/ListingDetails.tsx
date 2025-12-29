@@ -570,7 +570,14 @@ const ListingDetails = () => {
                 <div className="text-center">
                   <DollarSign className="mx-auto mb-1.5 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   <p className="text-xs sm:text-sm text-muted-foreground">Daily Rate</p>
-                  <p className="text-sm sm:text-base font-semibold text-foreground">{formatPrice(listing.daily_price)}</p>
+                  <div className="flex items-center justify-center gap-2">
+                    {listing.original_daily_price && listing.original_daily_price > listing.daily_price && (
+                      <span className="text-sm text-muted-foreground line-through">
+                        {formatPrice(listing.original_daily_price)}
+                      </span>
+                    )}
+                    <p className="text-sm sm:text-base font-semibold text-foreground">{formatPrice(listing.daily_price)}</p>
+                  </div>
                 </div>
                 {listing.monthly_price && (
                   <div className="text-center col-span-2 md:col-span-1">
@@ -599,7 +606,14 @@ const ListingDetails = () => {
               {/* Price Card */}
               <div className="rounded-xl sm:rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-card">
                 <p className="text-xs sm:text-sm text-muted-foreground">Daily Rate</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gradient">{formatPrice(listing.daily_price)}<span className="text-sm sm:text-lg font-normal text-muted-foreground">/day</span></p>
+                <div className="flex items-center gap-2">
+                  {listing.original_daily_price && listing.original_daily_price > listing.daily_price && (
+                    <span className="text-lg sm:text-xl text-muted-foreground line-through">
+                      {formatPrice(listing.original_daily_price)}
+                    </span>
+                  )}
+                  <p className="text-2xl sm:text-3xl font-bold text-gradient">{formatPrice(listing.daily_price)}<span className="text-sm sm:text-lg font-normal text-muted-foreground">/day</span></p>
+                </div>
                 
                 {listing.monthly_price && (
                   <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground">

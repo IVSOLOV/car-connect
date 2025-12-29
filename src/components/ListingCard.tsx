@@ -70,7 +70,17 @@ const ListingCard = ({ listing, index = 0, startDate, endDate }: ListingCardProp
           </div>
 
           <div className="flex items-center justify-between border-t border-border pt-4">
-            <span className="text-2xl font-bold text-gradient">{formatPrice(listing.daily_price)}<span className="text-sm font-normal text-muted-foreground">/day</span></span>
+            <div className="flex items-center gap-2">
+              {listing.original_daily_price && listing.original_daily_price > listing.daily_price && (
+                <span className="text-lg text-muted-foreground line-through">
+                  {formatPrice(listing.original_daily_price)}
+                </span>
+              )}
+              <span className="text-2xl font-bold text-gradient">
+                {formatPrice(listing.daily_price)}
+                <span className="text-sm font-normal text-muted-foreground">/day</span>
+              </span>
+            </div>
             <span className="text-xs text-muted-foreground">View Details →</span>
           </div>
         </CardContent>

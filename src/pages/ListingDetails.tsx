@@ -388,7 +388,7 @@ const ListingDetails = () => {
       />
       <Header />
 
-      <main className="container mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-8 sm:pb-12">
+      <main className="container mx-auto px-4 pt-20 sm:pt-24 pb-8 sm:pb-12 max-w-full overflow-x-hidden">
         <Link
           to="/"
           className="mb-4 sm:mb-6 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
@@ -399,10 +399,10 @@ const ListingDetails = () => {
 
         <div className="grid gap-6 sm:gap-8 lg:grid-cols-3">
           {/* Main Content */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 min-w-0">
             {/* Image Gallery */}
             <div className="mb-6 sm:mb-8 animate-fade-in">
-              <div className="relative aspect-[16/10] overflow-hidden rounded-xl sm:rounded-2xl">
+              <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden rounded-xl sm:rounded-2xl w-full">
                 <img
                   src={images[selectedImage]}
                   alt={title}

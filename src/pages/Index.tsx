@@ -1,6 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import ListingCard from "@/components/ListingCard";
 import ListingCardSkeleton from "@/components/ListingCardSkeleton";
@@ -13,6 +14,7 @@ import type { Listing } from "@/types/listing";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -170,9 +172,18 @@ const Index = () => {
               <Link to="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Terms of Service
               </Link>
-              <a href="mailto:support@dirent.app" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                support@dirent.app
-              </a>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText("support@dirent.app");
+                  toast({
+                    title: "Email copied!",
+                    description: "support@dirent.app copied to clipboard",
+                  });
+                }}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Contact
+              </button>
             </div>
           </div>
         </div>

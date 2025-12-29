@@ -13,133 +13,218 @@ const TermsOfService = () => {
 
       <main className="container mx-auto px-4 py-24">
         <div className="mx-auto max-w-3xl">
-          <h1 className="mb-8 text-4xl font-bold text-foreground">Terms of Service</h1>
-          <p className="mb-6 text-muted-foreground">Last updated: December 2024</p>
+          <h1 className="mb-8 text-4xl font-bold text-foreground">Terms of Service for DiRent</h1>
+          <p className="mb-6 text-muted-foreground">Last updated: December 2025</p>
 
           <div className="prose prose-invert max-w-none space-y-8">
+            <p className="text-muted-foreground">
+              Welcome to DiRent ("we", "our", "us"). These Terms of Service ("Terms") govern your access to and use of the DiRent website and mobile application (the "Service").
+            </p>
+            <p className="text-muted-foreground">
+              By accessing or using DiRent, you agree to be bound by these Terms. If you do not agree, do not use the Service.
+            </p>
+
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">1. Acceptance of Terms</h2>
-              <p className="text-muted-foreground">
-                By accessing or using DiRent, you agree to be bound by these Terms of Service. If you do not 
-                agree to these terms, please do not use our platform. DiRent is a marketplace that connects 
-                car owners with renters—we do not own or operate any vehicles listed on our platform.
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">1. Description of the Service</h2>
+              <p className="text-muted-foreground mb-3">
+                DiRent is an online marketplace that allows vehicle owners ("Hosts") to list vehicles and communicate directly with potential renters ("Guests").
+              </p>
+              <p className="text-muted-foreground mb-3">DiRent:</p>
+              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
+                <li>Provides vehicle listings and messaging tools</li>
+                <li>Does not manage bookings</li>
+                <li>Does not process rental payments between users</li>
+                <li>Does not provide insurance</li>
+                <li>Does not act as a rental agency</li>
+              </ul>
+              <p className="text-muted-foreground mt-3">
+                All rental agreements, payments, insurance, and liabilities are handled directly between users.
               </p>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">2. Description of Service</h2>
-              <p className="text-muted-foreground">
-                DiRent provides a peer-to-peer car rental marketplace where car owners can list their vehicles 
-                for rent and renters can browse and contact owners directly. We facilitate the connection but 
-                are not a party to any rental agreement between owners and renters.
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">2. Eligibility</h2>
+              <p className="text-muted-foreground mb-3">
+                You must be at least 18 years old to use DiRent.
               </p>
+              <p className="text-muted-foreground mb-3">By using the Service, you represent that:</p>
+              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
+                <li>You are legally able to enter into agreements</li>
+                <li>Any information you provide is accurate and truthful</li>
+              </ul>
             </section>
 
             <section>
               <h2 className="mb-4 text-2xl font-semibold text-foreground">3. User Accounts</h2>
-              <p className="mb-4 text-muted-foreground">To use certain features, you must create an account. You agree to:</p>
+              
+              <h3 className="text-xl font-medium mb-3 text-foreground">3.1 Account Registration</h3>
+              <p className="text-muted-foreground mb-3">
+                To access certain features, you must create an account and provide accurate information.
+              </p>
+              <p className="text-muted-foreground mb-3">You are responsible for:</p>
               <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
-                <li>Provide accurate and complete information</li>
-                <li>Maintain the security of your account credentials</li>
-                <li>Notify us immediately of any unauthorized access</li>
-                <li>Be responsible for all activities under your account</li>
-                <li>Be at least 18 years old to create an account</li>
+                <li>Maintaining account confidentiality</li>
+                <li>All activity that occurs under your account</li>
+              </ul>
+
+              <h3 className="text-xl font-medium mb-3 mt-4 text-foreground">3.2 Account Types</h3>
+              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
+                <li><strong className="text-foreground">Guest:</strong> Can browse listings and message hosts</li>
+                <li><strong className="text-foreground">Host:</strong> Can create listings and manage vehicles (subscription required)</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">4. Car Owner Responsibilities</h2>
-              <p className="mb-4 text-muted-foreground">If you list a vehicle on DiRent, you agree to:</p>
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">4. Host Listings</h2>
+              <p className="text-muted-foreground mb-3">Hosts are solely responsible for:</p>
               <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
-                <li>Provide accurate information about your vehicle</li>
-                <li>Maintain valid registration and insurance for your vehicle</li>
-                <li>Ensure your vehicle is safe and roadworthy</li>
-                <li>Respond promptly to renter inquiries</li>
-                <li>Honor confirmed bookings and pricing</li>
-                <li>Comply with all applicable laws and regulations</li>
+                <li>Accuracy of listing information</li>
+                <li>Vehicle condition and legality</li>
+                <li>Pricing and availability</li>
+                <li>Compliance with local laws and regulations</li>
+              </ul>
+              <p className="text-muted-foreground mt-3">
+                DiRent may remove or suspend listings at its discretion.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">5. Subscriptions & Fees</h2>
+              
+              <h3 className="text-xl font-medium mb-3 text-foreground">5.1 Host Subscription</h3>
+              <p className="text-muted-foreground mb-3">
+                Hosts must maintain an active subscription to publish or activate listings.
+              </p>
+              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
+                <li>Subscription fees are billed on a recurring basis</li>
+                <li>Fees are charged per listed vehicle</li>
+                <li>Failure to pay may result in listing deactivation</li>
+              </ul>
+
+              <h3 className="text-xl font-medium mb-3 mt-4 text-foreground">5.2 No Refunds</h3>
+              <p className="text-muted-foreground">
+                Subscription fees are non-refundable, unless required by law.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">6. User Conduct</h2>
+              <p className="text-muted-foreground mb-3">You agree not to:</p>
+              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
+                <li>Provide false or misleading information</li>
+                <li>Use the Service for illegal activities</li>
+                <li>Harass, abuse, or spam other users</li>
+                <li>Circumvent the subscription system</li>
+                <li>Attempt to access unauthorized parts of the platform</li>
+              </ul>
+              <p className="text-muted-foreground mt-3">
+                Violation may result in account suspension or termination.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">7. Messaging & Communication</h2>
+              <p className="text-muted-foreground mb-3">
+                All communication must remain respectful and lawful.
+              </p>
+              <p className="text-muted-foreground mb-3">DiRent reserves the right to:</p>
+              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
+                <li>Monitor messages for abuse prevention</li>
+                <li>Remove content that violates these Terms</li>
+              </ul>
+              <p className="text-muted-foreground mt-3">
+                DiRent is not responsible for communications between users.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">8. No Insurance & No Guarantees</h2>
+              <p className="text-muted-foreground mb-3">DiRent does not:</p>
+              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
+                <li>Provide vehicle insurance</li>
+                <li>Verify driver licenses</li>
+                <li>Inspect vehicles</li>
+                <li>Guarantee vehicle availability, condition, or safety</li>
+              </ul>
+              <p className="text-muted-foreground mt-3">
+                Users assume all risks related to vehicle rentals arranged through the platform.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">9. Limitation of Liability</h2>
+              <p className="text-muted-foreground mb-3">To the maximum extent permitted by law:</p>
+              <p className="text-muted-foreground mb-3">DiRent shall not be liable for:</p>
+              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
+                <li>Accidents, injuries, or damages</li>
+                <li>Loss or theft of vehicles</li>
+                <li>Disputes between users</li>
+                <li>Financial losses resulting from rentals</li>
+              </ul>
+              <p className="text-foreground font-medium mt-3">
+                Use of the Service is at your own risk.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">10. Indemnification</h2>
+              <p className="text-muted-foreground mb-3">
+                You agree to indemnify and hold harmless DiRent from any claims, damages, losses, or expenses arising from:
+              </p>
+              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
+                <li>Your use of the Service</li>
+                <li>Your interactions with other users</li>
+                <li>Any violation of these Terms</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">5. Renter Responsibilities</h2>
-              <p className="mb-4 text-muted-foreground">If you rent a vehicle through DiRent, you agree to:</p>
-              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
-                <li>Possess a valid driver's license</li>
-                <li>Treat the vehicle with care and respect</li>
-                <li>Return the vehicle in the same condition as received</li>
-                <li>Report any accidents or damage immediately</li>
-                <li>Comply with all traffic laws and regulations</li>
-                <li>Not sublease or transfer the vehicle to others</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">6. Fees and Payments</h2>
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">11. Termination</h2>
+              <p className="text-muted-foreground mb-3">
+                DiRent may suspend or terminate your account at any time, with or without notice, for violation of these Terms.
+              </p>
               <p className="text-muted-foreground">
-                Car owners pay a monthly subscription fee of $4.99 per listed vehicle. All rental payments 
-                and arrangements are made directly between car owners and renters. DiRent does not collect 
-                commissions on rentals. We are not responsible for payment disputes between users.
+                You may stop using the Service at any time.
               </p>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">7. Prohibited Activities</h2>
-              <p className="mb-4 text-muted-foreground">You may not:</p>
-              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
-                <li>Use the platform for any illegal purpose</li>
-                <li>Post false, misleading, or fraudulent content</li>
-                <li>Harass, threaten, or abuse other users</li>
-                <li>Attempt to circumvent our platform to avoid fees</li>
-                <li>Scrape or collect user data without permission</li>
-                <li>Interfere with the platform's security or functionality</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">8. Limitation of Liability</h2>
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">12. Intellectual Property</h2>
+              <p className="text-muted-foreground mb-3">
+                All content, branding, logos, and platform design are the property of DiRent.
+              </p>
               <p className="text-muted-foreground">
-                DiRent is a marketplace platform only. We are not responsible for the condition of vehicles, 
-                the conduct of users, or any damages arising from rental transactions. Users engage in 
-                rentals at their own risk. To the maximum extent permitted by law, DiRent shall not be 
-                liable for any indirect, incidental, or consequential damages.
+                You may not copy, modify, or distribute any part of the Service without permission.
               </p>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">9. Indemnification</h2>
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">13. Changes to the Terms</h2>
+              <p className="text-muted-foreground mb-3">
+                We may update these Terms at any time.
+              </p>
               <p className="text-muted-foreground">
-                You agree to indemnify and hold harmless DiRent, its officers, directors, employees, and 
-                agents from any claims, damages, or expenses arising from your use of the platform or 
-                violation of these terms.
+                Continued use of the Service after changes constitutes acceptance of the updated Terms.
               </p>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">10. Termination</h2>
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">14. Governing Law</h2>
               <p className="text-muted-foreground">
-                We may suspend or terminate your account at any time for violation of these terms or for 
-                any other reason at our discretion. You may also delete your account at any time through 
-                your account settings.
+                These Terms are governed by the laws of the United States and the state where DiRent operates.
               </p>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">11. Changes to Terms</h2>
-              <p className="text-muted-foreground">
-                We may modify these Terms of Service at any time. Continued use of the platform after 
-                changes constitutes acceptance of the new terms. We will notify users of significant 
-                changes via email or platform notification.
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">15. Contact Information</h2>
+              <p className="text-muted-foreground mb-3">
+                For questions regarding these Terms, contact:
               </p>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">12. Contact</h2>
-              <p className="text-muted-foreground">
-                For questions about these Terms of Service, please contact us at:
-              </p>
-              <p className="mt-4 text-muted-foreground">
-                Email: <a href="mailto:legal@dirent.com" className="text-primary hover:underline">legal@dirent.com</a>
-              </p>
+              <div className="text-muted-foreground">
+                <p>Email: <a href="mailto:support@dirent.app" className="text-primary hover:underline">support@dirent.app</a></p>
+                <p>Company Name: DiRent</p>
+                <p>Location: United States</p>
+              </div>
             </section>
           </div>
         </div>

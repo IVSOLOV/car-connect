@@ -72,6 +72,7 @@ export type Database = {
           model: string
           monthly_price: number | null
           original_daily_price: number | null
+          original_monthly_price: number | null
           rejection_reason: string | null
           state: string
           title_status: string
@@ -92,6 +93,7 @@ export type Database = {
           model: string
           monthly_price?: number | null
           original_daily_price?: number | null
+          original_monthly_price?: number | null
           rejection_reason?: string | null
           state: string
           title_status?: string
@@ -112,6 +114,7 @@ export type Database = {
           model?: string
           monthly_price?: number | null
           original_daily_price?: number | null
+          original_monthly_price?: number | null
           rejection_reason?: string | null
           state?: string
           title_status?: string

@@ -583,7 +583,14 @@ const ListingDetails = () => {
                   <div className="text-center col-span-2 md:col-span-1">
                     <DollarSign className="mx-auto mb-1.5 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     <p className="text-xs sm:text-sm text-muted-foreground">Monthly Rate</p>
-                    <p className="text-sm sm:text-base font-semibold text-foreground">{formatPrice(listing.monthly_price)}</p>
+                    <div className="flex items-center justify-center gap-2">
+                      {listing.original_monthly_price && listing.original_monthly_price > listing.monthly_price && (
+                        <span className="text-sm text-muted-foreground line-through">
+                          {formatPrice(listing.original_monthly_price)}
+                        </span>
+                      )}
+                      <p className="text-sm sm:text-base font-semibold text-foreground">{formatPrice(listing.monthly_price)}</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -617,6 +624,9 @@ const ListingDetails = () => {
                 
                 {listing.monthly_price && (
                   <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground">
+                    {listing.original_monthly_price && listing.original_monthly_price > listing.monthly_price && (
+                      <span className="line-through mr-2">{formatPrice(listing.original_monthly_price)}</span>
+                    )}
                     or {formatPrice(listing.monthly_price)}/month
                   </p>
                 )}

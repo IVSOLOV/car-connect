@@ -149,6 +149,7 @@ const Index = () => {
             <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
               <p className="text-4xl font-bold text-gradient">$4.99</p>
               <p className="mt-2 text-muted-foreground">Per Car / Month</p>
+              <p className="mt-1 text-sm text-primary font-medium">1 Month Free Trial</p>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: "300ms" }}>
               <p className="text-4xl font-bold text-gradient">100%</p>

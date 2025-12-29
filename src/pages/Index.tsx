@@ -71,7 +71,7 @@ const Index = () => {
             </h1>
             <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground sm:text-xl">
               Skip the middleman. Connect directly with car owners and save on fees.
-              No commissions, just simple car rentals.
+              No commissions, no limitations on years, mileage, or titles — just simple car rentals.
             </p>
 
 

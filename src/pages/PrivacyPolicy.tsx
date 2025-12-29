@@ -4,109 +4,177 @@ import SEO from "@/components/SEO";
 const PrivacyPolicy = () => {
   return (
     <div className="min-h-screen bg-background">
-      <SEO
+      <SEO 
         title="Privacy Policy | DiRent"
-        description="Learn how DiRent collects, uses, and protects your personal information."
+        description="DiRent's Privacy Policy - Learn how we collect, use, and protect your personal information."
         canonicalUrl="/privacy"
       />
       <Header />
-
       <main className="container mx-auto px-4 py-24">
         <div className="mx-auto max-w-3xl">
-          <h1 className="mb-8 text-4xl font-bold text-foreground">Privacy Policy</h1>
-          <p className="mb-6 text-muted-foreground">Last updated: December 2024</p>
-
+          <h1 className="text-4xl font-bold mb-8 text-foreground">Privacy Policy for DiRent</h1>
+          
+          <p className="text-muted-foreground mb-6">Last updated: December 29, 2025</p>
+          
           <div className="prose prose-invert max-w-none space-y-8">
-            <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">1. Introduction</h2>
-              <p className="text-muted-foreground">
-                Welcome to DiRent. We respect your privacy and are committed to protecting your personal data. 
-                This privacy policy explains how we collect, use, and safeguard your information when you use our 
-                car rental marketplace platform.
-              </p>
-            </section>
+            <p className="text-muted-foreground">
+              DiRent ("we", "our", "us") respects your privacy and is committed to protecting your personal information. 
+              This Privacy Policy explains how we collect, use, store, and protect information when you use the DiRent 
+              website and mobile application (the "Service").
+            </p>
+            
+            <p className="text-muted-foreground">
+              By using DiRent, you agree to the collection and use of information in accordance with this Privacy Policy.
+            </p>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">2. Information We Collect</h2>
-              <p className="mb-4 text-muted-foreground">We collect the following types of information:</p>
-              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
-                <li><strong className="text-foreground">Account Information:</strong> Name, email address, phone number, and profile photo when you create an account.</li>
-                <li><strong className="text-foreground">Listing Information:</strong> Vehicle details, photos, pricing, and availability that car owners provide.</li>
-                <li><strong className="text-foreground">Communication Data:</strong> Messages exchanged between renters and car owners through our platform.</li>
-                <li><strong className="text-foreground">Usage Data:</strong> Information about how you interact with our platform, including pages visited and features used.</li>
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">1. Information We Collect</h2>
+              
+              <h3 className="text-xl font-medium mb-3 text-foreground">1.1 Information You Provide</h3>
+              <p className="text-muted-foreground mb-3">
+                We may collect the following personal information when you create an account or use the Service:
+              </p>
+              <ul className="list-disc pl-6 mb-4 text-muted-foreground space-y-1">
+                <li>Full name</li>
+                <li>Email address</li>
+                <li>Password (stored in encrypted form)</li>
+                <li>Location (city and state)</li>
+                <li>Vehicle information (for hosts), including:
+                  <ul className="list-disc pl-6 mt-1 space-y-1">
+                    <li>Make, model, year</li>
+                    <li>Photos uploaded by you</li>
+                    <li>Pricing details</li>
+                  </ul>
+                </li>
+                <li>Messages sent through the in-app messaging system</li>
               </ul>
-            </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">3. How We Use Your Information</h2>
-              <p className="mb-4 text-muted-foreground">We use your information to:</p>
-              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
-                <li>Provide and maintain our car rental marketplace services</li>
-                <li>Facilitate communication between car owners and renters</li>
-                <li>Process transactions and send related information</li>
-                <li>Send promotional communications (with your consent)</li>
-                <li>Improve our platform and develop new features</li>
-                <li>Ensure the security and integrity of our services</li>
+              <h3 className="text-xl font-medium mb-3 text-foreground">1.2 Automatically Collected Information</h3>
+              <p className="text-muted-foreground mb-3">When you use DiRent, we may automatically collect:</p>
+              <ul className="list-disc pl-6 mb-4 text-muted-foreground space-y-1">
+                <li>IP address</li>
+                <li>Device type and browser information</li>
+                <li>Log data (pages visited, actions taken)</li>
+                <li>Date and time of access</li>
               </ul>
+              <p className="text-muted-foreground">This data is used for security, analytics, and service improvement.</p>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">4. Information Sharing</h2>
-              <p className="text-muted-foreground">
-                We do not sell your personal information. We may share your information with:
-              </p>
-              <ul className="mt-4 list-disc space-y-2 pl-6 text-muted-foreground">
-                <li><strong className="text-foreground">Other Users:</strong> Car owners and renters can see relevant profile information to facilitate rentals.</li>
-                <li><strong className="text-foreground">Service Providers:</strong> Third parties that help us operate our platform (hosting, analytics, etc.).</li>
-                <li><strong className="text-foreground">Legal Requirements:</strong> When required by law or to protect our rights and safety.</li>
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">2. How We Use Your Information</h2>
+              <p className="text-muted-foreground mb-3">We use your information to:</p>
+              <ul className="list-disc pl-6 mb-4 text-muted-foreground space-y-1">
+                <li>Create and manage user accounts</li>
+                <li>Display vehicle listings</li>
+                <li>Enable communication between guests and hosts</li>
+                <li>Process host subscriptions and payments</li>
+                <li>Provide customer support</li>
+                <li>Improve platform performance and user experience</li>
+                <li>Enforce our Terms of Service and platform rules</li>
               </ul>
+              <p className="text-foreground font-medium">We do not sell or rent your personal data to third parties.</p>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">5. Data Security</h2>
-              <p className="text-muted-foreground">
-                We implement appropriate security measures to protect your personal information against unauthorized 
-                access, alteration, disclosure, or destruction. This includes encryption, secure servers, and 
-                regular security assessments.
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">3. Payments</h2>
+              <p className="text-muted-foreground mb-3">
+                Payments for host subscriptions are processed by third-party payment providers (such as Stripe). 
+                DiRent does not store your full payment card information.
               </p>
+              <p className="text-muted-foreground">Payment providers handle your data according to their own privacy policies.</p>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">6. Your Rights</h2>
-              <p className="mb-4 text-muted-foreground">You have the right to:</p>
-              <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
-                <li>Access and receive a copy of your personal data</li>
-                <li>Correct inaccurate or incomplete information</li>
-                <li>Delete your account and associated data</li>
-                <li>Opt out of marketing communications</li>
-                <li>Object to certain processing of your data</li>
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">4. Messaging & Communication</h2>
+              <p className="text-muted-foreground mb-3">Messages exchanged between users are stored within the platform to:</p>
+              <ul className="list-disc pl-6 mb-4 text-muted-foreground space-y-1">
+                <li>Enable communication between guests and hosts</li>
+                <li>Prevent fraud and abuse</li>
+                <li>Comply with legal requirements</li>
               </ul>
+              <p className="text-muted-foreground">Phone numbers and email addresses are not shown publicly.</p>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">7. Cookies</h2>
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">5. Data Sharing</h2>
+              <p className="text-muted-foreground mb-3">We may share limited information only in the following cases:</p>
+              <ul className="list-disc pl-6 mb-4 text-muted-foreground space-y-1">
+                <li>With service providers that help operate the platform (hosting, analytics, payments)</li>
+                <li>If required by law or legal process</li>
+                <li>To protect the rights, safety, and security of DiRent and its users</li>
+              </ul>
+              <p className="text-foreground font-medium">We never share personal data for advertising purposes.</p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">6. Data Retention</h2>
+              <p className="text-muted-foreground mb-3">We retain personal information only as long as necessary to:</p>
+              <ul className="list-disc pl-6 mb-4 text-muted-foreground space-y-1">
+                <li>Provide the Service</li>
+                <li>Meet legal and accounting obligations</li>
+                <li>Resolve disputes and enforce agreements</li>
+              </ul>
+              <p className="text-muted-foreground">You may request account deletion at any time.</p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">7. Your Rights</h2>
+              <p className="text-muted-foreground mb-3">Depending on your location, you may have the right to:</p>
+              <ul className="list-disc pl-6 mb-4 text-muted-foreground space-y-1">
+                <li>Access your personal data</li>
+                <li>Correct inaccurate information</li>
+                <li>Request deletion of your data</li>
+                <li>Withdraw consent where applicable</li>
+              </ul>
+              <p className="text-muted-foreground">You can exercise these rights by contacting us.</p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">8. Data Security</h2>
+              <p className="text-muted-foreground mb-3">
+                We take reasonable technical and organizational measures to protect your data, including:
+              </p>
+              <ul className="list-disc pl-6 mb-4 text-muted-foreground space-y-1">
+                <li>Encrypted passwords</li>
+                <li>Secure servers</li>
+                <li>Restricted access to personal information</li>
+              </ul>
               <p className="text-muted-foreground">
-                We use cookies and similar technologies to improve your experience, analyze usage patterns, 
-                and personalize content. You can control cookie preferences through your browser settings.
+                However, no system is 100% secure, and we cannot guarantee absolute security.
               </p>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">8. Contact Us</h2>
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">9. Children's Privacy</h2>
               <p className="text-muted-foreground">
-                If you have questions about this Privacy Policy or our data practices, please contact us at:
-              </p>
-              <p className="mt-4 text-muted-foreground">
-                Email: <a href="mailto:privacy@dirent.com" className="text-primary hover:underline">privacy@dirent.com</a>
+                DiRent is not intended for users under the age of 18. We do not knowingly collect personal data from children.
               </p>
             </section>
 
             <section>
-              <h2 className="mb-4 text-2xl font-semibold text-foreground">9. Changes to This Policy</h2>
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">10. Third-Party Links</h2>
               <p className="text-muted-foreground">
-                We may update this Privacy Policy from time to time. We will notify you of any changes by 
-                posting the new Privacy Policy on this page and updating the "Last updated" date.
+                The Service may contain links to third-party websites. We are not responsible for the privacy practices of those websites.
               </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">11. Changes to This Policy</h2>
+              <p className="text-muted-foreground">
+                We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated "Last updated" date.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">12. Contact Us</h2>
+              <p className="text-muted-foreground mb-3">
+                If you have any questions about this Privacy Policy or your data, please contact:
+              </p>
+              <div className="text-muted-foreground">
+                <p>Email: <a href="mailto:support@dirent.app" className="text-primary hover:underline">support@dirent.app</a></p>
+                <p>Company Name: DiRent</p>
+                <p>Location: United States</p>
+              </div>
             </section>
           </div>
         </div>

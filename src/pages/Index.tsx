@@ -83,11 +83,14 @@ const Index = () => {
                 List Your Car
               </Button>
             </div>
-          </div>
 
-          {/* Scroll Indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-            <ChevronDown className="h-8 w-8 text-muted-foreground" />
+            {/* Scroll Indicator */}
+            <div className="mt-12 flex flex-col items-center animate-bounce">
+              <span className="text-sm text-foreground/70 mb-2">Scroll to explore</span>
+              <div className="p-2 rounded-full bg-primary/20 border border-primary/30">
+                <ChevronDown className="h-6 w-6 text-primary" />
+              </div>
+            </div>
           </div>
         </div>
       </section>

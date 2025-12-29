@@ -388,21 +388,21 @@ const ListingDetails = () => {
       />
       <Header />
 
-      <main className="container mx-auto px-4 pt-24 pb-12">
+      <main className="container mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-8 sm:pb-12">
         <Link
           to="/"
-          className="mb-6 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
+          className="mb-4 sm:mb-6 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to listings
         </Link>
 
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid gap-6 sm:gap-8 lg:grid-cols-3">
           {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Image Gallery */}
-            <div className="mb-8 animate-fade-in">
-              <div className="relative aspect-[16/10] overflow-hidden rounded-2xl">
+            <div className="mb-6 sm:mb-8 animate-fade-in">
+              <div className="relative aspect-[16/10] overflow-hidden rounded-xl sm:rounded-2xl">
                 <img
                   src={images[selectedImage]}
                   alt={title}
@@ -524,12 +524,12 @@ const ListingDetails = () => {
               </div>
 
               {images.length > 1 && (
-                <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+                <div className="mt-3 sm:mt-4 flex gap-2 sm:gap-3 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
                   {images.map((img, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`relative h-20 w-28 flex-shrink-0 overflow-hidden rounded-lg transition-all ${
+                      className={`relative h-16 w-24 sm:h-20 sm:w-28 flex-shrink-0 overflow-hidden rounded-lg transition-all ${
                         selectedImage === index
                           ? "ring-2 ring-primary"
                           : "opacity-70 hover:opacity-100"
@@ -544,49 +544,49 @@ const ListingDetails = () => {
 
             {/* Details */}
             <div className="animate-slide-up" style={{ animationDelay: "100ms" }}>
-              <div className="mb-6">
-                <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <Badge variant="secondary">{listing.make}</Badge>
-                  <Badge variant="outline">
+              <div className="mb-4 sm:mb-6">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <Badge variant="secondary" className="text-xs sm:text-sm">{listing.make}</Badge>
+                  <Badge variant="outline" className="text-xs sm:text-sm">
                     <FileCheck className="mr-1 h-3 w-3" />
                     {listing.title_status === "clear" ? "Clear Title" : "Rebuild Title"}
                   </Badge>
                 </div>
-                <h1 className="text-3xl font-bold text-foreground md:text-4xl">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground md:text-4xl">
                   {title}
                 </h1>
-                <p className="mt-2 flex items-center text-muted-foreground">
-                  <MapPin className="mr-2 h-4 w-4" />
+                <p className="mt-1 sm:mt-2 flex items-center text-sm sm:text-base text-muted-foreground">
+                  <MapPin className="mr-1.5 sm:mr-2 h-4 w-4" />
                   {location}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 rounded-xl bg-secondary/50 p-5 md:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 rounded-xl bg-secondary/50 p-4 sm:p-5 md:grid-cols-3">
                 <div className="text-center">
-                  <Calendar className="mx-auto mb-2 h-5 w-5 text-primary" />
-                  <p className="text-sm text-muted-foreground">Year</p>
-                  <p className="font-semibold text-foreground">{listing.year}</p>
+                  <Calendar className="mx-auto mb-1.5 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <p className="text-xs sm:text-sm text-muted-foreground">Year</p>
+                  <p className="text-sm sm:text-base font-semibold text-foreground">{listing.year}</p>
                 </div>
                 <div className="text-center">
-                  <DollarSign className="mx-auto mb-2 h-5 w-5 text-primary" />
-                  <p className="text-sm text-muted-foreground">Daily Rate</p>
-                  <p className="font-semibold text-foreground">{formatPrice(listing.daily_price)}</p>
+                  <DollarSign className="mx-auto mb-1.5 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <p className="text-xs sm:text-sm text-muted-foreground">Daily Rate</p>
+                  <p className="text-sm sm:text-base font-semibold text-foreground">{formatPrice(listing.daily_price)}</p>
                 </div>
                 {listing.monthly_price && (
-                  <div className="text-center">
-                    <DollarSign className="mx-auto mb-2 h-5 w-5 text-primary" />
-                    <p className="text-sm text-muted-foreground">Monthly Rate</p>
-                    <p className="font-semibold text-foreground">{formatPrice(listing.monthly_price)}</p>
+                  <div className="text-center col-span-2 md:col-span-1">
+                    <DollarSign className="mx-auto mb-1.5 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <p className="text-xs sm:text-sm text-muted-foreground">Monthly Rate</p>
+                    <p className="text-sm sm:text-base font-semibold text-foreground">{formatPrice(listing.monthly_price)}</p>
                   </div>
                 )}
               </div>
 
               {listing.description && (
                 <>
-                  <Separator className="my-8" />
-                  <div className="mb-8">
-                    <h2 className="mb-4 text-xl font-bold text-foreground">Description</h2>
-                    <p className="leading-relaxed text-muted-foreground">{listing.description}</p>
+                  <Separator className="my-6 sm:my-8" />
+                  <div className="mb-6 sm:mb-8">
+                    <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-bold text-foreground">Description</h2>
+                    <p className="leading-relaxed text-sm sm:text-base text-muted-foreground">{listing.description}</p>
                   </div>
                 </>
               )}
@@ -594,20 +594,20 @@ const ListingDetails = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="animate-slide-up" style={{ animationDelay: "200ms" }}>
-            <div className="sticky top-24 space-y-6">
+          <div className="animate-slide-up lg:sticky lg:top-24" style={{ animationDelay: "200ms" }}>
+            <div className="space-y-4 sm:space-y-6">
               {/* Price Card */}
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
-                <p className="text-sm text-muted-foreground">Daily Rate</p>
-                <p className="text-3xl font-bold text-gradient">{formatPrice(listing.daily_price)}<span className="text-lg font-normal text-muted-foreground">/day</span></p>
+              <div className="rounded-xl sm:rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-card">
+                <p className="text-xs sm:text-sm text-muted-foreground">Daily Rate</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gradient">{formatPrice(listing.daily_price)}<span className="text-sm sm:text-lg font-normal text-muted-foreground">/day</span></p>
                 
                 {listing.monthly_price && (
-                  <p className="mt-2 text-sm text-muted-foreground">
+                  <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground">
                     or {formatPrice(listing.monthly_price)}/month
                   </p>
                 )}
 
-                <Separator className="my-5" />
+                <Separator className="my-4 sm:my-5" />
 
                 {!isOwner && (
                   <Button className="w-full mb-3" size="lg" onClick={() => {

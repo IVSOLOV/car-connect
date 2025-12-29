@@ -56,13 +56,13 @@ const Header = () => {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3">
             {/* Admin Support Tickets */}
             {user && role === "admin" && (
-              <Button variant="ghost" size="icon" onClick={() => navigate("/support-tickets")} className="relative">
-                <HelpCircle className="h-5 w-5" />
+              <Button variant="ghost" size="icon" onClick={() => navigate("/support-tickets")} className="relative h-9 w-9 sm:h-10 sm:w-10">
+                <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 {openCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs font-medium flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] sm:text-xs font-medium flex items-center justify-center">
                     {openCount > 9 ? "9+" : openCount}
                   </span>
                 )}
@@ -71,10 +71,10 @@ const Header = () => {
 
             {/* Admin Approval Requests */}
             {user && role === "admin" && (
-              <Button variant="ghost" size="icon" onClick={() => navigate("/approval-requests")} className="relative">
-                <Bell className="h-5 w-5" />
+              <Button variant="ghost" size="icon" onClick={() => navigate("/approval-requests")} className="relative h-9 w-9 sm:h-10 sm:w-10">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
                 {pendingCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs font-medium flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] sm:text-xs font-medium flex items-center justify-center">
                     {pendingCount > 9 ? "9+" : pendingCount}
                   </span>
                 )}
@@ -83,10 +83,10 @@ const Header = () => {
             
             {/* User Support Response Notification */}
             {user && role !== "admin" && (
-              <Button variant="ghost" size="icon" onClick={() => navigate("/support-tickets")} className="relative">
-                <Headphones className="h-5 w-5" />
+              <Button variant="ghost" size="icon" onClick={() => navigate("/support-tickets")} className="relative h-9 w-9 sm:h-10 sm:w-10">
+                <Headphones className="h-4 w-4 sm:h-5 sm:w-5" />
                 {responseCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs font-medium flex items-center justify-center">
                     {responseCount > 9 ? "9+" : responseCount}
                   </span>
                 )}
@@ -94,10 +94,10 @@ const Header = () => {
             )}
 
             {user && (
-              <Button variant="ghost" size="icon" onClick={() => navigate("/messages")} className="relative">
-                <MessageCircle className="h-5 w-5" />
+              <Button variant="ghost" size="icon" onClick={() => navigate("/messages")} className="relative h-9 w-9 sm:h-10 sm:w-10">
+                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs font-medium flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] sm:text-xs font-medium flex items-center justify-center">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}

@@ -54,7 +54,6 @@ interface UserProfile {
   last_name: string | null;
   full_name: string | null;
   company_name: string | null;
-  phone: string | null;
   created_at: string;
   listings_count?: number;
 }
@@ -247,8 +246,7 @@ const AdminPanel = () => {
         u.full_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
         u.first_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
         u.last_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
-        u.company_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
-        u.phone?.includes(userSearch)
+        u.company_name?.toLowerCase().includes(userSearch.toLowerCase())
       );
     }
 
@@ -592,7 +590,6 @@ const AdminPanel = () => {
                           <TableHead>User ID</TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>Company</TableHead>
-                          <TableHead>Phone</TableHead>
                           <TableHead>Listings</TableHead>
                           <TableHead>Joined</TableHead>
                           <TableHead>Actions</TableHead>
@@ -608,7 +605,6 @@ const AdminPanel = () => {
                               {user.full_name || `${user.first_name || ""} ${user.last_name || ""}`.trim() || "—"}
                             </TableCell>
                             <TableCell>{user.company_name || "—"}</TableCell>
-                            <TableCell>{user.phone || "—"}</TableCell>
                             <TableCell>
                               <Badge variant="secondary">{user.listings_count}</Badge>
                             </TableCell>

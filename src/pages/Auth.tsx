@@ -500,11 +500,11 @@ const Auth = () => {
                       className="text-sm font-normal cursor-pointer leading-relaxed"
                     >
                       I agree to the{" "}
-                      <Link to="/privacy-policy" className="text-primary hover:underline" target="_blank">
+                      <Link to="/privacy" className="text-primary hover:underline" target="_blank">
                         Privacy Policy
                       </Link>{" "}
                       and{" "}
-                      <Link to="/terms-of-service" className="text-primary hover:underline" target="_blank">
+                      <Link to="/terms" className="text-primary hover:underline" target="_blank">
                         Terms of Service
                       </Link>
                     </Label>

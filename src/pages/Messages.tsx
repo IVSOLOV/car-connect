@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, Car, User, ChevronRight, ArrowLeft, Paperclip, Image, FileText, X, Star } from "lucide-react";
+import { MessageCircle, Car, User, ChevronRight, ArrowLeft, Paperclip, Image, FileText, X, Star, Pencil, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,6 +29,7 @@ interface Message {
   message: string;
   created_at: string;
   read_at?: string | null;
+  edited_at?: string | null;
   attachments?: Attachment[];
 }
 
@@ -65,6 +66,9 @@ const Messages = () => {
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [hasExistingReview, setHasExistingReview] = useState(false);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -114,6 +118,7 @@ const Messages = () => {
           ...msg,
           attachments: (msg.attachments as unknown as Attachment[]) || [],
           read_at: msg.read_at,
+          edited_at: msg.edited_at,
           recipient_id: msg.recipient_id,
         });
       });
@@ -223,6 +228,7 @@ const Messages = () => {
         messages: (data || []).map(msg => ({
           ...msg,
           attachments: (msg.attachments as unknown as Attachment[]) || [],
+          edited_at: msg.edited_at,
         })),
       });
 
@@ -384,6 +390,72 @@ const Messages = () => {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  // Check if message can be edited (within 5 minutes and own message)
+  const canEditMessage = (msg: Message): boolean => {
+    if (msg.sender_id !== user?.id) return false;
+    const createdAt = new Date(msg.created_at);
+    const now = new Date();
+    const diffMinutes = (now.getTime() - createdAt.getTime()) / (1000 * 60);
+    return diffMinutes <= 5;
+  };
+
+  const startEditingMessage = (msg: Message) => {
+    setEditingMessageId(msg.id);
+    setEditingText(msg.message);
+  };
+
+  const cancelEditing = () => {
+    setEditingMessageId(null);
+    setEditingText("");
+  };
+
+  const saveEditedMessage = async (msgId: string) => {
+    if (!editingText.trim() || !user) return;
+    
+    setSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from("messages")
+        .update({ 
+          message: editingText.trim(),
+          edited_at: new Date().toISOString()
+        })
+        .eq("id", msgId)
+        .eq("sender_id", user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setSelectedConversation(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          messages: prev.messages.map(m => 
+            m.id === msgId 
+              ? { ...m, message: editingText.trim(), edited_at: new Date().toISOString() }
+              : m
+          )
+        };
+      });
+
+      setEditingMessageId(null);
+      setEditingText("");
+      toast({
+        title: "Message updated",
+        description: "Your message has been edited.",
+      });
+    } catch (error) {
+      console.error("Error editing message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to edit message.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const getSelectedConversationInfo = () => {
     if (!selectedConversation) return null;
     return conversations.find(
@@ -468,8 +540,18 @@ const Messages = () => {
                         {selectedConversation.messages.map((msg) => (
                           <div
                             key={msg.id}
-                            className={`flex ${msg.sender_id === user?.id ? "justify-end" : "justify-start"}`}
+                            className={`flex ${msg.sender_id === user?.id ? "justify-end" : "justify-start"} group`}
                           >
+                            {/* Edit button for own messages within 5 mins */}
+                            {msg.sender_id === user?.id && canEditMessage(msg) && editingMessageId !== msg.id && (
+                              <button
+                                onClick={() => startEditingMessage(msg)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 self-center p-1 hover:bg-muted rounded"
+                                title="Edit message"
+                              >
+                                <Pencil className="h-3 w-3 text-muted-foreground" />
+                              </button>
+                            )}
                             <div
                               className={`max-w-[85%] sm:max-w-[70%] rounded-lg px-3 py-2 sm:px-4 ${
                                 msg.sender_id === user?.id
@@ -477,28 +559,70 @@ const Messages = () => {
                                   : "bg-muted"
                               }`}
                             >
-                              {msg.message && msg.message !== "Sent attachment(s)" && (
-                                <p className="text-sm break-words">{msg.message}</p>
-                              )}
-                              
-                              {/* Attachments */}
-                              {msg.attachments && msg.attachments.length > 0 && (
-                                <div className="mt-2 space-y-2">
-                                  {msg.attachments.map((attachment, idx) => (
-                                    <AttachmentRenderer 
-                                      key={idx}
-                                      attachment={attachment}
-                                      isSender={msg.sender_id === user?.id}
-                                    />
-                                  ))}
+                              {editingMessageId === msg.id ? (
+                                <div className="space-y-2">
+                                  <input
+                                    type="text"
+                                    value={editingText}
+                                    onChange={(e) => setEditingText(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" && !e.shiftKey) {
+                                        e.preventDefault();
+                                        saveEditedMessage(msg.id);
+                                      } else if (e.key === "Escape") {
+                                        cancelEditing();
+                                      }
+                                    }}
+                                    className="w-full px-2 py-1 text-sm bg-background text-foreground rounded border border-border focus:outline-none focus:ring-1 focus:ring-ring"
+                                    autoFocus
+                                    disabled={savingEdit}
+                                  />
+                                  <div className="flex gap-1 justify-end">
+                                    <button
+                                      onClick={cancelEditing}
+                                      className="p-1 hover:bg-background/20 rounded text-primary-foreground/70"
+                                      disabled={savingEdit}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                    <button
+                                      onClick={() => saveEditedMessage(msg.id)}
+                                      className="p-1 hover:bg-background/20 rounded text-primary-foreground"
+                                      disabled={savingEdit || !editingText.trim()}
+                                    >
+                                      <Check className="h-3 w-3" />
+                                    </button>
+                                  </div>
                                 </div>
+                              ) : (
+                                <>
+                                  {msg.message && msg.message !== "Sent attachment(s)" && (
+                                    <p className="text-sm break-words">{msg.message}</p>
+                                  )}
+                                  
+                                  {/* Attachments */}
+                                  {msg.attachments && msg.attachments.length > 0 && (
+                                    <div className="mt-2 space-y-2">
+                                      {msg.attachments.map((attachment, idx) => (
+                                        <AttachmentRenderer 
+                                          key={idx}
+                                          attachment={attachment}
+                                          isSender={msg.sender_id === user?.id}
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
+                                  
+                                  <p className={`text-[10px] sm:text-xs mt-1 ${
+                                    msg.sender_id === user?.id ? "text-primary-foreground/70" : "text-muted-foreground"
+                                  }`}>
+                                    {format(new Date(msg.created_at), "MMM d, h:mm a")}
+                                    {msg.edited_at && (
+                                      <span className="ml-1">(edited)</span>
+                                    )}
+                                  </p>
+                                </>
                               )}
-                              
-                              <p className={`text-[10px] sm:text-xs mt-1 ${
-                                msg.sender_id === user?.id ? "text-primary-foreground/70" : "text-muted-foreground"
-                              }`}>
-                                {format(new Date(msg.created_at), "MMM d, h:mm a")}
-                              </p>
                             </div>
                           </div>
                         ))}

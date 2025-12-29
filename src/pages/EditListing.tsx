@@ -318,16 +318,22 @@ const EditListing = () => {
 
       // If only price decreased, keep current approval status and track original price
       if (onlyPriceDecreased && originalListing.approval_status === "approved") {
-        // Set original price for showing discount (use existing original or current price)
-        const existingOriginalPrice = (originalListing as any).original_daily_price;
+        // Set original daily price for showing discount (use existing original or current price)
+        const existingOriginalDailyPrice = (originalListing as any).original_daily_price;
         if (newDailyPrice < originalListing.daily_price) {
-          updateData.original_daily_price = existingOriginalPrice || originalListing.daily_price;
+          updateData.original_daily_price = existingOriginalDailyPrice || originalListing.daily_price;
+        }
+        // Set original monthly price for showing discount
+        const existingOriginalMonthlyPrice = (originalListing as any).original_monthly_price;
+        if (newMonthlyPrice !== null && originalListing.monthly_price !== null && newMonthlyPrice < originalListing.monthly_price) {
+          updateData.original_monthly_price = existingOriginalMonthlyPrice || originalListing.monthly_price;
         }
         // Keep approved status - no admin review needed
       } else {
         // Other changes require admin approval
         updateData.approval_status = "pending";
         updateData.original_daily_price = null; // Reset original price on full update
+        updateData.original_monthly_price = null;
       }
 
       const { error } = await supabase

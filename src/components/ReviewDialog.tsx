@@ -56,7 +56,7 @@ const ReviewDialog = ({
 
       if (error) {
         if (error.code === "23505") {
-          toast.error("You have already reviewed this user for this listing");
+          toast.error("You have already reviewed this user");
         } else {
           throw error;
         }

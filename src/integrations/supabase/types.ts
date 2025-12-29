@@ -21,8 +21,6 @@ export type Database = {
           id: string
           listing_id: string
           notes: string | null
-          renter_email: string | null
-          renter_name: string | null
           start_date: string
           updated_at: string
         }
@@ -32,8 +30,6 @@ export type Database = {
           id?: string
           listing_id: string
           notes?: string | null
-          renter_email?: string | null
-          renter_name?: string | null
           start_date: string
           updated_at?: string
         }
@@ -43,8 +39,6 @@ export type Database = {
           id?: string
           listing_id?: string
           notes?: string | null
-          renter_email?: string | null
-          renter_name?: string | null
           start_date?: string
           updated_at?: string
         }

@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, X, Plus, Trash2 } from "lucide-react";
+import { CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -19,21 +18,11 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { z } from "zod";
-
-// Validation schema for booking inputs
-const bookingSchema = z.object({
-  renterName: z.string().trim().max(100, "Name must be less than 100 characters").optional().or(z.literal("")),
-  renterEmail: z.string().trim().email("Please enter a valid email address").max(255, "Email must be less than 255 characters").optional().or(z.literal("")),
-});
-
 interface Booking {
   id: string;
   listing_id: string;
   start_date: string;
   end_date: string;
-  renter_name: string | null;
-  renter_email: string | null;
   notes: string | null;
 }
 
@@ -54,8 +43,6 @@ const BookingCalendarModal = ({
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
-  const [renterName, setRenterName] = useState("");
-  const [renterEmail, setRenterEmail] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
@@ -93,30 +80,13 @@ const BookingCalendarModal = ({
       return;
     }
 
-    // Validate inputs with zod schema
-    const validationResult = bookingSchema.safeParse({
-      renterName,
-      renterEmail,
-    });
-
-    if (!validationResult.success) {
-      const firstError = validationResult.error.errors[0];
-      toast.error(firstError.message);
-      return;
-    }
-
     setIsAdding(true);
 
     try {
-      const trimmedName = renterName.trim();
-      const trimmedEmail = renterEmail.trim();
-      
       const { error } = await supabase.from("listing_bookings" as any).insert({
         listing_id: listingId,
         start_date: format(startDate, "yyyy-MM-dd"),
         end_date: format(endDate, "yyyy-MM-dd"),
-        renter_name: trimmedName || null,
-        renter_email: trimmedEmail || null,
       });
 
       if (error) throw error;
@@ -124,8 +94,6 @@ const BookingCalendarModal = ({
       toast.success("Booking added successfully");
       setStartDate(undefined);
       setEndDate(undefined);
-      setRenterName("");
-      setRenterEmail("");
       fetchBookings();
     } catch (error) {
       console.error("Error adding booking:", error);
@@ -245,24 +213,6 @@ const BookingCalendarModal = ({
                 </Popover>
               </div>
 
-              <div className="space-y-2">
-                <Label>Renter Name (optional)</Label>
-                <Input
-                  placeholder="John Doe"
-                  value={renterName}
-                  onChange={(e) => setRenterName(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Renter Email (optional)</Label>
-                <Input
-                  type="email"
-                  placeholder="john@example.com"
-                  value={renterEmail}
-                  onChange={(e) => setRenterEmail(e.target.value)}
-                />
-              </div>
             </div>
 
             <Button
@@ -300,12 +250,6 @@ const BookingCalendarModal = ({
                         {format(new Date(booking.start_date), "MMM d, yyyy")} -{" "}
                         {format(new Date(booking.end_date), "MMM d, yyyy")}
                       </p>
-                      {booking.renter_name && (
-                        <p className="text-sm text-muted-foreground">
-                          {booking.renter_name}
-                          {booking.renter_email && ` · ${booking.renter_email}`}
-                        </p>
-                      )}
                     </div>
                     <Button
                       variant="ghost"

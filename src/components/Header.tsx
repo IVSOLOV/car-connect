@@ -173,23 +173,6 @@ const Header = () => {
                 Sign In
               </Button>
             )}
-
-            {/* Mobile menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild className="md:hidden">
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                  Browse Cars
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/become-host")}>
-                  List Your Car
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
       </div>

@@ -410,75 +410,75 @@ const Messages = () => {
       />
       <Header />
       
-      <main className="container mx-auto px-4 py-8 pt-24">
+      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pt-20 sm:pt-24">
         <div className="max-w-4xl mx-auto">
-          <Card className="h-[calc(100vh-8rem)]">
-            <CardHeader className="border-b">
-              <CardTitle className="flex items-center gap-2">
+          <Card className="h-[calc(100vh-6rem)] sm:h-[calc(100vh-8rem)] overflow-hidden">
+            <CardHeader className="border-b py-3 sm:py-4 px-3 sm:px-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 {selectedConversation ? (
                   <>
                     <Button 
                       variant="ghost" 
                       size="icon" 
                       onClick={() => setSelectedConversation(null)}
-                      className="mr-2"
+                      className="mr-1 sm:mr-2 h-8 w-8 sm:h-10 sm:w-10 shrink-0"
                     >
-                      <ArrowLeft className="h-5 w-5" />
+                      <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                     <div 
-                      className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                      className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-80 transition-opacity min-w-0 flex-1"
                       onClick={() => convInfo && navigate(`/owner/${convInfo.other_user_id}`)}
                     >
                       {convInfo?.other_user_avatar ? (
                         <img 
                           src={convInfo.other_user_avatar} 
                           alt={convInfo.other_user_name}
-                          className="w-10 h-10 rounded-full object-cover"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shrink-0"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="h-5 w-5 text-primary" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                         </div>
                       )}
-                      <div>
-                        <p className="font-semibold hover:text-primary transition-colors">{convInfo?.other_user_name}</p>
-                        <p className="text-sm text-muted-foreground">{convInfo?.listing_title}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold hover:text-primary transition-colors truncate text-sm sm:text-base">{convInfo?.other_user_name}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{convInfo?.listing_title}</p>
                       </div>
                     </div>
                   </>
                 ) : (
                   <>
-                    <MessageCircle className="h-5 w-5" />
+                    <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                     Messages
                   </>
                 )}
               </CardTitle>
             </CardHeader>
             
-            <CardContent className="p-0 h-[calc(100%-5rem)]">
+            <CardContent className="p-0 h-[calc(100%-4rem)] sm:h-[calc(100%-5rem)]">
               {selectedConversation ? (
                 <div className="flex flex-col h-full">
-                  <ScrollArea className="flex-1 p-4">
+                  <ScrollArea className="flex-1 p-2 sm:p-4">
                     {loadingMessages ? (
                       <div className="flex justify-center py-8">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-3 sm:space-y-4">
                         {selectedConversation.messages.map((msg) => (
                           <div
                             key={msg.id}
                             className={`flex ${msg.sender_id === user?.id ? "justify-end" : "justify-start"}`}
                           >
                             <div
-                              className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                              className={`max-w-[85%] sm:max-w-[70%] rounded-lg px-3 py-2 sm:px-4 ${
                                 msg.sender_id === user?.id
                                   ? "bg-primary text-primary-foreground"
                                   : "bg-muted"
                               }`}
                             >
                               {msg.message && msg.message !== "Sent attachment(s)" && (
-                                <p className="text-sm">{msg.message}</p>
+                                <p className="text-sm break-words">{msg.message}</p>
                               )}
                               
                               {/* Attachments */}
@@ -494,7 +494,7 @@ const Messages = () => {
                                 </div>
                               )}
                               
-                              <p className={`text-xs mt-1 ${
+                              <p className={`text-[10px] sm:text-xs mt-1 ${
                                 msg.sender_id === user?.id ? "text-primary-foreground/70" : "text-muted-foreground"
                               }`}>
                                 {format(new Date(msg.created_at), "MMM d, h:mm a")}
@@ -508,36 +508,37 @@ const Messages = () => {
 
                   {/* Review Prompt - Show after 5+ messages */}
                   {selectedConversation.messages.length >= 5 && !hasExistingReview && convInfo && (
-                    <div className="border-t border-b bg-accent/30 p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Star className="h-5 w-5 text-yellow-500" />
-                        <span className="text-sm">How was your experience with {convInfo.other_user_name}?</span>
+                    <div className="border-t border-b bg-accent/30 p-2 sm:p-3 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 shrink-0" />
+                        <span className="text-xs sm:text-sm truncate">How was your experience with {convInfo.other_user_name}?</span>
                       </div>
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => setShowReviewDialog(true)}
+                        className="shrink-0 text-xs sm:text-sm h-8"
                       >
-                        Rate User
+                        Rate
                       </Button>
                     </div>
                   )}
                   
-                  <div className="border-t p-4">
+                  <div className="border-t p-2 sm:p-4 safe-bottom">
                     {/* Pending files preview */}
                     {pendingFiles.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-3">
+                      <div className="flex flex-wrap gap-2 mb-2 sm:mb-3">
                         {pendingFiles.map((file, idx) => (
                           <div 
                             key={idx}
-                            className="relative flex items-center gap-2 bg-muted rounded-md px-3 py-2"
+                            className="relative flex items-center gap-1 sm:gap-2 bg-muted rounded-md px-2 py-1.5 sm:px-3 sm:py-2"
                           >
                             {file.type.startsWith('image/') ? (
-                              <Image className="h-4 w-4" />
+                              <Image className="h-3 w-3 sm:h-4 sm:w-4" />
                             ) : (
-                              <FileText className="h-4 w-4" />
+                              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                             )}
-                            <span className="text-sm truncate max-w-[100px]">{file.name}</span>
+                            <span className="text-xs sm:text-sm truncate max-w-[60px] sm:max-w-[100px]">{file.name}</span>
                             <button 
                               onClick={() => removePendingFile(idx)}
                               className="hover:bg-background rounded-full p-0.5"
@@ -549,7 +550,7 @@ const Messages = () => {
                       </div>
                     )}
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 sm:gap-2">
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -563,8 +564,9 @@ const Messages = () => {
                         size="icon"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={sendingMessage}
+                        className="h-10 w-10 shrink-0"
                       >
-                        <Paperclip className="h-5 w-5" />
+                        <Paperclip className="h-4 w-4 sm:h-5 sm:w-5" />
                       </Button>
                       <input
                         type="text"
@@ -572,13 +574,14 @@ const Messages = () => {
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
                         placeholder="Type a message..."
-                        className="flex-1 px-4 py-2 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="flex-1 min-w-0 px-3 sm:px-4 py-2 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                       />
                       <Button 
                         onClick={sendMessage} 
                         disabled={sendingMessage || (!newMessage.trim() && pendingFiles.length === 0)}
+                        className="shrink-0 px-3 sm:px-4"
                       >
-                        {uploadingFiles ? "Uploading..." : sendingMessage ? "..." : "Send"}
+                        {uploadingFiles ? "..." : sendingMessage ? "..." : "Send"}
                       </Button>
                     </div>
                   </div>
@@ -603,41 +606,41 @@ const Messages = () => {
                         <button
                           key={`${conv.listing_id}-${conv.other_user_id}`}
                           onClick={() => openConversation(conv)}
-                          className="w-full p-4 flex items-center gap-4 hover:bg-accent/50 transition-colors text-left"
+                          className="w-full p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-accent/50 transition-colors text-left"
                         >
-                          <div className="relative">
+                          <div className="relative shrink-0">
                             {conv.other_user_avatar ? (
                               <img 
                                 src={conv.other_user_avatar} 
                                 alt={conv.other_user_name}
-                                className="w-12 h-12 rounded-full object-cover"
+                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                <User className="h-6 w-6 text-primary" />
+                              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                <User className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                               </div>
                             )}
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <p className={`text-foreground truncate ${conv.unread_count > 0 ? "font-bold" : "font-semibold"}`}>
+                            <div className="flex items-center justify-between gap-2">
+                              <p className={`text-foreground truncate text-sm sm:text-base ${conv.unread_count > 0 ? "font-bold" : "font-semibold"}`}>
                                 {conv.other_user_name}
                               </p>
-                              <span className={`text-xs ${conv.unread_count > 0 ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+                              <span className={`text-[10px] sm:text-xs shrink-0 ${conv.unread_count > 0 ? "text-primary font-semibold" : "text-muted-foreground"}`}>
                                 {format(new Date(conv.last_message_time), "MMM d")}
                               </span>
                             </div>
-                            <p className={`text-sm flex items-center gap-1 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                            <p className={`text-xs sm:text-sm flex items-center gap-1 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                               <Car className="h-3 w-3 flex-shrink-0" />
                               <span className="truncate">{conv.listing_title}</span>
                             </p>
-                            <p className={`text-sm truncate mt-1 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                            <p className={`text-xs sm:text-sm truncate mt-0.5 sm:mt-1 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                               {conv.last_message}
                             </p>
                           </div>
                           
-                          <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                          <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                         </button>
                       ))}
                     </div>

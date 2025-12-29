@@ -355,22 +355,22 @@ const Dashboard = () => {
       />
       <Header />
 
-      <main className="container mx-auto px-4 pt-24 pb-12">
+      <main className="container mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-8 sm:pb-12">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Browse Cars</h1>
-          <p className="text-muted-foreground">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">Browse Cars</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Find the perfect car for your next trip
           </p>
         </div>
 
         {/* Search and Mobile Filter Button */}
-        <div className="flex gap-3 mb-6">
+        <div className="flex gap-2 sm:gap-3 mb-4 sm:mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by make, model, or city..."
-              className="pl-10"
+              placeholder="Search make, model, city..."
+              className="pl-9 sm:pl-10 text-sm sm:text-base h-10 sm:h-11"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -379,17 +379,17 @@ const Dashboard = () => {
           {/* Mobile Filters */}
           <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" className="lg:hidden shrink-0">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                Filters
+              <Button variant="outline" className="lg:hidden shrink-0 h-10 sm:h-11 px-3">
+                <SlidersHorizontal className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Filters</span>
                 {hasActiveFilters && (
-                  <span className="ml-2 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+                  <span className="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs flex items-center justify-center">
                     !
                   </span>
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-80">
+            <SheetContent side="right" className="w-[85vw] max-w-80 overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Filters</SheetTitle>
               </SheetHeader>
@@ -400,7 +400,7 @@ const Dashboard = () => {
           </Sheet>
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex gap-6 sm:gap-8">
           {/* Desktop Sidebar Filters */}
           <aside className="hidden lg:block w-64 shrink-0">
             <div className="sticky top-24 rounded-xl border border-border bg-card p-5">
@@ -412,11 +412,11 @@ const Dashboard = () => {
           {/* Results */}
           <div className="flex-1">
             {/* Results count */}
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
+            <div className="mb-3 sm:mb-4 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {loading ? "Loading..." : `${filteredListings.length} cars available`}
                 {startDate && endDate && (
-                  <span className="ml-1">
+                  <span className="block sm:inline sm:ml-1">
                     for {format(startDate, "MMM d")} - {format(endDate, "MMM d")}
                   </span>
                 )}
@@ -426,7 +426,7 @@ const Dashboard = () => {
                   variant="ghost"
                   size="sm"
                   onClick={clearFilters}
-                  className="hidden lg:flex"
+                  className="hidden lg:flex text-xs h-8"
                 >
                   <X className="mr-1 h-3 w-3" />
                   Clear filters
@@ -435,7 +435,7 @@ const Dashboard = () => {
             </div>
 
             {loading ? (
-              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                 <ListingCardSkeleton count={6} />
               </div>
             ) : filteredListings.length === 0 ? (
@@ -447,7 +447,7 @@ const Dashboard = () => {
                 />
               </div>
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredListings.map((listing, index) => (
                   <ListingCard 
                     key={listing.id} 

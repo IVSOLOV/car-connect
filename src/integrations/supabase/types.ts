@@ -162,6 +162,30 @@ export type Database = {
           },
         ]
       }
+      private_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -171,7 +195,6 @@ export type Database = {
           full_name: string | null
           id: string
           last_name: string | null
-          phone: string | null
           show_company_as_owner: boolean | null
           updated_at: string
           user_id: string
@@ -184,7 +207,6 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_name?: string | null
-          phone?: string | null
           show_company_as_owner?: boolean | null
           updated_at?: string
           user_id: string
@@ -197,7 +219,6 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_name?: string | null
-          phone?: string | null
           show_company_as_owner?: boolean | null
           updated_at?: string
           user_id?: string

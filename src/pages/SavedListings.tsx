@@ -170,7 +170,10 @@ const SavedListings = () => {
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          onClick={() => navigate(`/listing/${listing.id}`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/listing/${listing.id}`);
+                          }}
                           className="text-muted-foreground hover:text-foreground"
                           title="View listing"
                         >
@@ -179,7 +182,10 @@ const SavedListings = () => {
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          onClick={() => handleUnsaveListing(listing.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnsaveListing(listing.id);
+                          }}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           title="Remove from saved"
                         >

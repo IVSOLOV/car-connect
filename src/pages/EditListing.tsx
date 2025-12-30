@@ -103,6 +103,7 @@ const EditListing = () => {
   const [state, setState] = useState("");
   const [titleStatus, setTitleStatus] = useState("clear");
   const [dailyPrice, setDailyPrice] = useState("");
+  const [weeklyPrice, setWeeklyPrice] = useState("");
   const [monthlyPrice, setMonthlyPrice] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -161,6 +162,7 @@ const EditListing = () => {
       setState(listing.state);
       setTitleStatus(listing.title_status);
       setDailyPrice(listing.daily_price.toString());
+      setWeeklyPrice(listing.weekly_price?.toString() || "");
       setMonthlyPrice(listing.monthly_price?.toString() || "");
       setDescription(listing.description || "");
       setExistingImages(listing.images || []);
@@ -288,6 +290,7 @@ const EditListing = () => {
 
       // Determine if only price changed (and decreased)
       const newDailyPrice = parseInt(dailyPrice);
+      const newWeeklyPrice = weeklyPrice ? parseInt(weeklyPrice) : null;
       const newMonthlyPrice = monthlyPrice ? parseInt(monthlyPrice) : null;
       
       const onlyPriceDecreased = originalListing && 
@@ -300,6 +303,7 @@ const EditListing = () => {
         (description || null) === (originalListing.description || null) &&
         JSON.stringify(uploadedImageUrls.sort()) === JSON.stringify((originalListing.images || []).sort()) &&
         newDailyPrice <= originalListing.daily_price &&
+        (newWeeklyPrice === null || originalListing.weekly_price === null || newWeeklyPrice <= originalListing.weekly_price) &&
         (newMonthlyPrice === null || originalListing.monthly_price === null || newMonthlyPrice <= originalListing.monthly_price);
 
       // Build update object
@@ -311,6 +315,7 @@ const EditListing = () => {
         state,
         title_status: titleStatus,
         daily_price: newDailyPrice,
+        weekly_price: newWeeklyPrice,
         monthly_price: newMonthlyPrice,
         description: description || null,
         images: uploadedImageUrls,
@@ -323,6 +328,11 @@ const EditListing = () => {
         if (newDailyPrice < originalListing.daily_price) {
           updateData.original_daily_price = existingOriginalDailyPrice || originalListing.daily_price;
         }
+        // Set original weekly price for showing discount
+        const existingOriginalWeeklyPrice = (originalListing as any).original_weekly_price;
+        if (newWeeklyPrice !== null && originalListing.weekly_price !== null && newWeeklyPrice < originalListing.weekly_price) {
+          updateData.original_weekly_price = existingOriginalWeeklyPrice || originalListing.weekly_price;
+        }
         // Set original monthly price for showing discount
         const existingOriginalMonthlyPrice = (originalListing as any).original_monthly_price;
         if (newMonthlyPrice !== null && originalListing.monthly_price !== null && newMonthlyPrice < originalListing.monthly_price) {
@@ -333,6 +343,7 @@ const EditListing = () => {
         // Other changes require admin approval
         updateData.approval_status = "pending";
         updateData.original_daily_price = null; // Reset original price on full update
+        updateData.original_weekly_price = null;
         updateData.original_monthly_price = null;
       }
 
@@ -547,7 +558,7 @@ const EditListing = () => {
             </div>
 
             {/* Pricing */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="dailyPrice">Daily Price *</Label>
                 <div className="relative">
@@ -556,6 +567,20 @@ const EditListing = () => {
                     id="dailyPrice"
                     value={dailyPrice}
                     onChange={(e) => handlePriceChange(e.target.value, setDailyPrice)}
+                    placeholder="0"
+                    className="pl-7"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weeklyPrice">Weekly Price (optional)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="weeklyPrice"
+                    value={weeklyPrice}
+                    onChange={(e) => handlePriceChange(e.target.value, setWeeklyPrice)}
                     placeholder="0"
                     className="pl-7"
                   />

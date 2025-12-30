@@ -3,6 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { Car, Eye, Trash2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +39,8 @@ const SavedListings = () => {
   const { toast } = useToast();
   const [savedListings, setSavedListings] = useState<Listing[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -81,6 +93,8 @@ const SavedListings = () => {
       if (error) throw error;
 
       setSavedListings((prev) => prev.filter((l) => l.id !== listingId));
+      setDeleteDialogOpen(false);
+      setListingToDelete(null);
       toast({
         title: "Removed",
         description: "Listing removed from saved.",
@@ -93,6 +107,11 @@ const SavedListings = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const openDeleteDialog = (listing: Listing) => {
+    setListingToDelete(listing);
+    setDeleteDialogOpen(true);
   };
 
   if (loading) {
@@ -184,7 +203,7 @@ const SavedListings = () => {
                           size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleUnsaveListing(listing.id);
+                            openDeleteDialog(listing);
                           }}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           title="Remove from saved"
@@ -200,6 +219,31 @@ const SavedListings = () => {
           </Card>
         </div>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove from saved?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove{" "}
+              <span className="font-medium text-foreground">
+                {listingToDelete?.year} {listingToDelete?.make} {listingToDelete?.model}
+              </span>{" "}
+              from your saved listings?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => listingToDelete && handleUnsaveListing(listingToDelete.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

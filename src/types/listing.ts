@@ -8,8 +8,10 @@ export interface Listing {
   state: string;
   title_status: string;
   daily_price: number;
+  weekly_price: number | null;
   monthly_price: number | null;
   original_daily_price: number | null;
+  original_weekly_price: number | null;
   original_monthly_price: number | null;
   description: string | null;
   images: string[];

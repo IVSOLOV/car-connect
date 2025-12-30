@@ -67,11 +67,13 @@ export type Database = {
           monthly_price: number | null
           original_daily_price: number | null
           original_monthly_price: number | null
+          original_weekly_price: number | null
           rejection_reason: string | null
           state: string
           title_status: string
           updated_at: string
           user_id: string
+          weekly_price: number | null
           year: number
         }
         Insert: {
@@ -88,11 +90,13 @@ export type Database = {
           monthly_price?: number | null
           original_daily_price?: number | null
           original_monthly_price?: number | null
+          original_weekly_price?: number | null
           rejection_reason?: string | null
           state: string
           title_status?: string
           updated_at?: string
           user_id: string
+          weekly_price?: number | null
           year: number
         }
         Update: {
@@ -109,11 +113,13 @@ export type Database = {
           monthly_price?: number | null
           original_daily_price?: number | null
           original_monthly_price?: number | null
+          original_weekly_price?: number | null
           rejection_reason?: string | null
           state?: string
           title_status?: string
           updated_at?: string
           user_id?: string
+          weekly_price?: number | null
           year?: number
         }
         Relationships: []

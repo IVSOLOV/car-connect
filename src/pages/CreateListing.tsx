@@ -98,6 +98,7 @@ const CreateListing = () => {
   const [state, setState] = useState("");
   const [titleStatus, setTitleStatus] = useState("clear");
   const [dailyPrice, setDailyPrice] = useState("");
+  const [weeklyPrice, setWeeklyPrice] = useState("");
   const [monthlyPrice, setMonthlyPrice] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -283,6 +284,7 @@ const CreateListing = () => {
           state,
           title_status: titleStatus,
           daily_price: parseInt(dailyPrice),
+          weekly_price: weeklyPrice ? parseInt(weeklyPrice) : null,
           monthly_price: monthlyPrice ? parseInt(monthlyPrice) : null,
           description: description || null,
           images: uploadedImageUrls,
@@ -460,7 +462,7 @@ const CreateListing = () => {
             </div>
 
             {/* Pricing */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="dailyPrice">Daily Price *</Label>
                 <div className="relative">
@@ -469,6 +471,20 @@ const CreateListing = () => {
                     id="dailyPrice"
                     value={dailyPrice}
                     onChange={(e) => handlePriceChange(e.target.value, setDailyPrice)}
+                    placeholder="0"
+                    className="pl-7"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weeklyPrice">Weekly Price</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="weeklyPrice"
+                    value={weeklyPrice}
+                    onChange={(e) => handlePriceChange(e.target.value, setWeeklyPrice)}
                     placeholder="0"
                     className="pl-7"
                   />

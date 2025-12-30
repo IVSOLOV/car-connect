@@ -1,5 +1,5 @@
 import { useNavigate, Link } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Copy, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
@@ -11,12 +11,21 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-car.jpg";
 import type { Listing } from "@/types/listing";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchListings();
@@ -177,13 +186,7 @@ const Index = () => {
                 Terms of Service
               </Link>
               <button 
-                onClick={() => {
-                  navigator.clipboard.writeText("support@dirent.app");
-                  toast({
-                    title: "Email copied!",
-                    description: "support@dirent.app copied to clipboard",
-                  });
-                }}
+                onClick={() => setContactDialogOpen(true)}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 Contact
@@ -192,6 +195,49 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      {/* Contact Email Dialog */}
+      <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Contact Support</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              You can reach us at the following email address:
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 rounded-md border border-border bg-muted/50 px-4 py-3">
+                <span className="text-foreground font-medium select-all">
+                  support@dirent.app
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  navigator.clipboard.writeText("support@dirent.app");
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                  toast({
+                    title: "Email copied!",
+                    description: "support@dirent.app copied to clipboard",
+                  });
+                }}
+              >
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Highlight the email above to copy, or click the copy button.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -25,7 +25,7 @@ const formatPhoneNumber = (value: string) => {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 };
 
-type AuthMode = "login" | "signup" | "forgot" | "verify-email";
+type AuthMode = "login" | "signup" | "forgot" | "verify-email" | "reset-password";
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -42,6 +42,8 @@ const Auth = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resetSent, setResetSent] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { user, signIn, signUp } = useAuth();
@@ -49,10 +51,20 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    // Check if this is a password reset flow
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    const accessToken = hashParams.get('access_token');
+    
+    if (type === 'recovery' && accessToken) {
+      setMode("reset-password");
+      return; // Don't redirect on recovery flow
+    }
+    
+    if (user && mode !== "reset-password") {
       navigate("/");
     }
-  }, [user, navigate]);
+  }, [user, navigate, mode]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -227,6 +239,53 @@ const Auth = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    const newErrors: Record<string, string> = {};
+    
+    const passwordResult = passwordSchema.safeParse(newPassword);
+    if (!passwordResult.success) {
+      newErrors.newPassword = passwordResult.error.errors[0].message;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+    
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Password updated!",
+          description: "Your password has been successfully changed.",
+        });
+        // Clear the hash and redirect to login
+        window.history.replaceState(null, '', '/auth');
+        setMode("login");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getHeading = () => {
     switch (mode) {
       case "login":
@@ -237,6 +296,8 @@ const Auth = () => {
         return "Reset your password";
       case "verify-email":
         return "Verify your email";
+      case "reset-password":
+        return "Set new password";
     }
   };
 
@@ -250,6 +311,8 @@ const Auth = () => {
         return "Enter your email and we'll send you a reset link";
       case "verify-email":
         return "We've sent you a verification link";
+      case "reset-password":
+        return "Choose a new password for your account";
     }
   };
 
@@ -276,7 +339,61 @@ const Auth = () => {
 
         {/* Form */}
         <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
-          {mode === "verify-email" ? (
+          {mode === "reset-password" ? (
+            <form onSubmit={(e) => { e.preventDefault(); handleResetPassword(); }} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pl-10"
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.newPassword && (
+                  <p className="text-sm text-destructive">{errors.newPassword}</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10"
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+                )}
+              </div>
+              
+              <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating password...
+                  </>
+                ) : (
+                  <>
+                    Update Password
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </form>
+          ) : mode === "verify-email" ? (
             <div className="text-center py-4">
               <div className="mb-4 mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <Mail className="h-6 w-6 text-primary" />
@@ -577,7 +694,7 @@ const Auth = () => {
             </form>
           )}
 
-          {mode !== "forgot" && (
+          {mode !== "forgot" && mode !== "reset-password" && (
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
                 {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}

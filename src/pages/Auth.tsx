@@ -25,7 +25,7 @@ const formatPhoneNumber = (value: string) => {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 };
 
-type AuthMode = "login" | "signup" | "forgot";
+type AuthMode = "login" | "signup" | "forgot" | "verify-email";
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -209,11 +209,11 @@ const Auth = () => {
             });
           }
         } else {
+          setMode("verify-email");
           toast({
-            title: "Account created!",
-            description: "Welcome to DiRent. You can now browse and save listings.",
+            title: "Verification email sent!",
+            description: "Please check your inbox to verify your email address.",
           });
-          navigate("/");
         }
       }
     } catch (error) {
@@ -235,6 +235,8 @@ const Auth = () => {
         return "Create your account";
       case "forgot":
         return "Reset your password";
+      case "verify-email":
+        return "Verify your email";
     }
   };
 
@@ -246,6 +248,8 @@ const Auth = () => {
         return "Join the direct car rental marketplace";
       case "forgot":
         return "Enter your email and we'll send you a reset link";
+      case "verify-email":
+        return "We've sent you a verification link";
     }
   };
 
@@ -272,7 +276,32 @@ const Auth = () => {
 
         {/* Form */}
         <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
-          {mode === "forgot" && resetSent ? (
+          {mode === "verify-email" ? (
+            <div className="text-center py-4">
+              <div className="mb-4 mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Mail className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Check your inbox</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                We've sent a verification link to <strong>{email}</strong>
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Click the link in the email to verify your account and start using DiRent.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setMode("login");
+                  setEmail("");
+                  setPassword("");
+                }}
+                className="w-full"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to sign in
+              </Button>
+            </div>
+          ) : mode === "forgot" && resetSent ? (
             <div className="text-center py-4">
               <div className="mb-4 mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <Mail className="h-6 w-6 text-primary" />

@@ -1,4 +1,5 @@
 export type VehicleType = "car" | "suv" | "minivan" | "truck" | "van" | "cargo_van" | "box_truck";
+export type FuelType = "gas" | "hybrid" | "electric";
 
 export interface Listing {
   id: string;
@@ -10,6 +11,7 @@ export interface Listing {
   state: string;
   title_status: string;
   vehicle_type: string;
+  fuel_type: string;
   daily_price: number;
   weekly_price: number | null;
   monthly_price: number | null;

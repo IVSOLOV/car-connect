@@ -20,6 +20,7 @@ import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { VehicleTypeSelector, type VehicleType } from "@/components/VehicleTypeSelector";
+import type { FuelType } from "@/types/listing";
 const carMakes = [
   "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Buick",
   "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ferrari", "Fiat", "Ford",
@@ -103,6 +104,7 @@ const CreateListing = () => {
   const [monthlyPrice, setMonthlyPrice] = useState("");
   const [description, setDescription] = useState("");
   const [vehicleType, setVehicleType] = useState<VehicleType>("car");
+  const [fuelType, setFuelType] = useState<FuelType>("gas");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentYear = new Date().getFullYear();
@@ -311,6 +313,7 @@ const CreateListing = () => {
           state,
           title_status: titleStatus,
           vehicle_type: vehicleType,
+          fuel_type: fuelType,
           daily_price: parseInt(dailyPrice),
           weekly_price: weeklyPrice ? parseInt(weeklyPrice) : null,
           monthly_price: monthlyPrice ? parseInt(monthlyPrice) : null,
@@ -512,6 +515,25 @@ const CreateListing = () => {
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="rebuild" id="rebuild" />
                   <Label htmlFor="rebuild" className="cursor-pointer">Rebuild</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Fuel Type (Optional) */}
+            <div className="space-y-2">
+              <Label>Fuel Type</Label>
+              <RadioGroup value={fuelType} onValueChange={(v) => setFuelType(v as FuelType)} className="flex gap-6">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="gas" id="gas" />
+                  <Label htmlFor="gas" className="cursor-pointer">Gas</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="hybrid" id="hybrid" />
+                  <Label htmlFor="hybrid" className="cursor-pointer">Hybrid</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="electric" id="electric" />
+                  <Label htmlFor="electric" className="cursor-pointer">Electric</Label>
                 </div>
               </RadioGroup>
             </div>

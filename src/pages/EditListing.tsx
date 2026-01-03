@@ -20,7 +20,7 @@ import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { VehicleTypeSelector, type VehicleType } from "@/components/VehicleTypeSelector";
-import type { Listing } from "@/types/listing";
+import type { Listing, FuelType } from "@/types/listing";
 
 const carMakes = [
   "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Buick",
@@ -108,6 +108,7 @@ const EditListing = () => {
   const [monthlyPrice, setMonthlyPrice] = useState("");
   const [description, setDescription] = useState("");
   const [vehicleType, setVehicleType] = useState<VehicleType>("car");
+  const [fuelType, setFuelType] = useState<FuelType>("gas");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Track original values to detect price-only changes
@@ -168,6 +169,7 @@ const EditListing = () => {
       setMonthlyPrice(listing.monthly_price?.toString() || "");
       setDescription(listing.description || "");
       setVehicleType((listing.vehicle_type as VehicleType) || "car");
+      setFuelType((listing.fuel_type as FuelType) || "gas");
       setExistingImages(listing.images || []);
     } catch (error) {
       console.error("Error fetching listing:", error);
@@ -367,6 +369,7 @@ const EditListing = () => {
         state,
         title_status: titleStatus,
         vehicle_type: vehicleType,
+        fuel_type: fuelType,
         daily_price: newDailyPrice,
         weekly_price: newWeeklyPrice,
         monthly_price: newMonthlyPrice,
@@ -648,6 +651,25 @@ const EditListing = () => {
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="rebuild" id="rebuild" />
                   <Label htmlFor="rebuild" className="cursor-pointer">Rebuild</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Fuel Type */}
+            <div className="space-y-2">
+              <Label>Fuel Type</Label>
+              <RadioGroup value={fuelType} onValueChange={(v) => setFuelType(v as FuelType)} className="flex gap-6">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="gas" id="gas" />
+                  <Label htmlFor="gas" className="cursor-pointer">Gas</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="hybrid" id="hybrid" />
+                  <Label htmlFor="hybrid" className="cursor-pointer">Hybrid</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="electric" id="electric" />
+                  <Label htmlFor="electric" className="cursor-pointer">Electric</Label>
                 </div>
               </RadioGroup>
             </div>

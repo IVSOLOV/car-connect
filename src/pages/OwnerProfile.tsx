@@ -240,9 +240,21 @@ const OwnerProfile = () => {
                         <MapPin className="h-3 w-3 mr-1" />
                         {listing.city}, {listing.state}
                       </p>
-                      <p className="text-primary font-bold">
-                        {formatPrice(listing.daily_price)}/day
-                      </p>
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="text-primary font-bold">
+                          {formatPrice(listing.daily_price)}/day
+                        </span>
+                        {listing.weekly_price && (
+                          <span className="text-muted-foreground">
+                            {formatPrice(listing.weekly_price)}/wk
+                          </span>
+                        )}
+                        {listing.monthly_price && (
+                          <span className="text-muted-foreground">
+                            {formatPrice(listing.monthly_price)}/mo
+                          </span>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>

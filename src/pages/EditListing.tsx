@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Upload, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, X, Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -236,6 +236,36 @@ const EditListing = () => {
     setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const setMainExistingImage = (index: number) => {
+    if (index === 0) return; // Already main
+    setExistingImages((prev) => {
+      const newArr = [...prev];
+      const [selected] = newArr.splice(index, 1);
+      newArr.unshift(selected);
+      return newArr;
+    });
+  };
+
+  const setMainNewImage = (index: number) => {
+    // Move existing images to the end, make this new image first
+    setNewImages((prev) => {
+      const newArr = [...prev];
+      const [selected] = newArr.splice(index, 1);
+      newArr.unshift(selected);
+      return newArr;
+    });
+    setNewImagePreviews((prev) => {
+      const newArr = [...prev];
+      const [selected] = newArr.splice(index, 1);
+      newArr.unshift(selected);
+      return newArr;
+    });
+    // Clear existing images so new image becomes first
+    if (existingImages.length > 0) {
+      setExistingImages([]);
+    }
+  };
+
   const handlePriceChange = (value: string, setter: (val: string) => void) => {
     const numericValue = value.replace(/[^0-9]/g, "");
     setter(numericValue);
@@ -421,19 +451,39 @@ const EditListing = () => {
             <div className="space-y-2">
               <Label>Images</Label>
               
+              <p className="text-sm text-muted-foreground">
+                Click on an image to set it as the main photo
+              </p>
+              
               {/* Existing Images */}
               {existingImages.length > 0 && (
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
                   {existingImages.map((url, index) => (
-                    <div key={`existing-${index}`} className="relative aspect-square">
+                    <div 
+                      key={`existing-${index}`} 
+                      className={`relative aspect-square cursor-pointer group ${
+                        index === 0 && newImagePreviews.length === 0 ? "ring-2 ring-primary ring-offset-2" : ""
+                      }`}
+                      onClick={() => setMainExistingImage(index)}
+                    >
                       <img 
                         src={url} 
                         alt={`Existing ${index + 1}`} 
                         className="w-full h-full object-cover rounded-lg"
                       />
+                      {index === 0 && newImagePreviews.length === 0 && (
+                        <div className="absolute top-1 left-1 bg-primary text-primary-foreground rounded-full p-1">
+                          <Star className="h-3 w-3 fill-current" />
+                        </div>
+                      )}
+                      {(index !== 0 || newImagePreviews.length > 0) && (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                          <span className="text-white text-xs font-medium">Set as main</span>
+                        </div>
+                      )}
                       <button
                         type="button"
-                        onClick={() => removeExistingImage(index)}
+                        onClick={(e) => { e.stopPropagation(); removeExistingImage(index); }}
                         className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
                       >
                         <X className="h-3 w-3" />
@@ -447,15 +497,31 @@ const EditListing = () => {
               {newImagePreviews.length > 0 && (
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
                   {newImagePreviews.map((preview, index) => (
-                    <div key={`new-${index}`} className="relative aspect-square">
+                    <div 
+                      key={`new-${index}`} 
+                      className={`relative aspect-square cursor-pointer group ${
+                        index === 0 && existingImages.length === 0 ? "ring-2 ring-primary ring-offset-2" : ""
+                      }`}
+                      onClick={() => setMainNewImage(index)}
+                    >
                       <img 
                         src={preview} 
                         alt={`New ${index + 1}`} 
                         className="w-full h-full object-cover rounded-lg border-2 border-primary"
                       />
+                      {index === 0 && existingImages.length === 0 && (
+                        <div className="absolute top-1 left-1 bg-primary text-primary-foreground rounded-full p-1">
+                          <Star className="h-3 w-3 fill-current" />
+                        </div>
+                      )}
+                      {(index !== 0 || existingImages.length > 0) && (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                          <span className="text-white text-xs font-medium">Set as main</span>
+                        </div>
+                      )}
                       <button
                         type="button"
-                        onClick={() => removeNewImage(index)}
+                        onClick={(e) => { e.stopPropagation(); removeNewImage(index); }}
                         className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
                       >
                         <X className="h-3 w-3" />

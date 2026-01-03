@@ -15,7 +15,7 @@ export type VehicleType = typeof VEHICLE_TYPES[number]["value"];
 
 // Side-view vehicle icons
 const VehicleIcon = ({ type, className }: { type: string; className?: string }) => {
-  const iconClass = cn("w-6 h-6", className);
+  const iconClass = cn("w-8 h-8", className);
   
   switch (type) {
     case "sedan":

@@ -211,7 +211,7 @@ export const VehicleTypeFilter = ({ value, onChange }: VehicleTypeFilterProps) =
         type="button"
         onClick={() => onChange("")}
         className={cn(
-          "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-xs font-medium",
+          "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-xs font-medium min-w-[70px] justify-center",
           "hover:border-primary/50 hover:bg-accent/50",
           value === ""
             ? "border-primary bg-primary/10 text-primary"
@@ -228,7 +228,7 @@ export const VehicleTypeFilter = ({ value, onChange }: VehicleTypeFilterProps) =
             type="button"
             onClick={() => onChange(type.value)}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all text-xs font-medium",
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all text-xs font-medium min-w-[70px] justify-center",
               "hover:border-primary/50 hover:bg-accent/50",
               isSelected
                 ? "border-primary bg-primary/10 text-primary"

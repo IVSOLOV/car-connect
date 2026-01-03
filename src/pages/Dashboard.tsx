@@ -238,54 +238,29 @@ const Dashboard = () => {
       <div className="space-y-2">
         <Label>Fuel Type</Label>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant={selectedFuelType === "" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFuelType("")}
-            className="text-xs"
-          >
-            All
-          </Button>
-          <Button
-            variant={selectedFuelType === "gas" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFuelType("gas")}
-            className="text-xs"
-          >
-            Gas
-          </Button>
-          <Button
-            variant={selectedFuelType === "diesel" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFuelType("diesel")}
-            className="text-xs"
-          >
-            Diesel
-          </Button>
-          <Button
-            variant={selectedFuelType === "hybrid" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFuelType("hybrid")}
-            className="text-xs"
-          >
-            Hybrid
-          </Button>
-          <Button
-            variant={selectedFuelType === "electric" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFuelType("electric")}
-            className="text-xs"
-          >
-            Electric
-          </Button>
-          <Button
-            variant={selectedFuelType === "other" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFuelType("other")}
-            className="text-xs"
-          >
-            Other
-          </Button>
+          {[
+            { value: "", label: "All" },
+            { value: "gas", label: "Gas" },
+            { value: "diesel", label: "Diesel" },
+            { value: "hybrid", label: "Hybrid" },
+            { value: "electric", label: "Electric" },
+            { value: "other", label: "Other" },
+          ].map((fuel) => (
+            <button
+              key={fuel.value}
+              type="button"
+              onClick={() => setSelectedFuelType(fuel.value)}
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-xs font-medium min-w-[70px] justify-center",
+                "hover:border-primary/50 hover:bg-accent/50",
+                selectedFuelType === fuel.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-muted-foreground"
+              )}
+            >
+              {fuel.label}
+            </button>
+          ))}
         </div>
       </div>
 

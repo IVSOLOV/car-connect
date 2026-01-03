@@ -117,8 +117,8 @@ const Index = () => {
           </div>
 
           {loading ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <ListingCardSkeleton count={6} />
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <ListingCardSkeleton count={10} />
             </div>
           ) : listings.length === 0 ? (
             <div className="rounded-xl border border-border bg-card">
@@ -129,7 +129,7 @@ const Index = () => {
               />
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {listings.map((listing, index) => (
                 <ListingCard key={listing.id} listing={listing} index={index} />
               ))}

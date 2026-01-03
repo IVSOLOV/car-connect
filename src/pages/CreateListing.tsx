@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, X, Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -174,6 +174,22 @@ const CreateListing = () => {
   const removeImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const setMainImage = (index: number) => {
+    if (index === 0) return; // Already main
+    setImages((prev) => {
+      const newArr = [...prev];
+      const [selected] = newArr.splice(index, 1);
+      newArr.unshift(selected);
+      return newArr;
+    });
+    setImagePreviews((prev) => {
+      const newArr = [...prev];
+      const [selected] = newArr.splice(index, 1);
+      newArr.unshift(selected);
+      return newArr;
+    });
   };
 
   const handlePriceChange = (value: string, setter: (val: string) => void) => {
@@ -369,24 +385,45 @@ const CreateListing = () => {
               </div>
               
               {imagePreviews.length > 0 && (
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-4">
-                  {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square">
-                      <img 
-                        src={preview} 
-                        alt={`Preview ${index + 1}`} 
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                <>
+                  <p className="text-sm text-muted-foreground mt-4">
+                    Click on an image to set it as the main photo
+                  </p>
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-2">
+                    {imagePreviews.map((preview, index) => (
+                      <div 
+                        key={index} 
+                        className={`relative aspect-square cursor-pointer group ${
+                          index === 0 ? "ring-2 ring-primary ring-offset-2" : ""
+                        }`}
+                        onClick={() => setMainImage(index)}
                       >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                        <img 
+                          src={preview} 
+                          alt={`Preview ${index + 1}`} 
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        {index === 0 && (
+                          <div className="absolute top-1 left-1 bg-primary text-primary-foreground rounded-full p-1">
+                            <Star className="h-3 w-3 fill-current" />
+                          </div>
+                        )}
+                        {index !== 0 && (
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                            <span className="text-white text-xs font-medium">Set as main</span>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); removeImage(index); }}
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
 

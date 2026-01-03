@@ -20,11 +20,11 @@ const VehicleIcon = ({ type, className }: { type: string; className?: string }) 
   switch (type) {
     case "sedan":
       return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
-          <path d="M2 15h20M4 15v-2c0-.5.2-1 .5-1.2L7 10l2-3h6l2.5 3 2.5 1.8c.3.2.5.7.5 1.2v2" />
-          <path d="M9 10h6" />
-          <circle cx="6" cy="15" r="2" fill="currentColor" />
-          <circle cx="18" cy="15" r="2" fill="currentColor" />
+        <svg viewBox="0 0 24 24" fill="currentColor" className={iconClass}>
+          <path d="M21 13.5c0-.3-.1-.6-.2-.8l-1.5-1.2-2-3c-.3-.5-.8-.8-1.3-.8H8c-.5 0-1 .3-1.3.8l-2 3-1.5 1.2c-.1.2-.2.5-.2.8v2c0 .3.2.5.5.5H5c0 1.1.9 2 2 2s2-.9 2-2h6c0 1.1.9 2 2 2s2-.9 2-2h1.5c.3 0 .5-.2.5-.5v-2z" />
+          <circle cx="7" cy="16" r="1.5" fill="hsl(var(--card))" />
+          <circle cx="17" cy="16" r="1.5" fill="hsl(var(--card))" />
+          <path d="M8.5 9h7l1.2 2H7.3l1.2-2z" fill="hsl(var(--card))" opacity="0.3" />
         </svg>
       );
     case "suv":
@@ -81,11 +81,11 @@ const VehicleIcon = ({ type, className }: { type: string; className?: string }) 
       );
     default:
       return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
-          <path d="M2 15h20M4 15v-2c0-.5.2-1 .5-1.2L7 10l2-3h6l2.5 3 2.5 1.8c.3.2.5.7.5 1.2v2" />
-          <path d="M9 10h6" />
-          <circle cx="6" cy="15" r="2" fill="currentColor" />
-          <circle cx="18" cy="15" r="2" fill="currentColor" />
+        <svg viewBox="0 0 24 24" fill="currentColor" className={iconClass}>
+          <path d="M21 13.5c0-.3-.1-.6-.2-.8l-1.5-1.2-2-3c-.3-.5-.8-.8-1.3-.8H8c-.5 0-1 .3-1.3.8l-2 3-1.5 1.2c-.1.2-.2.5-.2.8v2c0 .3.2.5.5.5H5c0 1.1.9 2 2 2s2-.9 2-2h6c0 1.1.9 2 2 2s2-.9 2-2h1.5c.3 0 .5-.2.5-.5v-2z" />
+          <circle cx="7" cy="16" r="1.5" fill="hsl(var(--card))" />
+          <circle cx="17" cy="16" r="1.5" fill="hsl(var(--card))" />
+          <path d="M8.5 9h7l1.2 2H7.3l1.2-2z" fill="hsl(var(--card))" opacity="0.3" />
         </svg>
       );
   }

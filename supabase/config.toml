@@ -3,6 +3,9 @@ project_id = "fhaukvjpthkftfxfmnhm"
 [functions.google-places]
 verify_jwt = false
 
+[functions.send-notification-email]
+verify_jwt = false
+
 [auth.email]
 enable_signup = true
 double_confirm_changes = true

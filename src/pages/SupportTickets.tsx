@@ -31,6 +31,7 @@ import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { sendNotificationEmail } from "@/lib/notifications";
 
 interface Ticket {
   id: string;
@@ -113,9 +114,12 @@ const SupportTickets = () => {
   const updateTicketStatus = async (ticketId: string, newStatus: string) => {
     setUpdatingTicket(ticketId);
     try {
+      const ticket = tickets.find(t => t.id === ticketId);
+      const currentNotes = adminNotes[ticketId] || null;
+      
       const updateData: any = { 
         status: newStatus,
-        admin_notes: adminNotes[ticketId] || null,
+        admin_notes: currentNotes,
         response_read_at: null, // Reset so user gets notified of new response
       };
       
@@ -129,6 +133,14 @@ const SupportTickets = () => {
         .eq("id", ticketId);
 
       if (error) throw error;
+
+      // Send email notification to ticket owner if there's admin notes
+      if (ticket && currentNotes) {
+        sendNotificationEmail("ticket_response", ticket.user_id, {
+          ticketSubject: ticket.subject,
+          adminNotes: currentNotes,
+        }).catch(err => console.error("Failed to send email notification:", err));
+      }
 
       toast.success("Ticket updated successfully");
       fetchTickets();

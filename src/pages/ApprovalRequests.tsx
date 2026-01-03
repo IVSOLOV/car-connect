@@ -19,6 +19,7 @@ import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { sendNotificationEmail } from "@/lib/notifications";
 import type { Listing } from "@/types/listing";
 
 interface ListingWithProfile extends Listing {
@@ -101,17 +102,23 @@ const ApprovalRequests = () => {
     }
   };
 
-  const handleApprove = async (listingId: string) => {
+  const handleApprove = async (listing: ListingWithProfile) => {
     try {
       const { error } = await supabase
         .from("listings")
         .update({ approval_status: "approved", rejection_reason: null })
-        .eq("id", listingId);
+        .eq("id", listing.id);
 
       if (error) throw error;
 
+      // Send email notification to listing owner
+      const listingTitle = `${listing.year} ${listing.make} ${listing.model}`;
+      sendNotificationEmail("listing_approved", listing.user_id, {
+        listingTitle,
+      }).catch(err => console.error("Failed to send email notification:", err));
+
       toast.success("Listing approved successfully");
-      setListings((prev) => prev.filter((l) => l.id !== listingId));
+      setListings((prev) => prev.filter((l) => l.id !== listing.id));
     } catch (error) {
       console.error("Error approving listing:", error);
       toast.error("Failed to approve listing");
@@ -142,6 +149,13 @@ const ApprovalRequests = () => {
         .eq("id", rejectingListing.id);
 
       if (error) throw error;
+
+      // Send email notification to listing owner
+      const listingTitle = `${rejectingListing.year} ${rejectingListing.make} ${rejectingListing.model}`;
+      sendNotificationEmail("listing_rejected", rejectingListing.user_id, {
+        listingTitle,
+        rejectionReason: rejectionReason.trim(),
+      }).catch(err => console.error("Failed to send email notification:", err));
 
       toast.success("Listing rejected");
       setListings((prev) => prev.filter((l) => l.id !== rejectingListing.id));
@@ -276,7 +290,7 @@ const ApprovalRequests = () => {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => handleApprove(listing.id)}
+                          onClick={() => handleApprove(listing)}
                         >
                           <Check className="h-4 w-4 mr-1" />
                           Approve

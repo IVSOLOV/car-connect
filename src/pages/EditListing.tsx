@@ -327,23 +327,32 @@ const EditListing = () => {
         uploadedImageUrls.push(publicUrl);
       }
 
-      // Determine if only price changed (and decreased)
+      // Determine if changes are minor (only price decrease or image reorder)
       const newDailyPrice = parseInt(dailyPrice);
       const newWeeklyPrice = weeklyPrice ? parseInt(weeklyPrice) : null;
       const newMonthlyPrice = monthlyPrice ? parseInt(monthlyPrice) : null;
       
-      const onlyPriceDecreased = originalListing && 
+      // Check if images are the same (regardless of order)
+      const sameImages = JSON.stringify([...uploadedImageUrls].sort()) === JSON.stringify([...(originalListing?.images || [])].sort());
+      
+      // Check if non-image, non-price fields changed
+      const coreFieldsUnchanged = originalListing && 
         parseInt(year) === originalListing.year &&
         make === originalListing.make &&
         model === originalListing.model &&
         city === originalListing.city &&
         state === originalListing.state &&
         titleStatus === originalListing.title_status &&
-        (description || null) === (originalListing.description || null) &&
-        JSON.stringify(uploadedImageUrls.sort()) === JSON.stringify((originalListing.images || []).sort()) &&
+        (description || null) === (originalListing.description || null);
+      
+      // Check if prices only decreased (or stayed same)
+      const pricesNotIncreased = originalListing &&
         newDailyPrice <= originalListing.daily_price &&
         (newWeeklyPrice === null || originalListing.weekly_price === null || newWeeklyPrice <= originalListing.weekly_price) &&
         (newMonthlyPrice === null || originalListing.monthly_price === null || newMonthlyPrice <= originalListing.monthly_price);
+      
+      // Skip approval if only image order changed, or only price decreased, or both
+      const skipApproval = coreFieldsUnchanged && sameImages && pricesNotIncreased;
 
       // Build update object
       const updateData: Record<string, any> = {
@@ -360,8 +369,8 @@ const EditListing = () => {
         images: uploadedImageUrls,
       };
 
-      // If only price decreased, keep current approval status and track original price
-      if (onlyPriceDecreased && originalListing.approval_status === "approved") {
+      // If minor changes only (price decrease or image reorder), keep current approval status
+      if (skipApproval && originalListing.approval_status === "approved") {
         // Set original daily price for showing discount (use existing original or current price)
         const existingOriginalDailyPrice = (originalListing as any).original_daily_price;
         if (newDailyPrice < originalListing.daily_price) {
@@ -393,8 +402,8 @@ const EditListing = () => {
 
       if (error) throw error;
 
-      const successMessage = onlyPriceDecreased && originalListing?.approval_status === "approved"
-        ? "Your price has been updated and the listing is live."
+      const successMessage = skipApproval && originalListing?.approval_status === "approved"
+        ? "Your changes have been saved."
         : "Your changes have been submitted for admin approval.";
 
       toast({

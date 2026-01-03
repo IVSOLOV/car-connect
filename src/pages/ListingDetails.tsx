@@ -744,34 +744,51 @@ const ListingDetails = () => {
                 )}
               </div>
 
-              {/* Owner Card */}
-              <Link 
-                to={`/owner/${listing.user_id}`}
-                className="block rounded-2xl border border-border bg-card p-6 shadow-card transition-all hover:shadow-card-hover hover:border-primary/30"
-              >
-                <h3 className="mb-4 font-semibold text-foreground">Listed by</h3>
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-14 w-14 border-2 border-primary/20">
-                    <AvatarImage src={owner?.avatar_url || undefined} alt={ownerName} />
-                    <AvatarFallback>{ownerInitial}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-foreground">{ownerName}</p>
-                      {ownerRating && (
-                        <div className="flex items-center gap-1 text-amber-500">
-                          <Star className="h-4 w-4 fill-current" />
-                          <span className="text-sm font-medium">{ownerRating.average.toFixed(1)}</span>
-                          <span className="text-xs text-muted-foreground">({ownerRating.count})</span>
-                        </div>
-                      )}
+              {/* Owner Card - Only show for authenticated users */}
+              {user ? (
+                <Link 
+                  to={`/owner/${listing.user_id}`}
+                  className="block rounded-2xl border border-border bg-card p-6 shadow-card transition-all hover:shadow-card-hover hover:border-primary/30"
+                >
+                  <h3 className="mb-4 font-semibold text-foreground">Listed by</h3>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-14 w-14 border-2 border-primary/20">
+                      <AvatarImage src={owner?.avatar_url || undefined} alt={ownerName} />
+                      <AvatarFallback>{ownerInitial}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-foreground">{ownerName}</p>
+                        {ownerRating && (
+                          <div className="flex items-center gap-1 text-amber-500">
+                            <Star className="h-4 w-4 fill-current" />
+                            <span className="text-sm font-medium">{ownerRating.average.toFixed(1)}</span>
+                            <span className="text-xs text-muted-foreground">({ownerRating.count})</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Member since {memberSince}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Member since {memberSince}
-                    </p>
+                  </div>
+                </Link>
+              ) : (
+                <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+                  <h3 className="mb-4 font-semibold text-foreground">Listed by</h3>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-14 w-14 border-2 border-muted/20">
+                      <AvatarFallback className="bg-muted text-muted-foreground">?</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold text-muted-foreground">Sign in to view</p>
+                      <p className="text-sm text-muted-foreground">
+                        Owner details are hidden
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </Link>
+              )}
             </div>
           </div>
         </div>

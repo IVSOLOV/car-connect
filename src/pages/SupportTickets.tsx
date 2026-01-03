@@ -43,10 +43,15 @@ interface Ticket {
   created_at: string;
   updated_at: string;
   resolved_at: string | null;
-  admin_notes: string | null;
   user_name?: string;
   user_email?: string;
   response_read_at: string | null;
+}
+
+interface AdminNote {
+  id: string;
+  ticket_id: string;
+  notes: string | null;
 }
 
 const SupportTickets = () => {
@@ -56,6 +61,7 @@ const SupportTickets = () => {
   const [loading, setLoading] = useState(true);
   const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
+  const [adminNotesFromDb, setAdminNotesFromDb] = useState<Record<string, string>>({});
   const [updatingTicket, setUpdatingTicket] = useState<string | null>(null);
 
   const isAdmin = role === "admin";
@@ -77,6 +83,19 @@ const SupportTickets = () => {
 
       if (error) throw error;
 
+      // Fetch admin notes (users can see notes for their own tickets)
+      const { data: notesData } = await supabase
+        .from("support_ticket_admin_notes")
+        .select("*");
+
+      // Initialize admin notes from separate table
+      const notes: Record<string, string> = {};
+      notesData?.forEach((n: AdminNote) => {
+        notes[n.ticket_id] = n.notes || "";
+      });
+      setAdminNotes(notes);
+      setAdminNotesFromDb(notes);
+
       if (data && isAdmin) {
         // Fetch user info for each ticket
         const userIds = [...new Set(data.map(t => t.user_id))];
@@ -93,13 +112,6 @@ const SupportTickets = () => {
           };
         });
         setTickets(ticketsWithUsers);
-        
-        // Initialize admin notes
-        const notes: Record<string, string> = {};
-        ticketsWithUsers.forEach(t => {
-          notes[t.id] = t.admin_notes || "";
-        });
-        setAdminNotes(notes);
       } else if (data) {
         setTickets(data);
       }
@@ -116,11 +128,13 @@ const SupportTickets = () => {
     try {
       const ticket = tickets.find(t => t.id === ticketId);
       const currentNotes = adminNotes[ticketId] || null;
+      const previousNotes = adminNotesFromDb[ticketId] || null;
+      const notesChanged = currentNotes !== previousNotes;
       
+      // Update ticket status
       const updateData: any = { 
         status: newStatus,
-        admin_notes: currentNotes,
-        response_read_at: null, // Reset so user gets notified of new response
+        response_read_at: notesChanged ? null : undefined, // Reset so user gets notified of new response
       };
       
       if (newStatus === "resolved") {
@@ -134,8 +148,20 @@ const SupportTickets = () => {
 
       if (error) throw error;
 
-      // Send email notification to ticket owner if there's admin notes
-      if (ticket && currentNotes) {
+      // Update or insert admin notes in separate table
+      if (currentNotes) {
+        const { error: notesError } = await supabase
+          .from("support_ticket_admin_notes")
+          .upsert({
+            ticket_id: ticketId,
+            notes: currentNotes,
+          }, { onConflict: "ticket_id" });
+        
+        if (notesError) throw notesError;
+      }
+
+      // Send email notification to ticket owner if there's new admin notes
+      if (ticket && currentNotes && notesChanged) {
         sendNotificationEmail("ticket_response", ticket.user_id, {
           ticketSubject: ticket.subject,
           adminNotes: currentNotes,
@@ -239,7 +265,8 @@ const SupportTickets = () => {
                 onOpenChange={async (open) => {
                   setExpandedTicket(open ? ticket.id : null);
                   // Mark as read when user expands a ticket with admin notes
-                  if (open && !isAdmin && ticket.admin_notes && !ticket.response_read_at) {
+                  const hasAdminNotes = adminNotes[ticket.id];
+                  if (open && !isAdmin && hasAdminNotes && !ticket.response_read_at) {
                     await supabase
                       .from("support_tickets")
                       .update({ response_read_at: new Date().toISOString() })
@@ -281,10 +308,10 @@ const SupportTickets = () => {
                         <p className="mt-1 text-foreground whitespace-pre-wrap">{ticket.description}</p>
                       </div>
 
-                      {ticket.admin_notes && !isAdmin && (
+                      {adminNotes[ticket.id] && !isAdmin && (
                         <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
                           <Label className="text-primary">Admin Response</Label>
-                          <p className="mt-1 text-foreground whitespace-pre-wrap">{ticket.admin_notes}</p>
+                          <p className="mt-1 text-foreground whitespace-pre-wrap">{adminNotes[ticket.id]}</p>
                         </div>
                       )}
 

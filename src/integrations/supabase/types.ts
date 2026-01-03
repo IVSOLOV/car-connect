@@ -266,9 +266,40 @@ export type Database = {
           },
         ]
       }
+      support_ticket_admin_notes: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          ticket_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          ticket_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          ticket_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_admin_notes_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: true
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
-          admin_notes: string | null
           created_at: string
           description: string
           id: string
@@ -281,7 +312,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          admin_notes?: string | null
           created_at?: string
           description: string
           id?: string
@@ -294,7 +324,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          admin_notes?: string | null
           created_at?: string
           description?: string
           id?: string

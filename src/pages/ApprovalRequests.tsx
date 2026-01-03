@@ -252,31 +252,35 @@ const ApprovalRequests = () => {
                         <Badge variant="secondary">Pending</Badge>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-                        <div>
-                          <span className="text-muted-foreground">Owner:</span>{" "}
-                          <span className="text-foreground">{getOwnerName(listing)}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Daily Price:</span>{" "}
-                          <span className="text-foreground">{formatPrice(listing.daily_price)}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Title Status:</span>{" "}
-                          <span className="text-foreground capitalize">{listing.title_status}</span>
-                        </div>
-                        {listing.weekly_price && (
+                      <div className="flex flex-wrap justify-between gap-4 text-sm mb-4">
+                        <div className="space-y-1">
                           <div>
-                            <span className="text-muted-foreground">Weekly:</span>{" "}
-                            <span className="text-foreground">{formatPrice(listing.weekly_price)}</span>
+                            <span className="text-muted-foreground">Owner:</span>{" "}
+                            <span className="text-foreground">{getOwnerName(listing)}</span>
                           </div>
-                        )}
-                        {listing.monthly_price && (
                           <div>
-                            <span className="text-muted-foreground">Monthly:</span>{" "}
-                            <span className="text-foreground">{formatPrice(listing.monthly_price)}</span>
+                            <span className="text-muted-foreground">Title Status:</span>{" "}
+                            <span className="text-foreground capitalize">{listing.title_status}</span>
                           </div>
-                        )}
+                        </div>
+                        <div className="space-y-1 text-right">
+                          <div>
+                            <span className="text-muted-foreground">Daily Price:</span>{" "}
+                            <span className="text-foreground">{formatPrice(listing.daily_price)}</span>
+                          </div>
+                          {listing.weekly_price && (
+                            <div>
+                              <span className="text-muted-foreground">Weekly:</span>{" "}
+                              <span className="text-foreground">{formatPrice(listing.weekly_price)}</span>
+                            </div>
+                          )}
+                          {listing.monthly_price && (
+                            <div>
+                              <span className="text-muted-foreground">Monthly:</span>{" "}
+                              <span className="text-foreground">{formatPrice(listing.monthly_price)}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {listing.description && (

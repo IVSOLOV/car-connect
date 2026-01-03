@@ -561,12 +561,7 @@ const ListingDetails = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 rounded-xl bg-secondary/50 p-4 sm:p-5 md:grid-cols-3">
-                <div className="text-center">
-                  <Calendar className="mx-auto mb-1.5 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                  <p className="text-xs sm:text-sm text-muted-foreground">Year</p>
-                  <p className="text-sm sm:text-base font-semibold text-foreground">{listing.year}</p>
-                </div>
+              <div className="grid grid-cols-1 gap-3 sm:gap-4 rounded-xl bg-secondary/50 p-4 sm:p-5 sm:grid-cols-2 md:grid-cols-3">
                 <div className="text-center">
                   <DollarSign className="mx-auto mb-1.5 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   <p className="text-xs sm:text-sm text-muted-foreground">Daily Rate</p>

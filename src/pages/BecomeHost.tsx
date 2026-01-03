@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, DollarSign, Users, MessageCircle, Check, ArrowRight } from "lucide-react";
+import { Car, DollarSign, Users, MessageCircle, Check, ArrowRight, FileText, Shield, Camera, MapPin, FileSignature, CreditCard } from "lucide-react";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
@@ -161,6 +161,61 @@ const BecomeHost = () => {
               <Button variant="hero" className="w-full" onClick={handleBecomeHost}>
                 {user ? "List Your Car" : "Sign Up to List"}
               </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Host Recommendation Guide */}
+      <section className="py-16 border-t border-border bg-secondary/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-primary mb-4">
+                <FileText className="h-7 w-7 text-primary-foreground" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground mb-3">
+                Host Recommendation Guide
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Best practices for safely renting out your personal vehicle. Download our comprehensive guide for all the details.
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+              {[
+                { icon: Shield, title: "Driver License Validation", desc: "Verify guest's license is valid and matches their identity" },
+                { icon: Camera, title: "Identity Verification", desc: "Request a selfie with their license for verification" },
+                { icon: FileSignature, title: "Insurance Coverage", desc: "Obtain proper rental coverage from providers like ABI, Lula, or GMI" },
+                { icon: MapPin, title: "GPS Tracker", desc: "Install a tracker to protect against theft or unauthorized use" },
+                { icon: Camera, title: "Vehicle Documentation", desc: "Take 20+ photos before each rental documenting condition" },
+                { icon: CreditCard, title: "Payment Processing", desc: "Use independent apps like Stripe, Square, or PayPal" },
+              ].map((item, index) => (
+                <div key={index} className="flex gap-3 p-4 rounded-lg bg-card border border-border">
+                  <div className="flex-shrink-0">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <item.icon className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground text-sm mb-1">{item.title}</h4>
+                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <a 
+                href="/DiRent_Host_Recommendation_Guide.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" size="lg">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Download Full Guide (PDF)
+                </Button>
+              </a>
             </div>
           </div>
         </div>

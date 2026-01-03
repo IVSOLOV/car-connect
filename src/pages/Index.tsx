@@ -138,8 +138,8 @@ const Index = () => {
 
           {listings.length > 0 && (
             <div className="mt-12 text-center">
-              <Button variant="outline" size="lg">
-                Load More Listings
+              <Button variant="outline" size="lg" onClick={() => navigate("/dashboard")}>
+                Browse All Listings
               </Button>
             </div>
           )}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Star, MapPin, Calendar } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
@@ -26,6 +26,7 @@ interface Review {
   created_at: string;
   reviewer_id: string;
   reviewer_name?: string;
+  reviewer_avatar?: string | null;
 }
 
 const OwnerProfile = () => {
@@ -79,14 +80,15 @@ const OwnerProfile = () => {
         const reviewerIds = [...new Set(reviewsData.map(r => r.reviewer_id))];
         const { data: reviewerProfiles } = await supabase
           .from("profiles")
-          .select("user_id, first_name, last_name, full_name")
+          .select("user_id, first_name, last_name, full_name, avatar_url")
           .in("user_id", reviewerIds);
 
         const reviewsWithNames = reviewsData.map(review => {
           const reviewer = reviewerProfiles?.find(p => p.user_id === review.reviewer_id);
           return {
             ...review,
-            reviewer_name: reviewer?.full_name || `${reviewer?.first_name || ""} ${reviewer?.last_name || ""}`.trim() || "Anonymous"
+            reviewer_name: reviewer?.full_name || `${reviewer?.first_name || ""} ${reviewer?.last_name || ""}`.trim() || "Anonymous",
+            reviewer_avatar: reviewer?.avatar_url
           };
         });
 
@@ -279,6 +281,7 @@ const OwnerProfile = () => {
                 <Card key={review.id} className="p-4">
                   <div className="flex items-start gap-4">
                     <Avatar className="h-10 w-10">
+                      <AvatarImage src={review.reviewer_avatar || undefined} alt={review.reviewer_name} />
                       <AvatarFallback>{review.reviewer_name?.[0]?.toUpperCase() || "?"}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">

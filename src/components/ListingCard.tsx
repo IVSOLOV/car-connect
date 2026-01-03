@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { MapPin, Calendar, DollarSign } from "lucide-react";
+import { MapPin, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Listing } from "@/types/listing";
@@ -58,11 +58,7 @@ const ListingCard = ({ listing, index = 0, startDate, endDate }: ListingCardProp
             </p>
           </div>
 
-          <div className="mb-4 flex items-center gap-4">
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Calendar className="mr-1.5 h-3.5 w-3.5 text-primary" />
-              {listing.year}
-            </div>
+          <div className="mb-4 flex items-center">
             <div className="flex items-center text-xs text-muted-foreground">
               <DollarSign className="mr-1.5 h-3.5 w-3.5 text-primary" />
               {formatPrice(listing.daily_price)}/day

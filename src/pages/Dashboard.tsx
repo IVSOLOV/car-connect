@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import type { Listing } from "@/types/listing";
+import { VehicleTypeFilter, type VehicleType } from "@/components/VehicleTypeSelector";
 
 interface Booking {
   listing_id: string;
@@ -74,6 +75,7 @@ const Dashboard = () => {
   const [selectedState, setSelectedState] = useState("");
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [selectedVehicleType, setSelectedVehicleType] = useState<VehicleType | "">("");
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
 
@@ -87,7 +89,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [listings, bookings, searchQuery, selectedMake, selectedState, selectedPriceRange, selectedYear, startDate, endDate]);
+  }, [listings, bookings, searchQuery, selectedMake, selectedState, selectedPriceRange, selectedYear, selectedVehicleType, startDate, endDate]);
 
   const fetchListings = async () => {
     try {
@@ -172,6 +174,11 @@ const Dashboard = () => {
       results = results.filter((listing) => listing.year.toString() === selectedYear);
     }
 
+    // Vehicle type filter
+    if (selectedVehicleType) {
+      results = results.filter((listing) => listing.vehicle_type === selectedVehicleType);
+    }
+
     // Price range filter
     if (selectedPriceRange) {
       results = results.filter((listing) => {
@@ -200,11 +207,12 @@ const Dashboard = () => {
     setSelectedState("");
     setSelectedPriceRange("");
     setSelectedYear("");
+    setSelectedVehicleType("");
     setStartDate(undefined);
     setEndDate(undefined);
   };
 
-  const hasActiveFilters = searchQuery || selectedMake || selectedState || selectedPriceRange || selectedYear || startDate || endDate;
+  const hasActiveFilters = searchQuery || selectedMake || selectedState || selectedPriceRange || selectedYear || selectedVehicleType || startDate || endDate;
 
   const handleMakeChange = (value: string) => setSelectedMake(value === "all" ? "" : value);
   const handleStateChange = (value: string) => setSelectedState(value === "all" ? "" : value);
@@ -213,6 +221,12 @@ const Dashboard = () => {
 
   const FilterControls = () => (
     <div className="space-y-4">
+      {/* Vehicle Type Filter */}
+      <div className="space-y-2">
+        <Label>Vehicle Type</Label>
+        <VehicleTypeFilter value={selectedVehicleType} onChange={setSelectedVehicleType} />
+      </div>
+
       {/* Date Range Filter */}
       <div className="space-y-2">
         <Label>Pickup Date</Label>

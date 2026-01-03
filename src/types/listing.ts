@@ -1,3 +1,5 @@
+export type VehicleType = "car" | "suv" | "minivan" | "truck" | "van" | "cargo_van" | "box_truck";
+
 export interface Listing {
   id: string;
   user_id: string;
@@ -7,6 +9,7 @@ export interface Listing {
   city: string;
   state: string;
   title_status: string;
+  vehicle_type: string;
   daily_price: number;
   weekly_price: number | null;
   monthly_price: number | null;

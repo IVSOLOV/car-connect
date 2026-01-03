@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { LocationAutocomplete } from "@/components/LocationAutocomplete";
+import { VehicleTypeSelector, type VehicleType } from "@/components/VehicleTypeSelector";
 const carMakes = [
   "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Buick",
   "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ferrari", "Fiat", "Ford",
@@ -101,6 +102,7 @@ const CreateListing = () => {
   const [weeklyPrice, setWeeklyPrice] = useState("");
   const [monthlyPrice, setMonthlyPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [vehicleType, setVehicleType] = useState<VehicleType>("car");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentYear = new Date().getFullYear();
@@ -308,6 +310,7 @@ const CreateListing = () => {
           city,
           state,
           title_status: titleStatus,
+          vehicle_type: vehicleType,
           daily_price: parseInt(dailyPrice),
           weekly_price: weeklyPrice ? parseInt(weeklyPrice) : null,
           monthly_price: monthlyPrice ? parseInt(monthlyPrice) : null,
@@ -423,8 +426,14 @@ const CreateListing = () => {
                       </div>
                     ))}
                   </div>
-                </>
+              </>
               )}
+            </div>
+
+            {/* Vehicle Type */}
+            <div className="space-y-2">
+              <Label>Vehicle Type *</Label>
+              <VehicleTypeSelector value={vehicleType} onChange={setVehicleType} />
             </div>
 
             {/* Year */}

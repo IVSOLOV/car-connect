@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -752,6 +752,7 @@ const ListingDetails = () => {
                 <h3 className="mb-4 font-semibold text-foreground">Listed by</h3>
                 <div className="flex items-center gap-4">
                   <Avatar className="h-14 w-14 border-2 border-primary/20">
+                    <AvatarImage src={owner?.avatar_url || undefined} alt={ownerName} />
                     <AvatarFallback>{ownerInitial}</AvatarFallback>
                   </Avatar>
                   <div>
@@ -795,6 +796,7 @@ const ListingDetails = () => {
 
               <div className="mb-6 flex items-center gap-4 rounded-xl bg-secondary/50 p-4">
                 <Avatar className="h-12 w-12 border-2 border-primary/20">
+                  <AvatarImage src={owner?.avatar_url || undefined} alt={ownerName} />
                   <AvatarFallback>{ownerInitial}</AvatarFallback>
                 </Avatar>
                 <div>

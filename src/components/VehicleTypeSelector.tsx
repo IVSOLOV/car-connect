@@ -31,10 +31,13 @@ const VehicleIcon = ({ type, className }: { type: string; className?: string }) 
       );
     case "suv":
       return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
-          <path d="M4 17h16M6 17v-5h12v5M6 12l2-5h8l2 5" />
-          <circle cx="7.5" cy="17" r="1.5" />
-          <circle cx="16.5" cy="17" r="1.5" />
+        <svg viewBox="0 0 32 16" fill="currentColor" className={iconClass}>
+          <path d="M29 11v1.5c0 .5-.4 1-1 1h-1.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H10.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H4c-.6 0-1-.5-1-1V11l1-1.5V7c0-.5.3-1 .7-1.2L8 4h8l6 2h4l2 3v2z" />
+          <path d="M6 5.5L8.5 5h6l-1 4H5.5l.5-3.5zM15 5h5l3 4h-9L15 5z" fill="hsl(var(--background))" opacity="0.4" />
+          <circle cx="8" cy="13.5" r="2" />
+          <circle cx="8" cy="13.5" r="1" fill="hsl(var(--background))" />
+          <circle cx="24" cy="13.5" r="2" />
+          <circle cx="24" cy="13.5" r="1" fill="hsl(var(--background))" />
         </svg>
       );
     case "minivan":

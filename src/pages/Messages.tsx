@@ -12,6 +12,7 @@ import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import AttachmentRenderer from "@/components/AttachmentRenderer";
 import ReviewDialog from "@/components/ReviewDialog";
+import { sendNotificationEmail } from "@/lib/notifications";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -359,6 +360,29 @@ const Messages = () => {
         }]);
 
       if (error) throw error;
+
+      // Get sender name and listing title for email notification
+      const currentConv = conversations.find(
+        c => c.listing_id === selectedConversation.listing_id && c.other_user_id === selectedConversation.other_user_id
+      );
+      
+      // Get sender's profile for the email
+      const { data: senderProfile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, full_name")
+        .eq("user_id", user.id)
+        .single();
+      
+      const senderName = senderProfile?.full_name || 
+        `${senderProfile?.first_name || ""} ${senderProfile?.last_name || ""}`.trim() || 
+        "A user";
+
+      // Send email notification to recipient (fire and forget)
+      sendNotificationEmail("message", selectedConversation.other_user_id, {
+        senderName,
+        listingTitle: currentConv?.listing_title,
+        messagePreview: newMessage.trim().substring(0, 100),
+      }).catch(err => console.error("Failed to send email notification:", err));
 
       // Add message to local state
       const newMsg: Message = {

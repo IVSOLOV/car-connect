@@ -76,6 +76,7 @@ const Dashboard = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedVehicleType, setSelectedVehicleType] = useState<VehicleType | "">("");
+  const [selectedFuelType, setSelectedFuelType] = useState<string>("");
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
 
@@ -89,7 +90,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [listings, bookings, searchQuery, selectedMake, selectedState, selectedPriceRange, selectedYear, selectedVehicleType, startDate, endDate]);
+  }, [listings, bookings, searchQuery, selectedMake, selectedState, selectedPriceRange, selectedYear, selectedVehicleType, selectedFuelType, startDate, endDate]);
 
   const fetchListings = async () => {
     try {
@@ -179,6 +180,11 @@ const Dashboard = () => {
       results = results.filter((listing) => listing.vehicle_type === selectedVehicleType);
     }
 
+    // Fuel type filter
+    if (selectedFuelType) {
+      results = results.filter((listing) => listing.fuel_type === selectedFuelType);
+    }
+
     // Price range filter
     if (selectedPriceRange) {
       results = results.filter((listing) => {
@@ -208,11 +214,12 @@ const Dashboard = () => {
     setSelectedPriceRange("");
     setSelectedYear("");
     setSelectedVehicleType("");
+    setSelectedFuelType("");
     setStartDate(undefined);
     setEndDate(undefined);
   };
 
-  const hasActiveFilters = searchQuery || selectedMake || selectedState || selectedPriceRange || selectedYear || selectedVehicleType || startDate || endDate;
+  const hasActiveFilters = searchQuery || selectedMake || selectedState || selectedPriceRange || selectedYear || selectedVehicleType || selectedFuelType || startDate || endDate;
 
   const handleMakeChange = (value: string) => setSelectedMake(value === "all" ? "" : value);
   const handleStateChange = (value: string) => setSelectedState(value === "all" ? "" : value);
@@ -225,6 +232,45 @@ const Dashboard = () => {
       <div className="space-y-2">
         <Label>Vehicle Type</Label>
         <VehicleTypeFilter value={selectedVehicleType} onChange={setSelectedVehicleType} />
+      </div>
+
+      {/* Fuel Type Filter */}
+      <div className="space-y-2">
+        <Label>Fuel Type</Label>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={selectedFuelType === "" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedFuelType("")}
+            className="text-xs"
+          >
+            All
+          </Button>
+          <Button
+            variant={selectedFuelType === "electric" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedFuelType("electric")}
+            className="text-xs"
+          >
+            Electric
+          </Button>
+          <Button
+            variant={selectedFuelType === "hybrid" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedFuelType("hybrid")}
+            className="text-xs"
+          >
+            Hybrid
+          </Button>
+          <Button
+            variant={selectedFuelType === "gas" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedFuelType("gas")}
+            className="text-xs"
+          >
+            Gas
+          </Button>
+        </div>
       </div>
 
       {/* Date Range Filter */}

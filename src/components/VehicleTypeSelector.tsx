@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const VEHICLE_TYPES = [
-  { value: "car", label: "Car", icon: "car" },
+  { value: "car", label: "Sedan", icon: "sedan" },
   { value: "suv", label: "SUV", icon: "suv" },
   { value: "minivan", label: "Minivan", icon: "minivan" },
   { value: "truck", label: "Truck", icon: "truck" },
@@ -18,12 +18,13 @@ const VehicleIcon = ({ type, className }: { type: string; className?: string }) 
   const iconClass = cn("w-6 h-6", className);
   
   switch (type) {
-    case "car":
+    case "sedan":
       return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
-          <path d="M5 17h14M7 17v-3h10v3M7 14l1.5-4h7l1.5 4" />
-          <circle cx="8" cy="17" r="1.5" />
-          <circle cx="16" cy="17" r="1.5" />
+          <path d="M2 15h20M4 15v-2c0-.5.2-1 .5-1.2L7 10l2-3h6l2.5 3 2.5 1.8c.3.2.5.7.5 1.2v2" />
+          <path d="M9 10h6" />
+          <circle cx="6" cy="15" r="2" fill="currentColor" />
+          <circle cx="18" cy="15" r="2" fill="currentColor" />
         </svg>
       );
     case "suv":
@@ -81,9 +82,10 @@ const VehicleIcon = ({ type, className }: { type: string; className?: string }) 
     default:
       return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
-          <path d="M5 17h14M7 17v-3h10v3M7 14l1.5-4h7l1.5 4" />
-          <circle cx="8" cy="17" r="1.5" />
-          <circle cx="16" cy="17" r="1.5" />
+          <path d="M2 15h20M4 15v-2c0-.5.2-1 .5-1.2L7 10l2-3h6l2.5 3 2.5 1.8c.3.2.5.7.5 1.2v2" />
+          <path d="M9 10h6" />
+          <circle cx="6" cy="15" r="2" fill="currentColor" />
+          <circle cx="18" cy="15" r="2" fill="currentColor" />
         </svg>
       );
   }
@@ -186,5 +188,5 @@ export const VehicleTypeFilter = ({ value, onChange }: VehicleTypeFilterProps) =
 };
 
 export const getVehicleTypeLabel = (value: VehicleType): string => {
-  return VEHICLE_TYPES.find((t) => t.value === value)?.label || "Car";
+  return VEHICLE_TYPES.find((t) => t.value === value)?.label || "Sedan";
 };

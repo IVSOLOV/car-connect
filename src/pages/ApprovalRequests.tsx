@@ -265,6 +265,12 @@ const ApprovalRequests = () => {
                           <span className="text-muted-foreground">Title Status:</span>{" "}
                           <span className="text-foreground capitalize">{listing.title_status}</span>
                         </div>
+                        {listing.weekly_price && (
+                          <div>
+                            <span className="text-muted-foreground">Weekly:</span>{" "}
+                            <span className="text-foreground">{formatPrice(listing.weekly_price)}</span>
+                          </div>
+                        )}
                         {listing.monthly_price && (
                           <div>
                             <span className="text-muted-foreground">Monthly:</span>{" "}

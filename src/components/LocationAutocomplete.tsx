@@ -114,53 +114,68 @@ export function LocationAutocomplete({
     setShowDropdown(false);
   };
 
-  const handleGetLocation = () => {
+  const handleGetLocation = async () => {
     if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser");
+      toast.error("Geolocation is not supported. Please enter your city manually.");
       return;
     }
 
     setIsGettingLocation(true);
     
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`
-          );
-          const data = await response.json();
-          if (data.address) {
-            const city = data.address.city || data.address.town || data.address.village || "";
-            const stateAbbr = data.address.state;
-            
-            if (city && stateAbbr && usStates.includes(stateAbbr)) {
-              setInputValue(`${city}, ${stateAbbr}`);
-              onLocationSelect(city, stateAbbr);
-              toast.success("Location detected!");
-            } else if (city) {
-              setInputValue(city);
-              toast.info("City detected. Please select your state.");
-            } else {
-              toast.error("Could not determine your city. Please enter manually.");
-            }
-          }
-        } catch (error) {
-          console.error('Reverse geocoding error:', error);
-          toast.error("Could not get location details. Please enter manually.");
-        } finally {
-          setIsGettingLocation(false);
-        }
-      },
-      (error) => {
-        setIsGettingLocation(false);
-        if (error.code === error.PERMISSION_DENIED) {
-          toast.error("Location access denied. Please enable location access or enter your city manually.");
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { 
+          timeout: 10000,
+          enableHighAccuracy: false,
+          maximumAge: 300000 // 5 minutes cache
+        });
+      });
+
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`,
+        { headers: { 'User-Agent': 'DiRent/1.0' } }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Geocoding service unavailable');
+      }
+      
+      const data = await response.json();
+      
+      if (data.address) {
+        const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
+        const state = data.address.state || "";
+        
+        if (city && state && usStates.includes(state)) {
+          setInputValue(`${city}, ${state}`);
+          onLocationSelect(city, state);
+          toast.success("Location detected!");
+        } else if (city) {
+          setInputValue(city);
+          toast.info("City detected. Please type to select your full location.");
         } else {
-          toast.error("Could not get your location. Please enter manually.");
+          toast.error("Could not determine your city. Please type your location.");
         }
-      },
-      { timeout: 10000 }
-    );
+      } else {
+        toast.error("Could not determine location. Please type your city.");
+      }
+    } catch (error: unknown) {
+      console.error('Geolocation error:', error);
+      
+      if (error instanceof GeolocationPositionError) {
+        if (error.code === error.PERMISSION_DENIED) {
+          toast.error("Location access denied. Please type your city manually.");
+        } else if (error.code === error.TIMEOUT) {
+          toast.error("Location request timed out. Please type your city.");
+        } else {
+          toast.error("Could not get location. Please type your city.");
+        }
+      } else {
+        toast.error("Location service unavailable. Please type your city.");
+      }
+    } finally {
+      setIsGettingLocation(false);
+    }
   };
 
   return (

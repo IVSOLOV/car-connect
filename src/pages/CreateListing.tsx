@@ -237,6 +237,15 @@ const CreateListing = () => {
       return;
     }
 
+    if (parseInt(dailyPrice) <= 0) {
+      toast({
+        title: "Invalid Price",
+        description: "Daily rate must be greater than $0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!user) {
       toast({
         title: "Not Authenticated",

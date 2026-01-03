@@ -59,7 +59,7 @@ const Index = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0">
           <img
@@ -105,7 +105,7 @@ const Index = () => {
       </section>
 
       {/* Featured Listings */}
-      <section className="py-20">
+      <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">

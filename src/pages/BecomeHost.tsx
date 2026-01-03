@@ -95,10 +95,20 @@ const BecomeHost = () => {
               Join DiRent and list your car with zero commission fees. 
               Unlike other platforms, we don't take a cut of your rentals.
             </p>
-            <Button variant="hero" size="xl" onClick={handleBecomeHost}>
-              {user ? "List Your Car" : "Get Started"}
-              <ArrowRight className="h-5 w-5" />
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button variant="hero" size="xl" onClick={handleBecomeHost}>
+                {user ? "List Your Car" : "Get Started"}
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="xl" 
+                onClick={() => document.getElementById('host-guide')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                <FileText className="h-5 w-5 mr-2" />
+                Host Guide
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -167,7 +177,7 @@ const BecomeHost = () => {
       </section>
 
       {/* Host Recommendation Guide */}
-      <section className="py-16 border-t border-border bg-secondary/30">
+      <section id="host-guide" className="py-16 border-t border-border bg-secondary/30">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-10">

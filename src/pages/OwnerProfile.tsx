@@ -195,6 +195,7 @@ const OwnerProfile = () => {
         <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8 animate-fade-in">
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20 border-2 border-primary/20">
+              <AvatarImage src={owner.avatar_url || undefined} alt={ownerName} />
               <AvatarFallback className="text-2xl">{ownerInitial}</AvatarFallback>
             </Avatar>
             <div>

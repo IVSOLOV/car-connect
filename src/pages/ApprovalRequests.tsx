@@ -224,13 +224,13 @@ const ApprovalRequests = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-4 max-w-4xl">
             {listings.map((listing) => (
               <Card key={listing.id} className="overflow-hidden">
                 <CardContent className="p-0">
                   <div className="flex flex-col md:flex-row">
                     {/* Image */}
-                    <div className="w-full md:w-48 h-48 md:h-auto flex-shrink-0">
+                    <div className="w-full md:w-44 h-44 md:h-auto flex-shrink-0">
                       <img
                         src={listing.images?.[0] || "/placeholder.svg"}
                         alt={`${listing.year} ${listing.make} ${listing.model}`}
@@ -252,7 +252,7 @@ const ApprovalRequests = () => {
                         <Badge variant="secondary">Pending</Badge>
                       </div>
 
-                      <div className="flex flex-wrap gap-8 text-sm mb-4">
+                      <div className="grid grid-cols-3 gap-4 text-sm mb-4">
                         <div className="space-y-1">
                           <div>
                             <span className="text-muted-foreground">Owner:</span>{" "}
@@ -265,7 +265,7 @@ const ApprovalRequests = () => {
                         </div>
                         <div className="space-y-1">
                           <div>
-                            <span className="text-muted-foreground">Daily Price:</span>{" "}
+                            <span className="text-muted-foreground">Daily:</span>{" "}
                             <span className="text-foreground">{formatPrice(listing.daily_price)}</span>
                           </div>
                           {listing.weekly_price && (
@@ -281,6 +281,7 @@ const ApprovalRequests = () => {
                             </div>
                           )}
                         </div>
+                        <div></div>
                       </div>
 
                       {listing.description && (

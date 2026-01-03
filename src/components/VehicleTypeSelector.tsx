@@ -20,87 +20,129 @@ const VehicleIcon = ({ type, className }: { type: string; className?: string }) 
   switch (type) {
     case "sedan":
       return (
-        <svg viewBox="0 0 32 16" fill="currentColor" className={iconClass}>
-          <path d="M29 10v2c0 .5-.4 1-1 1h-1.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H10.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H4c-.6 0-1-.5-1-1v-2l1-2 3-4h10l4 2 6 2 2 2z" />
-          <path d="M7 7h5l-1 3H6.5L7 7zM13 7h6l2 3h-8V7z" fill="hsl(var(--background))" opacity="0.4" />
-          <circle cx="8" cy="13" r="2" />
-          <circle cx="8" cy="13" r="1" fill="hsl(var(--background))" />
-          <circle cx="24" cy="13" r="2" />
-          <circle cx="24" cy="13" r="1" fill="hsl(var(--background))" />
+        <svg viewBox="0 0 48 20" fill="currentColor" className={iconClass}>
+          {/* Car body */}
+          <path d="M4 14 L4 11 L7 11 L10 6 L18 4 L30 4 L36 6 L42 8 L44 11 L44 14 L40 14 C40 11.8 38.2 10 36 10 C33.8 10 32 11.8 32 14 L16 14 C16 11.8 14.2 10 12 10 C9.8 10 8 11.8 8 14 Z" />
+          {/* Windows */}
+          <path d="M11 6.5 L17.5 5 L17.5 10 L8 10 L11 6.5Z" fill="hsl(var(--background))" opacity="0.5" />
+          <path d="M19 5 L29.5 5 L34 7 L34 10 L19 10 Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Front wheel */}
+          <circle cx="12" cy="14" r="3.5" />
+          <circle cx="12" cy="14" r="1.5" fill="hsl(var(--background))" />
+          {/* Rear wheel */}
+          <circle cx="36" cy="14" r="3.5" />
+          <circle cx="36" cy="14" r="1.5" fill="hsl(var(--background))" />
         </svg>
       );
     case "suv":
       return (
-        <svg viewBox="0 0 32 16" fill="currentColor" className={iconClass}>
-          <path d="M29 11v1.5c0 .5-.4 1-1 1h-1.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H10.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H4c-.6 0-1-.5-1-1V11l1-1.5V7c0-.5.3-1 .7-1.2L8 4h8l6 2h4l2 3v2z" />
-          <path d="M6 5.5L8.5 5h6l-1 4H5.5l.5-3.5zM15 5h5l3 4h-9L15 5z" fill="hsl(var(--background))" opacity="0.4" />
-          <circle cx="8" cy="13.5" r="2" />
-          <circle cx="8" cy="13.5" r="1" fill="hsl(var(--background))" />
-          <circle cx="24" cy="13.5" r="2" />
-          <circle cx="24" cy="13.5" r="1" fill="hsl(var(--background))" />
+        <svg viewBox="0 0 48 20" fill="currentColor" className={iconClass}>
+          {/* SUV body - taller with sloped back */}
+          <path d="M4 14 L4 10 L6 10 L9 4 L20 3 L32 3 L38 5 L42 7 L44 10 L44 14 L40 14 C40 11.8 38.2 10 36 10 C33.8 10 32 11.8 32 14 L16 14 C16 11.8 14.2 10 12 10 C9.8 10 8 11.8 8 14 Z" />
+          {/* Windows */}
+          <path d="M10 5 L19 4 L19 9 L7 9 L10 5Z" fill="hsl(var(--background))" opacity="0.5" />
+          <path d="M21 4 L31 4 L36 6 L36 9 L21 9 Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Front wheel */}
+          <circle cx="12" cy="14" r="3.5" />
+          <circle cx="12" cy="14" r="1.5" fill="hsl(var(--background))" />
+          {/* Rear wheel */}
+          <circle cx="36" cy="14" r="3.5" />
+          <circle cx="36" cy="14" r="1.5" fill="hsl(var(--background))" />
         </svg>
       );
     case "minivan":
       return (
-        <svg viewBox="0 0 32 16" fill="currentColor" className={iconClass}>
-          <path d="M29 11v1.5c0 .5-.4 1-1 1h-1.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H10.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H4c-.6 0-1-.5-1-1V11l.5-1V6.5L6 4h20l2 2.5V10l1 1z" />
-          <path d="M5 5l2-1h4l-.5 5H4.5L5 5zM11.5 4h5v5h-5V4zM17 4h5v5h-5V4zM22.5 4H26l1.5 2v3h-5V4z" fill="hsl(var(--background))" opacity="0.4" />
-          <circle cx="8" cy="13.5" r="2" />
-          <circle cx="8" cy="13.5" r="1" fill="hsl(var(--background))" />
-          <circle cx="24" cy="13.5" r="2" />
-          <circle cx="24" cy="13.5" r="1" fill="hsl(var(--background))" />
+        <svg viewBox="0 0 48 20" fill="currentColor" className={iconClass}>
+          {/* Minivan body - long with sliding door windows */}
+          <path d="M4 14 L4 10 L5 6 L10 3 L40 3 L44 6 L44 14 L40 14 C40 11.8 38.2 10 36 10 C33.8 10 32 11.8 32 14 L16 14 C16 11.8 14.2 10 12 10 C9.8 10 8 11.8 8 14 Z" />
+          {/* Windows */}
+          <path d="M7 7 L10 4 L16 4 L16 9 L6 9 L7 7Z" fill="hsl(var(--background))" opacity="0.5" />
+          <path d="M18 4 L26 4 L26 9 L18 9 Z" fill="hsl(var(--background))" opacity="0.5" />
+          <path d="M28 4 L36 4 L36 9 L28 9 Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Front wheel */}
+          <circle cx="12" cy="14" r="3.5" />
+          <circle cx="12" cy="14" r="1.5" fill="hsl(var(--background))" />
+          {/* Rear wheel */}
+          <circle cx="36" cy="14" r="3.5" />
+          <circle cx="36" cy="14" r="1.5" fill="hsl(var(--background))" />
         </svg>
       );
     case "truck":
       return (
-        <svg viewBox="0 0 32 16" fill="currentColor" className={iconClass}>
-          <path d="M29 11v1.5c0 .5-.4 1-1 1h-1.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H10.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H4c-.6 0-1-.5-1-1V11l1-1V7l2-3h8l2 2h10l1 1v4z" />
-          <path d="M5 5l2-1h6l2 2v3H4.5L5 5zM15.5 6H27v3H15.5V6z" fill="hsl(var(--background))" opacity="0.4" />
-          <path d="M15 6h12v4H15V6z" fill="currentColor" />
-          <circle cx="8" cy="13.5" r="2" />
-          <circle cx="8" cy="13.5" r="1" fill="hsl(var(--background))" />
-          <circle cx="24" cy="13.5" r="2" />
-          <circle cx="24" cy="13.5" r="1" fill="hsl(var(--background))" />
+        <svg viewBox="0 0 48 20" fill="currentColor" className={iconClass}>
+          {/* Pickup truck - cab with open bed */}
+          <path d="M4 14 L4 10 L6 10 L9 5 L20 4 L20 6 L44 6 L44 14 L40 14 C40 11.8 38.2 10 36 10 C33.8 10 32 11.8 32 14 L16 14 C16 11.8 14.2 10 12 10 C9.8 10 8 11.8 8 14 Z" />
+          {/* Cab windows */}
+          <path d="M10 6 L19 5 L19 9 L7 9 L10 6Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Truck bed */}
+          <path d="M22 7 L42 7 L42 10 L22 10 Z" fill="currentColor" />
+          {/* Front wheel */}
+          <circle cx="12" cy="14" r="3.5" />
+          <circle cx="12" cy="14" r="1.5" fill="hsl(var(--background))" />
+          {/* Rear wheel */}
+          <circle cx="36" cy="14" r="3.5" />
+          <circle cx="36" cy="14" r="1.5" fill="hsl(var(--background))" />
         </svg>
       );
     case "van":
       return (
-        <svg viewBox="0 0 32 16" fill="currentColor" className={iconClass}>
-          <path d="M29 11v1.5c0 .5-.4 1-1 1h-1.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H10.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H4c-.6 0-1-.5-1-1V4c0-.5.4-1 1-1h5l3-1h15c.6 0 1 .5 1 1v8z" />
-          <path d="M4 4h4l2 5H4V4zM11 3h3v6h-3V3z" fill="hsl(var(--background))" opacity="0.4" />
-          <circle cx="8" cy="13.5" r="2" />
-          <circle cx="8" cy="13.5" r="1" fill="hsl(var(--background))" />
-          <circle cx="24" cy="13.5" r="2" />
-          <circle cx="24" cy="13.5" r="1" fill="hsl(var(--background))" />
+        <svg viewBox="0 0 48 20" fill="currentColor" className={iconClass}>
+          {/* Commercial van - tall boxy */}
+          <path d="M4 14 L4 4 L8 2 L40 2 L44 4 L44 14 L40 14 C40 11.8 38.2 10 36 10 C33.8 10 32 11.8 32 14 L16 14 C16 11.8 14.2 10 12 10 C9.8 10 8 11.8 8 14 Z" />
+          {/* Windows */}
+          <path d="M5 5 L8 3 L14 3 L14 9 L5 9 Z" fill="hsl(var(--background))" opacity="0.5" />
+          <path d="M16 3 L22 3 L22 9 L16 9 Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Front wheel */}
+          <circle cx="12" cy="14" r="3.5" />
+          <circle cx="12" cy="14" r="1.5" fill="hsl(var(--background))" />
+          {/* Rear wheel */}
+          <circle cx="36" cy="14" r="3.5" />
+          <circle cx="36" cy="14" r="1.5" fill="hsl(var(--background))" />
         </svg>
       );
     case "cargo_van":
       return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
-          <path d="M4 17h16M6 17v-7h12v7" />
-          <circle cx="7.5" cy="17" r="1.5" />
-          <circle cx="16.5" cy="17" r="1.5" />
-          <path d="M8 13h2v2H8zM12 10v7" />
+        <svg viewBox="0 0 48 20" fill="currentColor" className={iconClass}>
+          {/* Cargo van - tall with no rear windows */}
+          <path d="M4 14 L4 4 L8 2 L40 2 L44 4 L44 14 L40 14 C40 11.8 38.2 10 36 10 C33.8 10 32 11.8 32 14 L16 14 C16 11.8 14.2 10 12 10 C9.8 10 8 11.8 8 14 Z" />
+          {/* Front windows only */}
+          <path d="M5 5 L8 3 L14 3 L14 9 L5 9 Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Cargo door line */}
+          <path d="M28 3 L28 10" stroke="hsl(var(--background))" strokeWidth="0.5" fill="none" opacity="0.3" />
+          {/* Front wheel */}
+          <circle cx="12" cy="14" r="3.5" />
+          <circle cx="12" cy="14" r="1.5" fill="hsl(var(--background))" />
+          {/* Rear wheel */}
+          <circle cx="36" cy="14" r="3.5" />
+          <circle cx="36" cy="14" r="1.5" fill="hsl(var(--background))" />
         </svg>
       );
     case "box_truck":
       return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
-          <path d="M3 17h18M5 17v-4l2-3h3v7M10 10h10v7" />
-          <circle cx="6.5" cy="17" r="1.5" />
-          <circle cx="17.5" cy="17" r="1.5" />
-          <path d="M12 12h6v3h-6z" />
+        <svg viewBox="0 0 48 20" fill="currentColor" className={iconClass}>
+          {/* Box truck - cab and separate box */}
+          <path d="M4 14 L4 8 L6 8 L9 4 L18 4 L18 14 L16 14 C16 11.8 14.2 10 12 10 C9.8 10 8 11.8 8 14 Z" />
+          <path d="M20 2 L44 2 L44 14 L40 14 C40 11.8 38.2 10 36 10 C33.8 10 32 11.8 32 14 L20 14 Z" />
+          {/* Cab window */}
+          <path d="M10 5 L17 5 L17 9 L7 9 L10 5Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Front wheel */}
+          <circle cx="12" cy="14" r="3.5" />
+          <circle cx="12" cy="14" r="1.5" fill="hsl(var(--background))" />
+          {/* Rear wheel */}
+          <circle cx="36" cy="14" r="3.5" />
+          <circle cx="36" cy="14" r="1.5" fill="hsl(var(--background))" />
         </svg>
       );
     default:
       return (
-        <svg viewBox="0 0 32 16" fill="currentColor" className={iconClass}>
-          <path d="M29 10v2c0 .5-.4 1-1 1h-1.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H10.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H4c-.6 0-1-.5-1-1v-2l1-2 3-4h10l4 2 6 2 2 2z" />
-          <path d="M7 7h5l-1 3H6.5L7 7zM13 7h6l2 3h-8V7z" fill="hsl(var(--background))" opacity="0.4" />
-          <circle cx="8" cy="13" r="2" />
-          <circle cx="8" cy="13" r="1" fill="hsl(var(--background))" />
-          <circle cx="24" cy="13" r="2" />
-          <circle cx="24" cy="13" r="1" fill="hsl(var(--background))" />
+        <svg viewBox="0 0 48 20" fill="currentColor" className={iconClass}>
+          <path d="M4 14 L4 11 L7 11 L10 6 L18 4 L30 4 L36 6 L42 8 L44 11 L44 14 L40 14 C40 11.8 38.2 10 36 10 C33.8 10 32 11.8 32 14 L16 14 C16 11.8 14.2 10 12 10 C9.8 10 8 11.8 8 14 Z" />
+          <path d="M11 6.5 L17.5 5 L17.5 10 L8 10 L11 6.5Z" fill="hsl(var(--background))" opacity="0.5" />
+          <path d="M19 5 L29.5 5 L34 7 L34 10 L19 10 Z" fill="hsl(var(--background))" opacity="0.5" />
+          <circle cx="12" cy="14" r="3.5" />
+          <circle cx="12" cy="14" r="1.5" fill="hsl(var(--background))" />
+          <circle cx="36" cy="14" r="3.5" />
+          <circle cx="36" cy="14" r="1.5" fill="hsl(var(--background))" />
         </svg>
       );
   }

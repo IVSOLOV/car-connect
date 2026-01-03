@@ -252,7 +252,7 @@ const ApprovalRequests = () => {
                         <Badge variant="secondary">Pending</Badge>
                       </div>
 
-                      <div className="flex flex-wrap justify-between gap-4 text-sm mb-4">
+                      <div className="flex flex-wrap gap-8 text-sm mb-4">
                         <div className="space-y-1">
                           <div>
                             <span className="text-muted-foreground">Owner:</span>{" "}
@@ -263,7 +263,7 @@ const ApprovalRequests = () => {
                             <span className="text-foreground capitalize">{listing.title_status}</span>
                           </div>
                         </div>
-                        <div className="space-y-1 text-right">
+                        <div className="space-y-1">
                           <div>
                             <span className="text-muted-foreground">Daily Price:</span>{" "}
                             <span className="text-foreground">{formatPrice(listing.daily_price)}</span>

@@ -217,9 +217,7 @@ const BecomeHost = () => {
 
             <div className="text-center">
               <a 
-                href="https://fhaukvjpthkftfxfmnhm.supabase.co/storage/v1/object/public/documents/DiRent_Host_Recommendation_Guide.pdf" 
-                target="_blank" 
-                rel="noopener noreferrer"
+                href="/DiRent_Host_Recommendation_Guide.pdf" 
                 download="DiRent_Host_Recommendation_Guide.pdf"
               >
                 <Button variant="outline" size="lg">

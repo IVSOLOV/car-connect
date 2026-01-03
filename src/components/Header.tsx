@@ -37,19 +37,23 @@ const Header = () => {
             <img src={logo} alt="DiRent" className="h-16" />
           </Link>
 
-          <nav className="hidden items-center gap-6 md:flex">
+          <nav className="hidden items-center gap-2 md:flex rounded-full border border-border bg-card/80 p-1">
             <Link
               to="/dashboard"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname === "/dashboard" ? "text-primary" : "text-muted-foreground"
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                location.pathname === "/dashboard" 
+                  ? "bg-primary text-primary-foreground shadow-sm" 
+                  : "text-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
             >
               Browse Cars
             </Link>
             <Link
               to="/become-host"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname === "/become-host" ? "text-primary" : "text-muted-foreground"
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                location.pathname === "/become-host" 
+                  ? "bg-primary text-primary-foreground shadow-sm" 
+                  : "text-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
             >
               List Your Car

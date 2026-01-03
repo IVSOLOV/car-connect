@@ -390,7 +390,7 @@ const ListingDetails = () => {
 
       <main className="container mx-auto px-4 pt-20 sm:pt-24 pb-8 sm:pb-12 max-w-full overflow-x-hidden">
         <Link
-          to="/"
+          to="/dashboard"
           className="mb-4 sm:mb-6 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />

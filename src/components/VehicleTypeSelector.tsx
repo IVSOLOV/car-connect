@@ -1,6 +1,5 @@
-import { Car, CarFront, Truck, Bus, Container, Package, Warehouse, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Checkbox } from "@/components/ui/checkbox";
 
 export const VEHICLE_TYPES = [
   { value: "car", label: "Car", icon: "car" },
@@ -14,27 +13,79 @@ export const VEHICLE_TYPES = [
 
 export type VehicleType = typeof VEHICLE_TYPES[number]["value"];
 
-// Using Lucide icons for clarity
+// Side-view vehicle icons
 const VehicleIcon = ({ type, className }: { type: string; className?: string }) => {
-  const iconClass = cn("w-5 h-5", className);
+  const iconClass = cn("w-6 h-6", className);
   
   switch (type) {
     case "car":
-      return <CarFront className={iconClass} />;
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+          <path d="M5 17h14M7 17v-3h10v3M7 14l1.5-4h7l1.5 4" />
+          <circle cx="8" cy="17" r="1.5" />
+          <circle cx="16" cy="17" r="1.5" />
+        </svg>
+      );
     case "suv":
-      return <Car className={iconClass} />;
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+          <path d="M4 17h16M6 17v-5h12v5M6 12l2-5h8l2 5" />
+          <circle cx="7.5" cy="17" r="1.5" />
+          <circle cx="16.5" cy="17" r="1.5" />
+        </svg>
+      );
     case "minivan":
-      return <Bus className={iconClass} />;
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+          <path d="M4 17h16M6 17v-6l3-4h9v10" />
+          <circle cx="7.5" cy="17" r="1.5" />
+          <circle cx="16.5" cy="17" r="1.5" />
+          <path d="M11 11h4v3h-4z" />
+        </svg>
+      );
     case "truck":
-      return <Truck className={iconClass} />;
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+          <path d="M3 17h18M5 17v-4l2-3h4v7M11 10h8v7" />
+          <circle cx="6.5" cy="17" r="1.5" />
+          <circle cx="17.5" cy="17" r="1.5" />
+        </svg>
+      );
     case "van":
-      return <Bus className={iconClass} />;
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+          <path d="M4 17h16M6 17v-7h12v7" />
+          <circle cx="7.5" cy="17" r="1.5" />
+          <circle cx="16.5" cy="17" r="1.5" />
+          <path d="M8 13h3v2H8z" />
+        </svg>
+      );
     case "cargo_van":
-      return <Container className={iconClass} />;
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+          <path d="M4 17h16M6 17v-7h12v7" />
+          <circle cx="7.5" cy="17" r="1.5" />
+          <circle cx="16.5" cy="17" r="1.5" />
+          <path d="M8 13h2v2H8zM12 10v7" />
+        </svg>
+      );
     case "box_truck":
-      return <Package className={iconClass} />;
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+          <path d="M3 17h18M5 17v-4l2-3h3v7M10 10h10v7" />
+          <circle cx="6.5" cy="17" r="1.5" />
+          <circle cx="17.5" cy="17" r="1.5" />
+          <path d="M12 12h6v3h-6z" />
+        </svg>
+      );
     default:
-      return <Car className={iconClass} />;
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+          <path d="M5 17h14M7 17v-3h10v3M7 14l1.5-4h7l1.5 4" />
+          <circle cx="8" cy="17" r="1.5" />
+          <circle cx="16" cy="17" r="1.5" />
+        </svg>
+      );
   }
 };
 

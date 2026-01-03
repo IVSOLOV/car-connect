@@ -247,12 +247,20 @@ const Dashboard = () => {
             All
           </Button>
           <Button
-            variant={selectedFuelType === "electric" ? "default" : "outline"}
+            variant={selectedFuelType === "gas" ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedFuelType("electric")}
+            onClick={() => setSelectedFuelType("gas")}
             className="text-xs"
           >
-            Electric
+            Gas
+          </Button>
+          <Button
+            variant={selectedFuelType === "diesel" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedFuelType("diesel")}
+            className="text-xs"
+          >
+            Diesel
           </Button>
           <Button
             variant={selectedFuelType === "hybrid" ? "default" : "outline"}
@@ -263,12 +271,20 @@ const Dashboard = () => {
             Hybrid
           </Button>
           <Button
-            variant={selectedFuelType === "gas" ? "default" : "outline"}
+            variant={selectedFuelType === "electric" ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedFuelType("gas")}
+            onClick={() => setSelectedFuelType("electric")}
             className="text-xs"
           >
-            Gas
+            Electric
+          </Button>
+          <Button
+            variant={selectedFuelType === "other" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedFuelType("other")}
+            className="text-xs"
+          >
+            Other
           </Button>
         </div>
       </div>

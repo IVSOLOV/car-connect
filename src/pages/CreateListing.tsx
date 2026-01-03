@@ -522,10 +522,14 @@ const CreateListing = () => {
             {/* Fuel Type (Optional) */}
             <div className="space-y-2">
               <Label>Fuel Type</Label>
-              <RadioGroup value={fuelType} onValueChange={(v) => setFuelType(v as FuelType)} className="flex gap-6">
+              <RadioGroup value={fuelType} onValueChange={(v) => setFuelType(v as FuelType)} className="flex flex-wrap gap-4">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="gas" id="gas" />
                   <Label htmlFor="gas" className="cursor-pointer">Gas</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="diesel" id="diesel" />
+                  <Label htmlFor="diesel" className="cursor-pointer">Diesel</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="hybrid" id="hybrid" />
@@ -534,6 +538,10 @@ const CreateListing = () => {
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="electric" id="electric" />
                   <Label htmlFor="electric" className="cursor-pointer">Electric</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="other" id="other" />
+                  <Label htmlFor="other" className="cursor-pointer">Other</Label>
                 </div>
               </RadioGroup>
             </div>

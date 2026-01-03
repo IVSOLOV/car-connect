@@ -20,11 +20,13 @@ const VehicleIcon = ({ type, className }: { type: string; className?: string }) 
   switch (type) {
     case "sedan":
       return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className={iconClass}>
-          <path d="M21 13.5c0-.3-.1-.6-.2-.8l-1.5-1.2-2-3c-.3-.5-.8-.8-1.3-.8H8c-.5 0-1 .3-1.3.8l-2 3-1.5 1.2c-.1.2-.2.5-.2.8v2c0 .3.2.5.5.5H5c0 1.1.9 2 2 2s2-.9 2-2h6c0 1.1.9 2 2 2s2-.9 2-2h1.5c.3 0 .5-.2.5-.5v-2z" />
-          <circle cx="7" cy="16" r="1.5" fill="hsl(var(--card))" />
-          <circle cx="17" cy="16" r="1.5" fill="hsl(var(--card))" />
-          <path d="M8.5 9h7l1.2 2H7.3l1.2-2z" fill="hsl(var(--card))" opacity="0.3" />
+        <svg viewBox="0 0 32 16" fill="currentColor" className={iconClass}>
+          <path d="M29 10v2c0 .5-.4 1-1 1h-1.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H10.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H4c-.6 0-1-.5-1-1v-2l1-2 3-4h10l4 2 6 2 2 2z" />
+          <path d="M7 7h5l-1 3H6.5L7 7zM13 7h6l2 3h-8V7z" fill="hsl(var(--background))" opacity="0.4" />
+          <circle cx="8" cy="13" r="2" />
+          <circle cx="8" cy="13" r="1" fill="hsl(var(--background))" />
+          <circle cx="24" cy="13" r="2" />
+          <circle cx="24" cy="13" r="1" fill="hsl(var(--background))" />
         </svg>
       );
     case "suv":
@@ -81,11 +83,13 @@ const VehicleIcon = ({ type, className }: { type: string; className?: string }) 
       );
     default:
       return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className={iconClass}>
-          <path d="M21 13.5c0-.3-.1-.6-.2-.8l-1.5-1.2-2-3c-.3-.5-.8-.8-1.3-.8H8c-.5 0-1 .3-1.3.8l-2 3-1.5 1.2c-.1.2-.2.5-.2.8v2c0 .3.2.5.5.5H5c0 1.1.9 2 2 2s2-.9 2-2h6c0 1.1.9 2 2 2s2-.9 2-2h1.5c.3 0 .5-.2.5-.5v-2z" />
-          <circle cx="7" cy="16" r="1.5" fill="hsl(var(--card))" />
-          <circle cx="17" cy="16" r="1.5" fill="hsl(var(--card))" />
-          <path d="M8.5 9h7l1.2 2H7.3l1.2-2z" fill="hsl(var(--card))" opacity="0.3" />
+        <svg viewBox="0 0 32 16" fill="currentColor" className={iconClass}>
+          <path d="M29 10v2c0 .5-.4 1-1 1h-1.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H10.5c-.3-1.2-1.4-2-2.5-2s-2.2.8-2.5 2H4c-.6 0-1-.5-1-1v-2l1-2 3-4h10l4 2 6 2 2 2z" />
+          <path d="M7 7h5l-1 3H6.5L7 7zM13 7h6l2 3h-8V7z" fill="hsl(var(--background))" opacity="0.4" />
+          <circle cx="8" cy="13" r="2" />
+          <circle cx="8" cy="13" r="1" fill="hsl(var(--background))" />
+          <circle cx="24" cy="13" r="2" />
+          <circle cx="24" cy="13" r="1" fill="hsl(var(--background))" />
         </svg>
       );
   }

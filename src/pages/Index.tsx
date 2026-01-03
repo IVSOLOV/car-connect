@@ -38,7 +38,7 @@ const Index = () => {
         .select("*")
         .eq("approval_status", "approved")
         .order("created_at", { ascending: false })
-        .limit(6);
+        .limit(10);
 
       if (error) throw error;
       setListings((data as unknown as Listing[]) || []);

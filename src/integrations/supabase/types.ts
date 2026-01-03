@@ -73,6 +73,7 @@ export type Database = {
           title_status: string
           updated_at: string
           user_id: string
+          vehicle_type: string
           weekly_price: number | null
           year: number
         }
@@ -96,6 +97,7 @@ export type Database = {
           title_status?: string
           updated_at?: string
           user_id: string
+          vehicle_type?: string
           weekly_price?: number | null
           year: number
         }
@@ -119,6 +121,7 @@ export type Database = {
           title_status?: string
           updated_at?: string
           user_id?: string
+          vehicle_type?: string
           weekly_price?: number | null
           year?: number
         }

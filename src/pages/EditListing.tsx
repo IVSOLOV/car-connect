@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { LocationAutocomplete } from "@/components/LocationAutocomplete";
+import { VehicleTypeSelector, type VehicleType } from "@/components/VehicleTypeSelector";
 import type { Listing } from "@/types/listing";
 
 const carMakes = [
@@ -106,6 +107,7 @@ const EditListing = () => {
   const [weeklyPrice, setWeeklyPrice] = useState("");
   const [monthlyPrice, setMonthlyPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [vehicleType, setVehicleType] = useState<VehicleType>("car");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Track original values to detect price-only changes
@@ -165,6 +167,7 @@ const EditListing = () => {
       setWeeklyPrice(listing.weekly_price?.toString() || "");
       setMonthlyPrice(listing.monthly_price?.toString() || "");
       setDescription(listing.description || "");
+      setVehicleType((listing.vehicle_type as VehicleType) || "car");
       setExistingImages(listing.images || []);
     } catch (error) {
       console.error("Error fetching listing:", error);
@@ -343,6 +346,7 @@ const EditListing = () => {
         city === originalListing.city &&
         state === originalListing.state &&
         titleStatus === originalListing.title_status &&
+        vehicleType === (originalListing.vehicle_type || "car") &&
         (description || null) === (originalListing.description || null);
       
       // Check if prices only decreased (or stayed same)
@@ -362,6 +366,7 @@ const EditListing = () => {
         city,
         state,
         title_status: titleStatus,
+        vehicle_type: vehicleType,
         daily_price: newDailyPrice,
         weekly_price: newWeeklyPrice,
         monthly_price: newMonthlyPrice,
@@ -559,6 +564,12 @@ const EditListing = () => {
                   </span>
                 </label>
               </div>
+            </div>
+
+            {/* Vehicle Type */}
+            <div className="space-y-2">
+              <Label>Vehicle Type *</Label>
+              <VehicleTypeSelector value={vehicleType} onChange={setVehicleType} />
             </div>
 
             {/* Year */}

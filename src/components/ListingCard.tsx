@@ -58,11 +58,17 @@ const ListingCard = ({ listing, index = 0, startDate, endDate }: ListingCardProp
             </p>
           </div>
 
-          <div className="mb-4 flex items-center">
-            <div className="flex items-center text-xs text-muted-foreground">
-              <DollarSign className="mr-1.5 h-3.5 w-3.5 text-primary" />
+          <div className="mb-4 flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center">
+              <DollarSign className="mr-1 h-3.5 w-3.5 text-primary" />
               {formatPrice(listing.daily_price)}/day
             </div>
+            {listing.weekly_price && (
+              <div>{formatPrice(listing.weekly_price)}/wk</div>
+            )}
+            {listing.monthly_price && (
+              <div>{formatPrice(listing.monthly_price)}/mo</div>
+            )}
           </div>
 
           <div className="flex items-center justify-between border-t border-border pt-4">

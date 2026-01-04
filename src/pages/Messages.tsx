@@ -869,8 +869,16 @@ const Messages = () => {
                                 {format(new Date(conv.last_message_time), "MMM d")}
                               </span>
                             </div>
-                            <p className={`text-xs sm:text-sm flex items-center gap-1 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-                              <Car className="h-3 w-3 flex-shrink-0" />
+                            <p className={`text-xs sm:text-sm flex items-center gap-1.5 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                              {conv.listing_image ? (
+                                <img 
+                                  src={conv.listing_image} 
+                                  alt={conv.listing_title}
+                                  className="w-5 h-5 sm:w-6 sm:h-6 rounded object-cover flex-shrink-0"
+                                />
+                              ) : (
+                                <Car className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                              )}
                               <span className="truncate">{conv.listing_title}</span>
                             </p>
                             <p className={`text-xs sm:text-sm truncate mt-0.5 sm:mt-1 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>

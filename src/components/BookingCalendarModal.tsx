@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, Trash2 } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -24,6 +25,7 @@ interface Booking {
   start_date: string;
   end_date: string;
   notes: string | null;
+  guest_name: string | null;
 }
 
 interface BookingCalendarModalProps {
@@ -43,6 +45,7 @@ const BookingCalendarModal = ({
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [guestName, setGuestName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
@@ -87,6 +90,7 @@ const BookingCalendarModal = ({
         listing_id: listingId,
         start_date: format(startDate, "yyyy-MM-dd"),
         end_date: format(endDate, "yyyy-MM-dd"),
+        guest_name: guestName.trim() || null,
       });
 
       if (error) throw error;
@@ -94,6 +98,7 @@ const BookingCalendarModal = ({
       toast.success("Booking added successfully");
       setStartDate(undefined);
       setEndDate(undefined);
+      setGuestName("");
       fetchBookings();
     } catch (error) {
       console.error("Error adding booking:", error);
@@ -213,6 +218,18 @@ const BookingCalendarModal = ({
                 </Popover>
               </div>
 
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Guest Name (Optional)</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Enter guest name"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
             </div>
 
             <Button
@@ -250,6 +267,12 @@ const BookingCalendarModal = ({
                         {format(new Date(booking.start_date), "MMM d, yyyy")} -{" "}
                         {format(new Date(booking.end_date), "MMM d, yyyy")}
                       </p>
+                      {booking.guest_name && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                          <User className="h-3 w-3" />
+                          {booking.guest_name}
+                        </p>
+                      )}
                     </div>
                     <Button
                       variant="ghost"

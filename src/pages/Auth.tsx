@@ -214,10 +214,16 @@ const Auth = () => {
           avatarFile: avatarFile || undefined,
         });
         if (error) {
-          if (error.message.includes("already registered")) {
+          if (error.message.includes("already registered") || error.message.includes("already been registered")) {
             toast({
               title: "Account exists",
               description: "This email is already registered. Try signing in instead.",
+              variant: "destructive",
+            });
+          } else if (error.message.includes("User already registered")) {
+            toast({
+              title: "Account exists",
+              description: "An account with this email already exists. Please sign in or use a different email.",
               variant: "destructive",
             });
           } else {

@@ -44,6 +44,7 @@ const Auth = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +102,10 @@ const Auth = () => {
 
       if (!agreedToTerms) {
         newErrors.terms = "You must agree to the Privacy Policy and Terms of Service";
+      }
+
+      if (password !== signupConfirmPassword) {
+        newErrors.signupConfirmPassword = "Passwords do not match";
       }
     }
 
@@ -679,6 +684,33 @@ const Auth = () => {
                   </div>
                   {errors.password && (
                     <p className="text-sm text-destructive">{errors.password}</p>
+                  )}
+                </div>
+              )}
+
+              {mode === "signup" && (
+                <div className="space-y-2">
+                  <Label htmlFor="signupConfirmPassword">Re-enter Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="signupConfirmPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      value={signupConfirmPassword}
+                      onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                      className={`pl-10 ${errors.signupConfirmPassword ? 'border-destructive' : ''}`}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  {errors.signupConfirmPassword && (
+                    <p className="text-sm text-destructive">{errors.signupConfirmPassword}</p>
+                  )}
+                  {signupConfirmPassword && password && signupConfirmPassword !== password && !errors.signupConfirmPassword && (
+                    <p className="text-sm text-amber-500">Passwords do not match</p>
+                  )}
+                  {signupConfirmPassword && password && signupConfirmPassword === password && (
+                    <p className="text-sm text-green-500">Passwords match</p>
                   )}
                 </div>
               )}

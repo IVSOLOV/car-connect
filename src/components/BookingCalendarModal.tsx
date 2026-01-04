@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, Trash2, User } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, User, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
 interface Booking {
   id: string;
   listing_id: string;
@@ -47,6 +48,7 @@ const BookingCalendarModal = ({
   const [endDate, setEndDate] = useState<Date>();
   const [guestName, setGuestName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -72,7 +74,21 @@ const BookingCalendarModal = ({
     }
   };
 
-  const handleAddBooking = async () => {
+  const handleStartEdit = (booking: Booking) => {
+    setEditingBooking(booking);
+    setStartDate(new Date(booking.start_date));
+    setEndDate(new Date(booking.end_date));
+    setGuestName(booking.guest_name || "");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingBooking(null);
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setGuestName("");
+  };
+
+  const handleSaveBooking = async () => {
     if (!startDate || !endDate) {
       toast.error("Please select both start and end dates");
       return;
@@ -86,23 +102,40 @@ const BookingCalendarModal = ({
     setIsAdding(true);
 
     try {
-      const { error } = await supabase.from("listing_bookings" as any).insert({
-        listing_id: listingId,
-        start_date: format(startDate, "yyyy-MM-dd"),
-        end_date: format(endDate, "yyyy-MM-dd"),
-        guest_name: guestName.trim() || null,
-      });
+      if (editingBooking) {
+        // Update existing booking
+        const { error } = await supabase
+          .from("listing_bookings" as any)
+          .update({
+            start_date: format(startDate, "yyyy-MM-dd"),
+            end_date: format(endDate, "yyyy-MM-dd"),
+            guest_name: guestName.trim() || null,
+          })
+          .eq("id", editingBooking.id);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success("Booking updated successfully");
+      } else {
+        // Add new booking
+        const { error } = await supabase.from("listing_bookings" as any).insert({
+          listing_id: listingId,
+          start_date: format(startDate, "yyyy-MM-dd"),
+          end_date: format(endDate, "yyyy-MM-dd"),
+          guest_name: guestName.trim() || null,
+        });
 
-      toast.success("Booking added successfully");
+        if (error) throw error;
+        toast.success("Booking added successfully");
+      }
+
       setStartDate(undefined);
       setEndDate(undefined);
       setGuestName("");
+      setEditingBooking(null);
       fetchBookings();
     } catch (error) {
-      console.error("Error adding booking:", error);
-      toast.error("Failed to add booking");
+      console.error("Error saving booking:", error);
+      toast.error(editingBooking ? "Failed to update booking" : "Failed to add booking");
     } finally {
       setIsAdding(false);
     }
@@ -125,16 +158,18 @@ const BookingCalendarModal = ({
     }
   };
 
-  // Get all booked dates for calendar highlighting
-  const bookedDates = bookings.flatMap((booking) => {
-    const dates: Date[] = [];
-    const start = new Date(booking.start_date);
-    const end = new Date(booking.end_date);
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      dates.push(new Date(d));
-    }
-    return dates;
-  });
+  // Get all booked dates for calendar highlighting (exclude editing booking)
+  const bookedDates = bookings
+    .filter((booking) => booking.id !== editingBooking?.id)
+    .flatMap((booking) => {
+      const dates: Date[] = [];
+      const start = new Date(booking.start_date);
+      const end = new Date(booking.end_date);
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        dates.push(new Date(d));
+      }
+      return dates;
+    });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -147,11 +182,24 @@ const BookingCalendarModal = ({
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          {/* Add New Booking */}
+          {/* Add/Edit Booking */}
           <div className="p-4 rounded-lg border border-border bg-secondary/30">
-            <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add New Booking
+            <h3 className="font-semibold text-foreground mb-4 flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                {editingBooking ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                {editingBooking ? "Edit Booking" : "Add New Booking"}
+              </span>
+              {editingBooking && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancelEdit}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </Button>
+              )}
             </h3>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -233,11 +281,11 @@ const BookingCalendarModal = ({
             </div>
 
             <Button
-              onClick={handleAddBooking}
+              onClick={handleSaveBooking}
               disabled={isAdding || !startDate || !endDate}
               className="mt-4 w-full sm:w-auto"
             >
-              {isAdding ? "Adding..." : "Add Booking"}
+              {isAdding ? "Saving..." : editingBooking ? "Update Booking" : "Add Booking"}
             </Button>
           </div>
 
@@ -260,7 +308,12 @@ const BookingCalendarModal = ({
                 {bookings.map((booking) => (
                   <div
                     key={booking.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border bg-card"
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-lg border bg-card",
+                      editingBooking?.id === booking.id
+                        ? "border-primary bg-primary/5"
+                        : "border-border"
+                    )}
                   >
                     <div>
                       <p className="font-medium text-foreground">
@@ -274,14 +327,25 @@ const BookingCalendarModal = ({
                         </p>
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteBooking(booking.id)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleStartEdit(booking)}
+                        className="text-muted-foreground hover:text-foreground"
+                        disabled={editingBooking?.id === booking.id}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteBooking(booking.id)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

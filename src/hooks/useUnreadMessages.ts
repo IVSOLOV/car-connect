@@ -33,20 +33,22 @@ export const useUnreadMessages = () => {
   useEffect(() => {
     fetchUnreadCount();
 
+    if (!user) return;
+
     // Subscribe to new messages
     const channel = supabase
-      .channel("unread-messages")
+      .channel(`unread-messages-${user.id}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "messages",
+          filter: `recipient_id=eq.${user.id}`,
         },
-        (payload) => {
-          if (payload.new.recipient_id === user?.id) {
-            setUnreadCount((prev) => prev + 1);
-          }
+        () => {
+          // Refetch to get accurate count
+          fetchUnreadCount();
         }
       )
       .on(
@@ -55,12 +57,11 @@ export const useUnreadMessages = () => {
           event: "UPDATE",
           schema: "public",
           table: "messages",
+          filter: `recipient_id=eq.${user.id}`,
         },
-        (payload) => {
-          // If a message was just marked as read
-          if (payload.new.recipient_id === user?.id && payload.new.read_at && !payload.old?.read_at) {
-            setUnreadCount((prev) => Math.max(0, prev - 1));
-          }
+        () => {
+          // Refetch to get accurate count when messages are marked as read
+          fetchUnreadCount();
         }
       )
       .subscribe();

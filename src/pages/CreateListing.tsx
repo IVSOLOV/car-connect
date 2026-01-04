@@ -394,6 +394,9 @@ const CreateListing = () => {
               <p className="text-sm text-muted-foreground">
                 Minimum 5 images required ({images.length}/5 uploaded)
               </p>
+              <p className="text-xs text-muted-foreground">
+                * To keep listings clear and trustworthy, please upload photos of only one vehicle per listing.
+              </p>
               <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                 images.length < 5 ? "border-destructive/50" : "border-border"
               }`}>

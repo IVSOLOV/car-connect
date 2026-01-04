@@ -603,12 +603,21 @@ const Messages = () => {
                         >
                           {convInfo?.other_user_name}
                         </p>
-                        <p 
-                          className="text-xs sm:text-sm text-muted-foreground truncate cursor-pointer hover:text-primary transition-colors"
+                        <div 
+                          className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => convInfo && navigate(`/listing/${convInfo.listing_id}`)}
                         >
-                          {convInfo?.listing_title}
-                        </p>
+                          {convInfo?.listing_image && (
+                            <img 
+                              src={convInfo.listing_image} 
+                              alt={convInfo.listing_title}
+                              className="w-5 h-5 sm:w-6 sm:h-6 rounded object-cover shrink-0"
+                            />
+                          )}
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate hover:text-primary transition-colors">
+                            {convInfo?.listing_title}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </>

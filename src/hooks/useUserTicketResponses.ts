@@ -13,16 +13,28 @@ export const useUserTicketResponses = () => {
     }
 
     // Count tickets that have unread admin responses
-    // We check response_read_at is null - admin sets this to null when they respond
-    const { count, error } = await supabase
+    // Only count tickets that:
+    // 1. Belong to the current user
+    // 2. Have response_read_at as null (not yet read by user)
+    // 3. Actually have admin notes (not just status changed)
+    const { data: ticketsWithNotes, error } = await supabase
       .from("support_tickets")
-      .select("*", { count: "exact", head: true })
+      .select(`
+        id,
+        response_read_at,
+        support_ticket_admin_notes!inner(notes)
+      `)
       .eq("user_id", user.id)
-      .is("response_read_at", null)
-      .neq("status", "open"); // If status changed from open, admin has responded
+      .is("response_read_at", null);
 
-    if (!error && count !== null) {
+    if (!error && ticketsWithNotes) {
+      // Count tickets that have non-empty admin notes
+      const count = ticketsWithNotes.filter(
+        (t) => t.support_ticket_admin_notes?.notes
+      ).length;
       setResponseCount(count);
+    } else {
+      setResponseCount(0);
     }
   }, [user]);
 
@@ -34,8 +46,8 @@ export const useUserTicketResponses = () => {
 
     fetchResponseCount();
 
-    // Set up realtime subscription
-    const channel = supabase
+    // Set up realtime subscription for both tables
+    const ticketChannel = supabase
       .channel(`user-ticket-responses-${user.id}`)
       .on(
         "postgres_changes",
@@ -49,10 +61,21 @@ export const useUserTicketResponses = () => {
           fetchResponseCount();
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "support_ticket_admin_notes",
+        },
+        () => {
+          fetchResponseCount();
+        }
+      )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(ticketChannel);
     };
   }, [user, fetchResponseCount]);
 

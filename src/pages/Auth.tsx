@@ -44,6 +44,8 @@ const Auth = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { user, signIn, signUp } = useAuth();
@@ -239,6 +241,48 @@ const Auth = () => {
     }
   };
 
+  const handleResendVerification = async () => {
+    setIsResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Failed to resend",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Verification email sent",
+          description: "Please check your inbox for the verification link.",
+        });
+        setResendCooldown(60);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  // Cooldown timer effect
+  React.useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
 
   const handleResetPassword = async () => {
     const newErrors: Record<string, string> = {};
@@ -406,18 +450,40 @@ const Auth = () => {
               <p className="text-sm text-muted-foreground mb-4">
                 Click the link in the email to verify your account and start using DiRent.
               </p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setMode("login");
-                  setEmail("");
-                  setPassword("");
-                }}
-                className="w-full"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to sign in
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  onClick={handleResendVerification}
+                  disabled={isResending || resendCooldown > 0}
+                  className="w-full"
+                >
+                  {isResending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : resendCooldown > 0 ? (
+                    `Resend in ${resendCooldown}s`
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Resend verification email
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setMode("login");
+                    setEmail("");
+                    setPassword("");
+                  }}
+                  className="w-full"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to sign in
+                </Button>
+              </div>
             </div>
           ) : mode === "forgot" && resetSent ? (
             <div className="text-center py-4">

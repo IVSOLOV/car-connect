@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, X, Eye, ArrowLeft } from "lucide-react";
+import { Check, X, Eye, ArrowLeft, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +14,14 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { sendNotificationEmail } from "@/lib/notifications";
+import { format } from "date-fns";
 import type { Listing } from "@/types/listing";
 
 interface ListingWithProfile extends Listing {
@@ -34,7 +36,9 @@ const ApprovalRequests = () => {
   const navigate = useNavigate();
   const { user, role, loading: authLoading } = useAuth();
   const [listings, setListings] = useState<ListingWithProfile[]>([]);
+  const [historyListings, setHistoryListings] = useState<ListingWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingListing, setRejectingListing] = useState<ListingWithProfile | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -47,6 +51,7 @@ const ApprovalRequests = () => {
 
     if (user && role === "admin") {
       fetchPendingListings();
+      fetchApprovalHistory();
     }
   }, [user, role, authLoading, navigate]);
 
@@ -99,6 +104,53 @@ const ApprovalRequests = () => {
       toast.error("Failed to fetch pending listings");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchApprovalHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      // Fetch approved and rejected listings
+      const { data: listingsData, error: listingsError } = await supabase
+        .from("listings")
+        .select("*")
+        .in("approval_status", ["approved", "rejected"])
+        .order("updated_at", { ascending: false })
+        .limit(50);
+
+      if (listingsError) throw listingsError;
+
+      if (!listingsData || listingsData.length === 0) {
+        setHistoryListings([]);
+        setHistoryLoading(false);
+        return;
+      }
+
+      // Get unique user IDs and fetch their profiles
+      const userIds = [...new Set(listingsData.map((l) => l.user_id))];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, first_name, last_name, company_name")
+        .in("user_id", userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Map profiles to listings
+      const profilesMap = new Map(
+        profilesData?.map((p) => [p.user_id, p]) || []
+      );
+
+      const listingsWithProfiles: ListingWithProfile[] = listingsData.map((listing) => ({
+        ...listing,
+        profiles: profilesMap.get(listing.user_id) || undefined,
+      }));
+
+      setHistoryListings(listingsWithProfiles);
+    } catch (error) {
+      console.error("Error fetching approval history:", error);
+      toast.error("Failed to fetch approval history");
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -216,112 +268,222 @@ const ApprovalRequests = () => {
 
         <h1 className="text-3xl font-bold text-foreground mb-8">Approval Requests</h1>
 
-        {listings.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Check className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg text-muted-foreground">No pending approval requests</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 max-w-4xl">
-            {listings.map((listing) => (
-              <Card key={listing.id} className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="flex flex-col md:flex-row">
-                    {/* Image */}
-                    <div className="w-full md:w-44 h-44 md:h-auto flex-shrink-0">
-                      <img
-                        src={listing.images?.[0] || "/placeholder.svg"}
-                        alt={`${listing.year} ${listing.make} ${listing.model}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+        <Tabs defaultValue="pending" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="pending" className="flex items-center gap-2">
+              <Check className="h-4 w-4" />
+              Pending ({listings.length})
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              History
+            </TabsTrigger>
+          </TabsList>
 
-                    {/* Details */}
-                    <div className="flex-1 p-4">
-                      <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-                        <div>
-                          <h3 className="text-lg font-semibold text-foreground">
-                            {listing.year} {listing.make} {listing.model}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {listing.city}, {listing.state}
-                          </p>
-                        </div>
-                        <Badge variant="secondary">Pending</Badge>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4 text-sm mb-4">
-                        <div className="space-y-1">
-                          <div>
-                            <span className="text-muted-foreground">Owner:</span>{" "}
-                            <span className="text-foreground">{getOwnerName(listing)}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Title Status:</span>{" "}
-                            <span className="text-foreground capitalize">{listing.title_status}</span>
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <div>
-                            <span className="text-muted-foreground">Daily:</span>{" "}
-                            <span className="text-foreground">{formatPrice(listing.daily_price)}</span>
-                          </div>
-                          {listing.weekly_price && (
-                            <div>
-                              <span className="text-muted-foreground">Weekly:</span>{" "}
-                              <span className="text-foreground">{formatPrice(listing.weekly_price)}</span>
-                            </div>
-                          )}
-                          {listing.monthly_price && (
-                            <div>
-                              <span className="text-muted-foreground">Monthly:</span>{" "}
-                              <span className="text-foreground">{formatPrice(listing.monthly_price)}</span>
-                            </div>
-                          )}
-                        </div>
-                        <div></div>
-                      </div>
-
-                      {listing.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                          {listing.description}
-                        </p>
-                      )}
-
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => navigate(`/listing/${listing.id}`)}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleApprove(listing)}
-                        >
-                          <Check className="h-4 w-4 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => openRejectDialog(listing)}
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Reject
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+          <TabsContent value="pending">
+            {listings.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Check className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-lg text-muted-foreground">No pending approval requests</p>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+            ) : (
+              <div className="grid gap-4 max-w-4xl">
+                {listings.map((listing) => (
+                  <Card key={listing.id} className="overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="flex flex-col md:flex-row">
+                        {/* Image */}
+                        <div className="w-full md:w-44 h-44 md:h-auto flex-shrink-0">
+                          <img
+                            src={listing.images?.[0] || "/placeholder.svg"}
+                            alt={`${listing.year} ${listing.make} ${listing.model}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex-1 p-4">
+                          <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                            <div>
+                              <h3 className="text-lg font-semibold text-foreground">
+                                {listing.year} {listing.make} {listing.model}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {listing.city}, {listing.state}
+                              </p>
+                            </div>
+                            <Badge variant="secondary">Pending</Badge>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-4 text-sm mb-4">
+                            <div className="space-y-1">
+                              <div>
+                                <span className="text-muted-foreground">Owner:</span>{" "}
+                                <span className="text-foreground">{getOwnerName(listing)}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Title Status:</span>{" "}
+                                <span className="text-foreground capitalize">{listing.title_status}</span>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div>
+                                <span className="text-muted-foreground">Daily:</span>{" "}
+                                <span className="text-foreground">{formatPrice(listing.daily_price)}</span>
+                              </div>
+                              {listing.weekly_price && (
+                                <div>
+                                  <span className="text-muted-foreground">Weekly:</span>{" "}
+                                  <span className="text-foreground">{formatPrice(listing.weekly_price)}</span>
+                                </div>
+                              )}
+                              {listing.monthly_price && (
+                                <div>
+                                  <span className="text-muted-foreground">Monthly:</span>{" "}
+                                  <span className="text-foreground">{formatPrice(listing.monthly_price)}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div></div>
+                          </div>
+
+                          {listing.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                              {listing.description}
+                            </p>
+                          )}
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => navigate(`/listing/${listing.id}`)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleApprove(listing)}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => openRejectDialog(listing)}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="history">
+            {historyLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : historyListings.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <History className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-lg text-muted-foreground">No approval history yet</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 max-w-4xl">
+                {historyListings.map((listing) => (
+                  <Card key={listing.id} className="overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="flex flex-col md:flex-row">
+                        {/* Image */}
+                        <div className="w-full md:w-44 h-44 md:h-auto flex-shrink-0">
+                          <img
+                            src={listing.images?.[0] || "/placeholder.svg"}
+                            alt={`${listing.year} ${listing.make} ${listing.model}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex-1 p-4">
+                          <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                            <div>
+                              <h3 className="text-lg font-semibold text-foreground">
+                                {listing.year} {listing.make} {listing.model}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {listing.city}, {listing.state}
+                              </p>
+                            </div>
+                            <Badge 
+                              variant={listing.approval_status === "approved" ? "default" : "destructive"}
+                            >
+                              {listing.approval_status === "approved" ? "Approved" : "Rejected"}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
+                            <div className="space-y-1">
+                              <div>
+                                <span className="text-muted-foreground">Owner:</span>{" "}
+                                <span className="text-foreground">{getOwnerName(listing)}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Daily:</span>{" "}
+                                <span className="text-foreground">{formatPrice(listing.daily_price)}</span>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div>
+                                <span className="text-muted-foreground">Updated:</span>{" "}
+                                <span className="text-foreground">{format(new Date(listing.updated_at), "MMM d, yyyy")}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Created:</span>{" "}
+                                <span className="text-foreground">{format(new Date(listing.created_at), "MMM d, yyyy")}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {listing.rejection_reason && (
+                            <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 mb-4">
+                              <p className="text-sm text-destructive">
+                                <span className="font-medium">Rejection reason:</span> {listing.rejection_reason}
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => navigate(`/listing/${listing.id}`)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Rejection Dialog */}

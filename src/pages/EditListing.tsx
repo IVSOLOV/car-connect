@@ -475,8 +475,8 @@ const EditListing = () => {
               <p className="text-sm text-muted-foreground">
                 Click on an image to set it as the main photo
               </p>
-              <p className="text-xs text-muted-foreground">
-                * To keep listings clear and trustworthy, please upload photos of only one vehicle per listing.
+              <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
+                ⚠ To keep listings clear and trustworthy, please upload photos of only one vehicle per listing.
               </p>
               
               {/* Existing Images */}

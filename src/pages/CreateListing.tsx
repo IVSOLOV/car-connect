@@ -24,10 +24,11 @@ import type { FuelType } from "@/types/listing";
 const carMakes = [
   "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Buick",
   "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ferrari", "Fiat", "Ford",
-  "Genesis", "GMC", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia",
-  "Lamborghini", "Land Rover", "Lexus", "Lincoln", "Lotus", "Maserati",
-  "Mazda", "McLaren", "Mercedes-Benz", "Mini", "Mitsubishi", "Nissan",
-  "Porsche", "Ram", "Rolls-Royce", "Subaru", "Tesla", "Toyota", "Volkswagen", "Volvo"
+  "Freightliner", "Genesis", "GMC", "Hino", "Honda", "Hyundai", "Infiniti", 
+  "Isuzu", "Jaguar", "Jeep", "Kia", "Lamborghini", "Land Rover", "Lexus", 
+  "Lincoln", "Lotus", "Maserati", "Mazda", "McLaren", "Mercedes-Benz", "Mini", 
+  "Mitsubishi", "Nissan", "Porsche", "Ram", "Rolls-Royce", "Subaru", "Tesla", 
+  "Toyota", "Volkswagen", "Volvo"
 ];
 
 const modelsByMake: Record<string, string[]> = {
@@ -39,17 +40,20 @@ const modelsByMake: Record<string, string[]> = {
   "BMW": ["2 Series", "3 Series", "4 Series", "5 Series", "7 Series", "8 Series", "X1", "X3", "X5", "X7", "Z4", "M3", "M4", "M5", "i4", "iX"],
   "Buick": ["Encore", "Envision", "Enclave", "Encore GX"],
   "Cadillac": ["CT4", "CT5", "Escalade", "XT4", "XT5", "XT6", "Lyriq"],
-  "Chevrolet": ["Spark", "Malibu", "Camaro", "Corvette", "Trax", "Equinox", "Blazer", "Traverse", "Tahoe", "Suburban", "Colorado", "Silverado", "Bolt EV"],
+  "Chevrolet": ["Spark", "Malibu", "Camaro", "Corvette", "Trax", "Equinox", "Blazer", "Traverse", "Tahoe", "Suburban", "Colorado", "Silverado", "Bolt EV", "Express Cargo", "Express Passenger", "City Express", "Low Cab Forward 3500", "Low Cab Forward 4500", "Low Cab Forward 5500", "Low Cab Forward 6500"],
   "Chrysler": ["300", "Pacifica", "Voyager"],
-  "Dodge": ["Charger", "Challenger", "Durango", "Hornet"],
+  "Dodge": ["Charger", "Challenger", "Durango", "Hornet", "Grand Caravan"],
   "Ferrari": ["Roma", "Portofino", "F8 Tributo", "SF90 Stradale", "812 Superfast", "296 GTB", "Purosangue"],
-  "Fiat": ["500", "500X"],
-  "Ford": ["Mustang", "Fusion", "Escape", "Edge", "Explorer", "Expedition", "Bronco", "Ranger", "F-150", "F-250", "Maverick", "Mustang Mach-E"],
+  "Fiat": ["500", "500X", "Ducato Cargo Van", "Ducato Passenger Van"],
+  "Ford": ["Mustang", "Fusion", "Escape", "Edge", "Explorer", "Expedition", "Bronco", "Ranger", "F-150", "F-250", "Maverick", "Mustang Mach-E", "Transit Connect", "Transit Cargo Van", "Transit Passenger Van", "Transit Cargo Van High Roof", "E-Transit Cargo Van", "F-350", "F-450", "F-550", "F-650", "F-750"],
+  "Freightliner": ["M2 106 Box Truck", "M2 112 Box Truck", "Sprinter Cargo Van", "Sprinter Passenger Van", "Sprinter Cab Chassis", "MT45", "MT55", "P700", "P1000", "P1200"],
   "Genesis": ["G70", "G80", "G90", "GV60", "GV70", "GV80"],
-  "GMC": ["Terrain", "Acadia", "Yukon", "Canyon", "Sierra", "Hummer EV"],
+  "GMC": ["Terrain", "Acadia", "Yukon", "Canyon", "Sierra", "Hummer EV", "Savana Cargo Van", "Savana Passenger Van", "Savana Cutaway"],
+  "Hino": ["195 Box Truck", "195DC Box Truck", "268 Box Truck", "268A Box Truck", "338 Box Truck", "L6 Box Truck", "L7 Box Truck", "XL7 Box Truck", "XL8 Box Truck"],
   "Honda": ["Civic", "Accord", "Insight", "HR-V", "CR-V", "Passport", "Pilot", "Odyssey", "Ridgeline"],
   "Hyundai": ["Accent", "Elantra", "Sonata", "Venue", "Kona", "Tucson", "Santa Fe", "Palisade", "Ioniq 5", "Ioniq 6"],
   "Infiniti": ["Q50", "Q60", "QX50", "QX55", "QX60", "QX80"],
+  "Isuzu": ["N-Series NPR Box Truck", "N-Series NPR-HD Box Truck", "N-Series NPR-XD Box Truck", "N-Series NQR Box Truck", "N-Series NRR Box Truck", "F-Series FTR Box Truck", "F-Series FVR Box Truck", "Reach Commercial Van"],
   "Jaguar": ["XE", "XF", "F-Type", "E-Pace", "F-Pace", "I-Pace"],
   "Jeep": ["Renegade", "Compass", "Cherokee", "Grand Cherokee", "Wrangler", "Gladiator", "Wagoneer"],
   "Kia": ["Rio", "Forte", "K5", "Stinger", "Seltos", "Sportage", "Sorento", "Telluride", "Carnival", "EV6"],
@@ -61,18 +65,18 @@ const modelsByMake: Record<string, string[]> = {
   "Maserati": ["Ghibli", "Quattroporte", "MC20", "Grecale", "Levante"],
   "Mazda": ["Mazda3", "Mazda6", "CX-30", "CX-5", "CX-50", "CX-9", "MX-5 Miata"],
   "McLaren": ["Artura", "GT", "720S", "765LT"],
-  "Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "S-Class", "CLA", "CLS", "GLA", "GLB", "GLC", "GLE", "GLS", "G-Class", "AMG GT", "EQS", "EQE"],
+  "Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "S-Class", "CLA", "CLS", "GLA", "GLB", "GLC", "GLE", "GLS", "G-Class", "AMG GT", "EQS", "EQE", "Sprinter Cargo Van", "Sprinter Passenger Van", "Sprinter Crew Van", "Sprinter Cab Chassis", "Metris Cargo Van", "Metris Passenger Van"],
   "Mini": ["Cooper", "Clubman", "Countryman", "Convertible"],
-  "Mitsubishi": ["Mirage", "Outlander", "Outlander Sport", "Eclipse Cross"],
-  "Nissan": ["Versa", "Sentra", "Altima", "Maxima", "Leaf", "Kicks", "Rogue", "Murano", "Pathfinder", "Armada", "Frontier", "Titan", "Z"],
+  "Mitsubishi": ["Mirage", "Outlander", "Outlander Sport", "Eclipse Cross", "Fuso Canter Box Truck", "Fuso FE Box Truck"],
+  "Nissan": ["Versa", "Sentra", "Altima", "Maxima", "Leaf", "Kicks", "Rogue", "Murano", "Pathfinder", "Armada", "Frontier", "Titan", "Z", "NV Cargo", "NV200 Cargo Van", "NV Passenger"],
   "Porsche": ["718 Boxster", "718 Cayman", "911", "Panamera", "Taycan", "Macan", "Cayenne"],
-  "Ram": ["1500", "2500", "3500", "ProMaster"],
+  "Ram": ["1500", "2500", "3500", "ProMaster 1500", "ProMaster 2500", "ProMaster 3500", "ProMaster City Cargo", "ProMaster City Passenger", "ProMaster Cutaway", "4500", "5500"],
   "Rolls-Royce": ["Ghost", "Phantom", "Wraith", "Dawn", "Cullinan", "Spectre"],
   "Subaru": ["Impreza", "Legacy", "WRX", "BRZ", "Crosstrek", "Forester", "Outback", "Ascent", "Solterra"],
   "Tesla": ["Model 3", "Model S", "Model X", "Model Y", "Cybertruck"],
-  "Toyota": ["Corolla", "Camry", "Avalon", "Prius", "Prius C", "GR86", "Supra", "C-HR", "RAV4", "Venza", "Highlander", "4Runner", "Sequoia", "Tacoma", "Tundra", "Land Cruiser"],
-  "Volkswagen": ["Jetta", "Passat", "Arteon", "Golf GTI", "Golf R", "ID.4", "Taos", "Tiguan", "Atlas"],
-  "Volvo": ["S60", "S90", "V60", "V90", "XC40", "XC60", "XC90", "C40 Recharge"]
+  "Toyota": ["Corolla", "Camry", "Avalon", "Prius", "Prius C", "GR86", "Supra", "C-HR", "RAV4", "Venza", "Highlander", "4Runner", "Sequoia", "Tacoma", "Tundra", "Land Cruiser", "Sienna"],
+  "Volkswagen": ["Jetta", "Passat", "Arteon", "Golf GTI", "Golf R", "ID.4", "Taos", "Tiguan", "Atlas", "ID. Buzz Cargo", "Transporter Cargo Van"],
+  "Volvo": ["S60", "S90", "V60", "V90", "XC40", "XC60", "XC90", "C40 Recharge", "VNL Box Truck", "VNR Box Truck", "FE Box Truck", "FL Box Truck"]
 };
 
 const usStates = [

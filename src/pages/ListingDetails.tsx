@@ -3,6 +3,9 @@ import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom"
 import { format, parseISO } from "date-fns";
 import {
   ArrowLeft,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   MapPin,
   Calendar,
   MessageCircle,
@@ -415,12 +418,40 @@ const ListingDetails = () => {
           <div className="lg:col-span-2 min-w-0">
             {/* Image Gallery */}
             <div className="mb-6 sm:mb-8 animate-fade-in">
-              <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden rounded-xl sm:rounded-2xl w-full">
+              <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden rounded-xl sm:rounded-2xl w-full group">
                 <img
                   src={images[selectedImage]}
                   alt={title}
                   className="h-full w-full object-cover"
                 />
+                
+                {/* Navigation Arrows */}
+                {images.length > 1 && (
+                  <>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity h-10 w-10"
+                      onClick={() => setSelectedImage((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity h-10 w-10"
+                      onClick={() => setSelectedImage((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </Button>
+                    
+                    {/* Image Counter */}
+                    <div className="absolute bottom-4 left-4 bg-background/80 backdrop-blur-sm text-foreground text-sm px-3 py-1 rounded-full">
+                      {selectedImage + 1} / {images.length}
+                    </div>
+                  </>
+                )}
+                
                 <div className="absolute bottom-4 right-4 flex gap-2">
                   <Button 
                     variant="secondary" 

@@ -44,6 +44,7 @@ import {
 import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
+import ReviewDialog from "@/components/ReviewDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -87,6 +88,8 @@ const ListingDetails = () => {
   const [ownerRating, setOwnerRating] = useState<{ average: number; count: number } | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [hasExistingReview, setHasExistingReview] = useState(false);
 
   // Get dates from URL params
   const startDateParam = searchParams.get("startDate");
@@ -180,6 +183,16 @@ const ListingDetails = () => {
           (msg) => msg.sender_id === user.id && msg.message.startsWith(defaultIntro)
         );
         setHasUserSentDefaultMessage(hasSentDefault);
+
+        // Check for existing review
+        const { data: reviewData } = await supabase
+          .from("user_reviews")
+          .select("id")
+          .eq("reviewer_id", user.id)
+          .eq("reviewed_id", listing.user_id)
+          .maybeSingle();
+        
+        setHasExistingReview(!!reviewData);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -846,6 +859,26 @@ const ListingDetails = () => {
                 </div>
               )}
 
+              {/* Review Prompt - Show after 5+ messages with responses from both sides */}
+              {user && listing && !isOwner && !hasExistingReview && messages.length >= 5 && 
+               messages.some(m => m.sender_id === user.id) && 
+               messages.some(m => m.sender_id === listing.user_id) && (
+                <div className="mb-4 p-3 rounded-lg bg-accent/30 border border-accent flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Star className="h-4 w-4 text-yellow-500 shrink-0" />
+                    <span className="text-sm truncate">How was your experience with {ownerName}?</span>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setShowReviewDialog(true)}
+                    className="shrink-0"
+                  >
+                    Rate
+                  </Button>
+                </div>
+              )}
+
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -937,6 +970,22 @@ const ListingDetails = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Review Dialog */}
+        {user && listing && !isOwner && (
+          <ReviewDialog
+            open={showReviewDialog}
+            onOpenChange={setShowReviewDialog}
+            reviewedUserId={listing.user_id}
+            reviewedUserName={ownerName}
+            listingId={listing.id}
+            reviewerId={user.id}
+            onReviewSubmitted={() => {
+              setHasExistingReview(true);
+              fetchMessages();
+            }}
+          />
+        )}
       </main>
     </div>
   );

@@ -344,7 +344,7 @@ const EditListing = () => {
       // Check if images are the same (regardless of order)
       const sameImages = JSON.stringify([...uploadedImageUrls].sort()) === JSON.stringify([...(originalListing?.images || [])].sort());
       
-      // Check if non-image, non-price fields changed
+      // Check if non-image, non-price, non-vehicle-type fields changed (these require admin approval)
       const coreFieldsUnchanged = originalListing && 
         parseInt(year) === originalListing.year &&
         make === originalListing.make &&
@@ -352,7 +352,6 @@ const EditListing = () => {
         city === originalListing.city &&
         state === originalListing.state &&
         titleStatus === originalListing.title_status &&
-        vehicleType === (originalListing.vehicle_type || "car") &&
         (description || null) === (originalListing.description || null);
       
       // Check if prices only decreased (or stayed same)
@@ -361,7 +360,7 @@ const EditListing = () => {
         (newWeeklyPrice === null || originalListing.weekly_price === null || newWeeklyPrice <= originalListing.weekly_price) &&
         (newMonthlyPrice === null || originalListing.monthly_price === null || newMonthlyPrice <= originalListing.monthly_price);
       
-      // Skip approval if only image order changed, or only price decreased, or both
+      // Skip approval if only image order changed, price decreased, or vehicle type changed
       const skipApproval = coreFieldsUnchanged && sameImages && pricesNotIncreased;
 
       // Build update object

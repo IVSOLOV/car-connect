@@ -112,11 +112,33 @@ const CreateListing = () => {
 
   const availableModels = make ? modelsByMake[make] || [] : [];
 
+  // Check if user is a host
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-    }
-  }, [user, navigate]);
+    const checkHostRole = async () => {
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "host")
+        .maybeSingle();
+
+      if (!roleData) {
+        toast({
+          title: "Host access required",
+          description: "You need to become a host before creating listings.",
+          variant: "destructive",
+        });
+        navigate("/become-host");
+      }
+    };
+
+    checkHostRole();
+  }, [user, navigate, toast]);
 
   useEffect(() => {
     if (make) {

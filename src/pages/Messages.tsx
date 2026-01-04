@@ -579,24 +579,36 @@ const Messages = () => {
                     >
                       <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
-                    <div 
-                      className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-80 transition-opacity min-w-0 flex-1"
-                      onClick={() => convInfo && navigate(`/owner/${convInfo.other_user_id}`)}
-                    >
-                      {convInfo?.other_user_avatar ? (
-                        <img 
-                          src={convInfo.other_user_avatar} 
-                          alt={convInfo.other_user_name}
-                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shrink-0"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                        </div>
-                      )}
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div 
+                        className="cursor-pointer hover:opacity-80 transition-opacity shrink-0"
+                        onClick={() => convInfo && navigate(`/owner/${convInfo.other_user_id}`)}
+                      >
+                        {convInfo?.other_user_avatar ? (
+                          <img 
+                            src={convInfo.other_user_avatar} 
+                            alt={convInfo.other_user_name}
+                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                          </div>
+                        )}
+                      </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold hover:text-primary transition-colors truncate text-sm sm:text-base">{convInfo?.other_user_name}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{convInfo?.listing_title}</p>
+                        <p 
+                          className="font-semibold hover:text-primary transition-colors truncate text-sm sm:text-base cursor-pointer"
+                          onClick={() => convInfo && navigate(`/owner/${convInfo.other_user_id}`)}
+                        >
+                          {convInfo?.other_user_name}
+                        </p>
+                        <p 
+                          className="text-xs sm:text-sm text-muted-foreground truncate cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => convInfo && navigate(`/listing/${convInfo.listing_id}`)}
+                        >
+                          {convInfo?.listing_title}
+                        </p>
                       </div>
                     </div>
                   </>

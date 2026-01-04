@@ -30,6 +30,7 @@ import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserTicketResponses } from "@/hooks/useUserTicketResponses";
 import { toast } from "sonner";
 import { sendNotificationEmail } from "@/lib/notifications";
 
@@ -57,6 +58,7 @@ interface AdminNote {
 const SupportTickets = () => {
   const navigate = useNavigate();
   const { user, role } = useAuth();
+  const { refetch: refetchResponseCount } = useUserTicketResponses();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
@@ -267,14 +269,19 @@ const SupportTickets = () => {
                   // Mark as read when user expands a ticket with admin notes
                   const hasAdminNotes = adminNotes[ticket.id];
                   if (open && !isAdmin && hasAdminNotes && !ticket.response_read_at) {
-                    await supabase
+                    const { error } = await supabase
                       .from("support_tickets")
                       .update({ response_read_at: new Date().toISOString() })
                       .eq("id", ticket.id);
-                    // Update local state
-                    setTickets(prev => prev.map(t => 
-                      t.id === ticket.id ? { ...t, response_read_at: new Date().toISOString() } : t
-                    ));
+                    
+                    if (!error) {
+                      // Update local state
+                      setTickets(prev => prev.map(t => 
+                        t.id === ticket.id ? { ...t, response_read_at: new Date().toISOString() } : t
+                      ));
+                      // Refresh the notification count in header
+                      refetchResponseCount();
+                    }
                   }
                 }}
               >

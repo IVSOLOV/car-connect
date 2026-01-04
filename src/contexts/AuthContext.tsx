@@ -110,6 +110,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
     });
     
+    // Check if user already exists - Supabase returns success with empty identities array
+    if (!error && signUpData.user && signUpData.user.identities?.length === 0) {
+      return { error: new Error("User already registered") };
+    }
+    
     // If signup successful and there's an avatar file, upload it
     if (!error && signUpData.user && avatarFile) {
       const fileExt = avatarFile.name.split('.').pop();

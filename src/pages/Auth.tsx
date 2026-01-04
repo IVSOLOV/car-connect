@@ -368,13 +368,25 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-background flex flex-col px-4 py-12">
       <SEO 
         title="Sign In | DiRent - Direct Owner Car Rentals"
         description="Sign in or create an account to rent cars directly from owners or list your car for rent."
         canonicalUrl="/auth"
       />
-      <div className="w-full max-w-md">
+      
+      {/* Back to Dashboard link */}
+      <div className="w-full max-w-md mx-auto mb-4">
+        <Link 
+          to="/dashboard" 
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Link>
+      </div>
+
+      <div className="w-full max-w-md mx-auto flex-1 flex flex-col justify-center">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">

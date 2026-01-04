@@ -327,23 +327,25 @@ const BookingCalendarModal = ({
                         </p>
                       )}
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-2">
                       <Button
-                        variant="ghost"
-                        size="icon"
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleStartEdit(booking)}
-                        className="text-muted-foreground hover:text-foreground"
+                        className="text-primary hover:text-primary hover:bg-primary/10 border-primary/30"
                         disabled={editingBooking?.id === booking.id}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Edit
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="icon"
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleDeleteBooking(booking.id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
                       </Button>
                     </div>
                   </div>

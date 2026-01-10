@@ -7,23 +7,35 @@ import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { useListingSubscription } from "@/hooks/useListingSubscription";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const ListingSuccess = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { checkSubscription } = useListingSubscription();
 
   useEffect(() => {
     // Refresh subscription status after successful payment
-    checkSubscription();
-  }, [checkSubscription]);
+    if (user) {
+      checkSubscription();
+    }
+  }, [checkSubscription, user]);
 
-  // If no user, redirect to auth
+  // Only redirect to auth AFTER loading is complete AND there's no user
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       navigate("/auth");
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
+
+  // Show loading while auth state is being restored
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

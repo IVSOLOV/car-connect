@@ -52,7 +52,8 @@ export function useListingSubscription() {
       if (funcError) throw funcError;
 
       if (data?.url) {
-        window.open(data.url, "_blank");
+        // Redirect in same window to preserve session
+        window.location.href = data.url;
       }
     } catch (err) {
       console.error("Error starting checkout:", err);

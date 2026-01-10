@@ -52,9 +52,13 @@ export function useListingSubscription() {
       if (funcError) throw funcError;
 
       if (data?.url) {
-        // Redirect in same window to preserve session
-        window.location.assign(data.url);
-        return; // Prevent any further code execution
+        // Open in new tab - required for iframe sandbox environments
+        const newWindow = window.open(data.url, "_blank");
+        if (!newWindow) {
+          // Fallback: if popup blocked, try direct navigation
+          window.location.href = data.url;
+        }
+        return;
       } else {
         throw new Error("No checkout URL returned");
       }

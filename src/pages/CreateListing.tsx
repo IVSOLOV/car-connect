@@ -681,7 +681,7 @@ const CreateListing = () => {
               variant="hero" 
               size="lg" 
               className="w-full" 
-              disabled={isSubmitting || !canCreateListing || subLoading}
+              disabled={isSubmitting || subLoading}
             >
               {isSubmitting ? (
                 <>

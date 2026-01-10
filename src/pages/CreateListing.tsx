@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, X, Loader2, Star } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Upload, X, Loader2, Star, CreditCard, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +21,9 @@ import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { VehicleTypeSelector, type VehicleType } from "@/components/VehicleTypeSelector";
+import { useListingSubscription } from "@/hooks/useListingSubscription";
 import type { FuelType } from "@/types/listing";
+
 const carMakes = [
   "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Buick",
   "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ferrari", "Fiat", "Ford",
@@ -92,8 +95,10 @@ const usStates = [
 
 const CreateListing = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { status: subStatus, isLoading: subLoading, checkSubscription, startCheckout, canCreateListing } = useListingSubscription();
 
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -110,11 +115,33 @@ const CreateListing = () => {
   const [vehicleType, setVehicleType] = useState<VehicleType>("car");
   const [fuelType, setFuelType] = useState<FuelType>("gas");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1929 }, (_, i) => currentYear - i);
 
   const availableModels = make ? modelsByMake[make] || [] : [];
+
+  // Handle payment success/cancel from Stripe redirect
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    if (paymentStatus === "success") {
+      toast({
+        title: "Payment Successful!",
+        description: "You can now create your listing.",
+      });
+      checkSubscription();
+      // Clear the URL params
+      navigate("/create-listing", { replace: true });
+    } else if (paymentStatus === "canceled") {
+      toast({
+        title: "Payment Canceled",
+        description: "You can try again when you're ready.",
+        variant: "destructive",
+      });
+      navigate("/create-listing", { replace: true });
+    }
+  }, [searchParams, toast, navigate, checkSubscription]);
 
   // Check if user is a host
   useEffect(() => {
@@ -385,7 +412,75 @@ const CreateListing = () => {
             Back
           </button>
 
-          <h1 className="text-3xl font-bold text-foreground mb-8">Vehicle Details</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-4">Vehicle Details</h1>
+
+          {/* Subscription Status Alert */}
+          {!subLoading && subStatus && (
+            <div className="mb-6">
+              {canCreateListing ? (
+                <Alert className="border-green-500/50 bg-green-500/10">
+                  <CreditCard className="h-4 w-4 text-green-600" />
+                  <AlertTitle className="text-green-600">Subscription Active</AlertTitle>
+                  <AlertDescription>
+                    You have {subStatus.availableSlots} listing slot{subStatus.availableSlots !== 1 ? 's' : ''} available.
+                    ({subStatus.activeListings} of {subStatus.paidListingSlots} used)
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert className="border-amber-500/50 bg-amber-500/10">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <AlertTitle className="text-amber-600">Subscription Required</AlertTitle>
+                  <AlertDescription className="space-y-3">
+                    <p>
+                      To create a listing, you need an active subscription at <strong>$4.99/month per listing</strong>.
+                      {subStatus.activeListings > 0 && (
+                        <> You currently have {subStatus.activeListings} active listing{subStatus.activeListings !== 1 ? 's' : ''} 
+                        using all {subStatus.paidListingSlots} of your paid slots.</>
+                      )}
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        setIsCheckingOut(true);
+                        try {
+                          await startCheckout(1);
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: "Failed to start checkout. Please try again.",
+                            variant: "destructive",
+                          });
+                        } finally {
+                          setIsCheckingOut(false);
+                        }
+                      }}
+                      disabled={isCheckingOut}
+                      className="w-full sm:w-auto"
+                    >
+                      {isCheckingOut ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Subscribe for $4.99/month
+                        </>
+                      )}
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
+
+          {subLoading && (
+            <div className="mb-6 flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Checking subscription status...
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Image Upload */}
@@ -633,12 +728,20 @@ const CreateListing = () => {
             </div>
 
             {/* Submit Button */}
-            <Button type="submit" variant="hero" size="lg" className="w-full" disabled={isSubmitting}>
+            <Button 
+              type="submit" 
+              variant="hero" 
+              size="lg" 
+              className="w-full" 
+              disabled={isSubmitting || !canCreateListing || subLoading}
+            >
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating...
                 </>
+              ) : !canCreateListing ? (
+                "Subscribe to Create Listing"
               ) : (
                 "Create Listing"
               )}

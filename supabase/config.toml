@@ -6,6 +6,15 @@ verify_jwt = false
 [functions.send-notification-email]
 verify_jwt = false
 
+[functions.create-listing-checkout]
+verify_jwt = false
+
+[functions.check-listing-subscription]
+verify_jwt = false
+
+[functions.customer-portal]
+verify_jwt = false
+
 [auth.email]
 enable_signup = true
 double_confirm_changes = true

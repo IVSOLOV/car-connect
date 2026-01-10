@@ -335,10 +335,39 @@ const CreateListing = () => {
       return;
     }
 
-    // If no subscription, redirect to Stripe checkout first
+    // If no subscription, save listing data to localStorage and redirect to Stripe checkout
     if (!canCreateListing) {
       setIsSubmitting(true);
       try {
+        // Save listing data to localStorage before redirect
+        const pendingListing = {
+          year,
+          make,
+          model,
+          city,
+          state,
+          titleStatus,
+          vehicleType,
+          fuelType,
+          dailyPrice,
+          weeklyPrice,
+          monthlyPrice,
+          description,
+          images: images.map(img => ({ name: img.name, type: img.type, size: img.size })),
+        };
+        localStorage.setItem("pendingListing", JSON.stringify(pendingListing));
+        
+        // Store image files as base64 for retrieval after payment
+        const imagePromises = images.map(img => {
+          return new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(img);
+          });
+        });
+        const imageDataUrls = await Promise.all(imagePromises);
+        localStorage.setItem("pendingListingImages", JSON.stringify(imageDataUrls));
+        
         await startCheckout(1);
       } catch (error) {
         toast({
@@ -346,6 +375,8 @@ const CreateListing = () => {
           description: "Failed to start checkout. Please try again.",
           variant: "destructive",
         });
+        localStorage.removeItem("pendingListing");
+        localStorage.removeItem("pendingListingImages");
       } finally {
         setIsSubmitting(false);
       }

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle, Car, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,15 @@ const ListingSuccess = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { checkSubscription } = useListingSubscription();
+  const [hasWaited, setHasWaited] = useState(false);
+
+  // Give auth time to restore from Stripe redirect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHasWaited(true);
+    }, 2000); // Wait 2 seconds before allowing redirect
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // Refresh subscription status after successful payment
@@ -21,15 +30,15 @@ const ListingSuccess = () => {
     }
   }, [checkSubscription, user]);
 
-  // Only redirect to auth AFTER loading is complete AND there's no user
+  // Only redirect to auth AFTER loading is complete, we've waited, AND there's no user
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && hasWaited && !user) {
       navigate("/auth");
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, hasWaited, navigate]);
 
   // Show loading while auth state is being restored
-  if (loading) {
+  if (loading || !hasWaited) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <LoadingSpinner />

@@ -300,10 +300,18 @@ const CreateListing = () => {
       return;
     }
     
-    if (!year || !make || !model || !city || !state || !dailyPrice) {
+    const missingFields: string[] = [];
+    if (!year) missingFields.push("Year");
+    if (!make) missingFields.push("Make");
+    if (!model) missingFields.push("Model");
+    if (!city) missingFields.push("City");
+    if (!state) missingFields.push("State");
+    if (!dailyPrice) missingFields.push("Daily Price");
+    
+    if (missingFields.length > 0) {
       toast({
         title: "Missing Fields",
-        description: "Please fill in all required fields.",
+        description: `Please fill in: ${missingFields.join(", ")}`,
         variant: "destructive",
       });
       return;

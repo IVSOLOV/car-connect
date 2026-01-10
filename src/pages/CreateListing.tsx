@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Upload, X, Loader2, Star, CreditCard, AlertCircle } from "lucide-react";
+import { ArrowLeft, Upload, X, Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,7 +98,7 @@ const CreateListing = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { status: subStatus, isLoading: subLoading, checkSubscription, startCheckout, canCreateListing } = useListingSubscription();
+  const { isLoading: subLoading, checkSubscription, startCheckout, canCreateListing } = useListingSubscription();
 
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -115,7 +115,6 @@ const CreateListing = () => {
   const [vehicleType, setVehicleType] = useState<VehicleType>("car");
   const [fuelType, setFuelType] = useState<FuelType>("gas");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1929 }, (_, i) => currentYear - i);
@@ -328,6 +327,23 @@ const CreateListing = () => {
       return;
     }
 
+    // If no subscription, redirect to Stripe checkout first
+    if (!canCreateListing) {
+      setIsSubmitting(true);
+      try {
+        await startCheckout(1);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to start checkout. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -413,74 +429,6 @@ const CreateListing = () => {
           </button>
 
           <h1 className="text-3xl font-bold text-foreground mb-4">Vehicle Details</h1>
-
-          {/* Subscription Status Alert */}
-          {!subLoading && subStatus && (
-            <div className="mb-6">
-              {canCreateListing ? (
-                <Alert className="border-green-500/50 bg-green-500/10">
-                  <CreditCard className="h-4 w-4 text-green-600" />
-                  <AlertTitle className="text-green-600">Subscription Active</AlertTitle>
-                  <AlertDescription>
-                    You have {subStatus.availableSlots} listing slot{subStatus.availableSlots !== 1 ? 's' : ''} available.
-                    ({subStatus.activeListings} of {subStatus.paidListingSlots} used)
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <Alert className="border-amber-500/50 bg-amber-500/10">
-                  <AlertCircle className="h-4 w-4 text-amber-600" />
-                  <AlertTitle className="text-amber-600">Subscription Required</AlertTitle>
-                  <AlertDescription className="space-y-3">
-                    <p>
-                      To create a listing, you need an active subscription at <strong>$4.99/month per listing</strong>.
-                      {subStatus.activeListings > 0 && (
-                        <> You currently have {subStatus.activeListings} active listing{subStatus.activeListings !== 1 ? 's' : ''} 
-                        using all {subStatus.paidListingSlots} of your paid slots.</>
-                      )}
-                    </p>
-                    <Button
-                      type="button"
-                      onClick={async () => {
-                        setIsCheckingOut(true);
-                        try {
-                          await startCheckout(1);
-                        } catch (error) {
-                          toast({
-                            title: "Error",
-                            description: "Failed to start checkout. Please try again.",
-                            variant: "destructive",
-                          });
-                        } finally {
-                          setIsCheckingOut(false);
-                        }
-                      }}
-                      disabled={isCheckingOut}
-                      className="w-full sm:w-auto"
-                    >
-                      {isCheckingOut ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          Subscribe for $4.99/month
-                        </>
-                      )}
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          )}
-
-          {subLoading && (
-            <div className="mb-6 flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Checking subscription status...
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Image Upload */}
@@ -738,10 +686,8 @@ const CreateListing = () => {
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  {!canCreateListing ? "Processing..." : "Creating..."}
                 </>
-              ) : !canCreateListing ? (
-                "Subscribe to Create Listing"
               ) : (
                 "Create Listing"
               )}

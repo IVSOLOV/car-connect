@@ -79,8 +79,17 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
+      subscription_data: {
+        trial_period_days: 30,
+        description: "30-day free trial. You will be charged $4.99/month per listing after the trial ends.",
+      },
       success_url: `${req.headers.get("origin")}/create-listing?payment=success`,
       cancel_url: `${req.headers.get("origin")}/create-listing?payment=canceled`,
+      custom_text: {
+        submit: {
+          message: "Start your 30-day free trial. You will be charged $4.99/month per listing after the trial period.",
+        },
+      },
       metadata: {
         user_id: user.id,
         new_listings: quantity.toString(),

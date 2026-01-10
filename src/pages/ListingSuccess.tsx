@@ -219,11 +219,11 @@ const ListingSuccess = () => {
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate("/")} 
+                  onClick={() => navigate("/dashboard")} 
                   className="flex-1 gap-2"
                 >
-                  <Search className="h-4 w-4" />
-                  Browse Listings
+                  <Car className="h-4 w-4" />
+                  My Listings
                 </Button>
               </div>
 

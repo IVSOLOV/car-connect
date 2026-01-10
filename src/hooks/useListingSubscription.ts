@@ -53,7 +53,10 @@ export function useListingSubscription() {
 
       if (data?.url) {
         // Redirect in same window to preserve session
-        window.location.href = data.url;
+        window.location.assign(data.url);
+        return; // Prevent any further code execution
+      } else {
+        throw new Error("No checkout URL returned");
       }
     } catch (err) {
       console.error("Error starting checkout:", err);

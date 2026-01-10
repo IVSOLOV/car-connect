@@ -126,8 +126,8 @@ const CreateListing = () => {
     const paymentStatus = searchParams.get("payment");
     if (paymentStatus === "success") {
       toast({
-        title: "Payment Successful!",
-        description: "You can now create your listing.",
+        title: "🎉 Welcome Aboard!",
+        description: "Your 30-day free trial has started! Now let's get your vehicle listed and earning.",
       });
       checkSubscription();
       // Clear the URL params
@@ -135,7 +135,7 @@ const CreateListing = () => {
     } else if (paymentStatus === "canceled") {
       toast({
         title: "Payment Canceled",
-        description: "You can try again when you're ready.",
+        description: "No worries! You can start your free trial whenever you're ready.",
         variant: "destructive",
       });
       navigate("/create-listing", { replace: true });

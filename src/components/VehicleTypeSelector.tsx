@@ -183,10 +183,6 @@ export const VehicleTypeSelector = ({ value, onChange, disabled }: VehicleTypeSe
             )}>
               {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
             </div>
-            <VehicleIcon type={type.icon} className={cn(
-              "flex-shrink-0",
-              isSelected ? "text-primary" : "text-muted-foreground"
-            )} />
             <span className={cn(
               "text-sm font-medium",
               isSelected ? "text-foreground" : "text-muted-foreground"

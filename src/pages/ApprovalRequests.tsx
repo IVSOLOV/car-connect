@@ -447,8 +447,12 @@ const ApprovalRequests = () => {
                             </div>
                             <div className="space-y-1">
                               <div>
-                                <span className="text-muted-foreground">Updated:</span>{" "}
-                                <span className="text-foreground">{format(new Date(listing.updated_at), "MMM d, yyyy")}</span>
+                                <span className="text-muted-foreground">
+                                  {listing.approval_status === "approved" ? "Approved:" : "Rejected:"}
+                                </span>{" "}
+                                <span className="text-foreground">
+                                  {format(new Date(listing.updated_at), "MMM d, yyyy 'at' h:mm a")}
+                                </span>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Created:</span>{" "}

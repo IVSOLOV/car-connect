@@ -9,6 +9,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BecomeHost from "./pages/BecomeHost";
+import GuestGuide from "./pages/GuestGuide";
 import CarDetails from "./pages/CarDetails";
 import ListingDetails from "./pages/ListingDetails";
 import CreateListing from "./pages/CreateListing";
@@ -42,6 +43,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/become-host" element={<BecomeHost />} />
+                <Route path="/guest-guide" element={<GuestGuide />} />
                 <Route path="/car/:id" element={<CarDetails />} />
                 <Route path="/listing/:id" element={<ListingDetails />} />
                 <Route path="/create-listing" element={<CreateListing />} />

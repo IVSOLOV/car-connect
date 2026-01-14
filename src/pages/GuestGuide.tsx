@@ -61,7 +61,7 @@ const GuestGuide = () => {
     {
       icon: Phone,
       title: "Keep Communication",
-      description: "Save all messages with the owner. Use the in-app messaging for a complete record.",
+      description: "Save all messages and agreements with the owner. Keep a record of all conversations.",
     },
     {
       icon: MapPin,

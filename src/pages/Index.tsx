@@ -92,6 +92,15 @@ const Index = () => {
                 List Your Car
               </Button>
             </div>
+            
+            <div className="mt-6">
+              <Link 
+                to="/guest-guide" 
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                New to renting? Read our Renter's Guide →
+              </Link>
+            </div>
 
             {/* Scroll Indicator */}
             <div className="mt-12 flex flex-col items-center animate-bounce">

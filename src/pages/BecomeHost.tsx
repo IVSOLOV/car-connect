@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Car, DollarSign, Users, MessageCircle, Check, ArrowRight, FileText, Shield, Camera, MapPin, FileSignature, CreditCard } from "lucide-react";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
@@ -274,15 +274,15 @@ const BecomeHost = () => {
               © 2025 DiRent. All rights reserved.
             </p>
             <div className="flex gap-6">
-              <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Privacy Policy
-              </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              </Link>
+              <Link to="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Terms of Service
-              </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              </Link>
+              <Link to="/write-to-support" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Contact
-              </a>
+              </Link>
             </div>
           </div>
         </div>

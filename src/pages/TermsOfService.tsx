@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 
@@ -218,10 +219,10 @@ const TermsOfService = () => {
             <section>
               <h2 className="mb-4 text-2xl font-semibold text-foreground">15. Contact Information</h2>
               <p className="text-muted-foreground mb-3">
-                For questions regarding these Terms, contact:
+                For questions regarding these Terms, please contact us through our support page.
               </p>
               <div className="text-muted-foreground">
-                <p>Email: <a href="mailto:support@dirent.app" className="text-primary hover:underline">support@dirent.app</a></p>
+                <p>Contact: <Link to="/write-to-support" className="text-primary hover:underline">Submit a Support Request</Link></p>
                 <p>Company Name: DiRent</p>
                 <p>Location: United States</p>
               </div>

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 
@@ -168,10 +169,10 @@ const PrivacyPolicy = () => {
             <section>
               <h2 className="text-2xl font-semibold mb-4 text-foreground">12. Contact Us</h2>
               <p className="text-muted-foreground mb-3">
-                If you have any questions about this Privacy Policy or your data, please contact:
+                If you have any questions about this Privacy Policy or your data, please contact us through our support page.
               </p>
               <div className="text-muted-foreground">
-                <p>Email: <a href="mailto:support@dirent.app" className="text-primary hover:underline">support@dirent.app</a></p>
+                <p>Contact: <Link to="/write-to-support" className="text-primary hover:underline">Submit a Support Request</Link></p>
                 <p>Company Name: DiRent</p>
                 <p>Location: United States</p>
               </div>

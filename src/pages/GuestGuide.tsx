@@ -270,9 +270,14 @@ const GuestGuide = () => {
       <footer className="border-t border-border py-12">
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <p className="text-sm text-muted-foreground">
-              © 2025 DiRent. All rights reserved.
-            </p>
+            <div className="text-center sm:text-left">
+              <p className="text-sm text-muted-foreground">
+                © 2025 DiRent. All rights reserved.
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                DiRent is a marketplace platform owned and operated by Solo Star Inc.
+              </p>
+            </div>
             <div className="flex gap-6">
               <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Privacy Policy

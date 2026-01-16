@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.4a68ac3c61af48f590e0422f18ed1794',
+  appId: 'com.solostar.dirent',
   appName: 'directrental',
   webDir: 'dist',
   server: {

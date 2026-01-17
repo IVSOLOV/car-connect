@@ -10,6 +10,8 @@ export const VEHICLE_TYPES = [
   { value: "cargo_van", label: "Cargo Van", icon: "cargo_van" },
   { value: "box_truck", label: "Box Truck", icon: "box_truck" },
   { value: "mobility", label: "Mobility Vehicle", icon: "mobility" },
+  { value: "rv", label: "RV", icon: "rv" },
+  { value: "trailer", label: "Trailer", icon: "trailer" },
 ] as const;
 
 export type VehicleType = typeof VEHICLE_TYPES[number]["value"];
@@ -152,6 +154,45 @@ const VehicleIcon = ({ type, className }: { type: string; className?: string }) 
           <circle cx="12" cy="14" r="3.5" />
           <circle cx="12" cy="14" r="1.5" fill="hsl(var(--background))" />
           {/* Rear wheel */}
+          <circle cx="36" cy="14" r="3.5" />
+          <circle cx="36" cy="14" r="1.5" fill="hsl(var(--background))" />
+        </svg>
+      );
+    case "rv":
+      return (
+        <svg viewBox="0 0 48 20" fill="currentColor" className={iconClass}>
+          {/* RV / Motorhome - long with cab and living area */}
+          <path d="M2 14 L2 8 L4 8 L7 4 L14 4 L14 2 L44 2 L46 4 L46 14 L42 14 C42 11.8 40.2 10 38 10 C35.8 10 34 11.8 34 14 L14 14 C14 11.8 12.2 10 10 10 C7.8 10 6 11.8 6 14 Z" />
+          {/* Cab window */}
+          <path d="M8 5 L13 5 L13 9 L5 9 L8 5Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Living area windows */}
+          <path d="M18 3 L24 3 L24 8 L18 8 Z" fill="hsl(var(--background))" opacity="0.5" />
+          <path d="M26 3 L32 3 L32 8 L26 8 Z" fill="hsl(var(--background))" opacity="0.5" />
+          <path d="M34 3 L40 3 L40 8 L34 8 Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Door */}
+          <path d="M42 4 L44 4 L44 10 L42 10 Z" fill="hsl(var(--background))" opacity="0.3" />
+          {/* Front wheel */}
+          <circle cx="10" cy="14" r="3.5" />
+          <circle cx="10" cy="14" r="1.5" fill="hsl(var(--background))" />
+          {/* Rear wheel */}
+          <circle cx="38" cy="14" r="3.5" />
+          <circle cx="38" cy="14" r="1.5" fill="hsl(var(--background))" />
+        </svg>
+      );
+    case "trailer":
+      return (
+        <svg viewBox="0 0 48 20" fill="currentColor" className={iconClass}>
+          {/* Travel trailer with hitch */}
+          {/* Hitch */}
+          <path d="M2 10 L8 10 L8 12 L2 12 Z" />
+          {/* Trailer body */}
+          <path d="M8 14 L8 4 L44 4 L46 6 L46 14 L40 14 C40 11.8 38.2 10 36 10 C33.8 10 32 11.8 32 14 Z" />
+          {/* Windows */}
+          <path d="M12 5 L20 5 L20 10 L12 10 Z" fill="hsl(var(--background))" opacity="0.5" />
+          <path d="M22 5 L30 5 L30 10 L22 10 Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Door */}
+          <path d="M38 5 L42 5 L42 11 L38 11 Z" fill="hsl(var(--background))" opacity="0.3" />
+          {/* Wheel */}
           <circle cx="36" cy="14" r="3.5" />
           <circle cx="36" cy="14" r="1.5" fill="hsl(var(--background))" />
         </svg>

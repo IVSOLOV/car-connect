@@ -113,6 +113,7 @@ const EditListing = () => {
   const [description, setDescription] = useState("");
   const [vehicleType, setVehicleType] = useState<VehicleType>("car");
   const [fuelType, setFuelType] = useState<FuelType>("gas");
+  const [licensePlate, setLicensePlate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Track original values to detect price-only changes
@@ -174,6 +175,7 @@ const EditListing = () => {
       setDescription(listing.description || "");
       setVehicleType((listing.vehicle_type as VehicleType) || "car");
       setFuelType((listing.fuel_type as FuelType) || "gas");
+      setLicensePlate(listing.license_plate || "");
       setExistingImages(listing.images || []);
     } catch (error) {
       console.error("Error fetching listing:", error);
@@ -283,10 +285,10 @@ const EditListing = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!year || !make || !model || !city || !state || !dailyPrice) {
+    if (!year || !make || !model || !city || !state || !licensePlate.trim() || !dailyPrice) {
       toast({
         title: "Missing Fields",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields including license plate.",
         variant: "destructive",
       });
       return;
@@ -370,6 +372,7 @@ const EditListing = () => {
         model,
         city,
         state,
+        license_plate: licensePlate.trim().toUpperCase(),
         title_status: titleStatus,
         vehicle_type: vehicleType,
         fuel_type: fuelType,
@@ -644,6 +647,21 @@ const EditListing = () => {
                 initialState={state}
                 placeholder="Start typing a city..."
               />
+            </div>
+
+            {/* License Plate */}
+            <div className="space-y-2">
+              <Label htmlFor="licensePlate">License Plate *</Label>
+              <Input
+                id="licensePlate"
+                value={licensePlate}
+                onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
+                placeholder="Enter license plate number"
+                maxLength={10}
+              />
+              <p className="text-xs text-muted-foreground">
+                Must be unique per state. This helps prevent duplicate listings.
+              </p>
             </div>
 
             {/* Title Status */}

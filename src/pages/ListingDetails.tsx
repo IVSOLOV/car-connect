@@ -48,6 +48,7 @@ import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import ReviewDialog from "@/components/ReviewDialog";
+import { sendNotificationEmail } from "@/lib/notifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -273,6 +274,26 @@ const ListingDetails = () => {
       });
 
       if (error) throw error;
+
+      // Get sender's profile for the email notification
+      const { data: senderProfile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, full_name")
+        .eq("user_id", user.id)
+        .single();
+      
+      const senderName = senderProfile?.full_name || 
+        `${senderProfile?.first_name || ""} ${senderProfile?.last_name || ""}`.trim() || 
+        "A user";
+
+      const listingTitle = `${listing.year} ${listing.make} ${listing.model}`;
+
+      // Send email notification to the listing owner (fire and forget)
+      sendNotificationEmail("message", listing.user_id, {
+        senderName,
+        listingTitle,
+        messagePreview: messageText.substring(0, 100),
+      }).catch(err => console.error("Failed to send email notification:", err));
 
       toast.success("Message sent!");
       setMessageText("");

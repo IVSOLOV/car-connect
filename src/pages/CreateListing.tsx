@@ -179,10 +179,15 @@ const CreateListing = () => {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length + images.length > 10) {
+    if (files.length === 0) return;
+
+    // Calculate how many more images we can accept
+    const remainingSlots = 10 - images.length;
+    
+    if (remainingSlots <= 0) {
       toast({
-        title: "Too many images",
-        description: "You can upload up to 10 images.",
+        title: "Maximum images reached",
+        description: "You already have 10 images. Remove some to add new ones.",
         variant: "destructive",
       });
       return;
@@ -217,9 +222,20 @@ const CreateListing = () => {
 
     if (newFiles.length === 0) return;
 
-    setImages((prev) => [...prev, ...newFiles]);
+    // Only take as many files as we have slots for
+    const filesToAdd = newFiles.slice(0, remainingSlots);
+    const skippedCount = newFiles.length - filesToAdd.length;
+
+    if (skippedCount > 0) {
+      toast({
+        title: "Some images not added",
+        description: `Only ${filesToAdd.length} of ${newFiles.length} images were added. Maximum is 10 images.`,
+      });
+    }
+
+    setImages((prev) => [...prev, ...filesToAdd]);
     
-    newFiles.forEach((file) => {
+    filesToAdd.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreviews((prev) => [...prev, reader.result as string]);

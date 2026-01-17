@@ -10,8 +10,8 @@ const corsHeaders = {
 };
 
 interface NotificationEmailRequest {
-  type: "message" | "ticket_response" | "listing_approved" | "listing_rejected";
-  recipientUserId: string;
+  type: "message" | "ticket_response" | "listing_approved" | "listing_rejected" | "admin_new_listing" | "admin_new_ticket";
+  recipientUserId?: string;
   data: {
     senderName?: string;
     listingTitle?: string;
@@ -19,6 +19,8 @@ interface NotificationEmailRequest {
     ticketSubject?: string;
     adminNotes?: string;
     rejectionReason?: string;
+    submitterName?: string;
+    ticketDescription?: string;
   };
 }
 
@@ -46,6 +48,124 @@ const handler = async (req: Request): Promise<Response> => {
     const { type, recipientUserId, data }: NotificationEmailRequest = await req.json();
     console.log("Notification request:", { type, recipientUserId, data });
 
+    const baseUrl = "https://directrental.lovable.app";
+    
+    // For admin notifications, get all admin emails
+    if (type === "admin_new_listing" || type === "admin_new_ticket") {
+      // Get all admin user IDs
+      const { data: adminRoles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      if (rolesError) {
+        console.error("Failed to get admin roles:", rolesError);
+        return new Response(
+          JSON.stringify({ error: "Failed to get admin users" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      if (!adminRoles || adminRoles.length === 0) {
+        console.log("No admin users found");
+        return new Response(
+          JSON.stringify({ success: true, message: "No admin users to notify" }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      // Get emails for all admins
+      const adminEmails: string[] = [];
+      for (const adminRole of adminRoles) {
+        const { data: userData } = await supabase.auth.admin.getUserById(adminRole.user_id);
+        if (userData?.user?.email) {
+          adminEmails.push(userData.user.email);
+        }
+      }
+
+      if (adminEmails.length === 0) {
+        console.log("No admin emails found");
+        return new Response(
+          JSON.stringify({ success: true, message: "No admin emails found" }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      let subject = "";
+      let htmlContent = "";
+
+      if (type === "admin_new_listing") {
+        subject = `🚗 New Listing Pending Approval - ${data.listingTitle}`;
+        htmlContent = `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #333;">📋 New Listing Submitted</h2>
+            <p style="color: #666; font-size: 16px;">A new listing has been submitted and is waiting for your review.</p>
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0; color: #444;"><strong>Vehicle:</strong> ${data.listingTitle}</p>
+              <p style="margin: 0; color: #444;"><strong>Submitted by:</strong> ${data.submitterName || "A user"}</p>
+            </div>
+            <a href="${baseUrl}/approval-requests" style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 10px;">Review Listings</a>
+            <p style="color: #999; font-size: 14px; margin-top: 30px;">- DiRent Admin System</p>
+          </div>
+        `;
+      } else if (type === "admin_new_ticket") {
+        subject = `🎫 New Support Ticket - ${data.ticketSubject}`;
+        htmlContent = `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #333;">🎫 New Support Ticket</h2>
+            <p style="color: #666; font-size: 16px;">A user has submitted a new support ticket.</p>
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0; color: #444;"><strong>Subject:</strong> ${data.ticketSubject}</p>
+              <p style="margin: 0 0 10px 0; color: #444;"><strong>From:</strong> ${data.submitterName || "A user"}</p>
+              ${data.ticketDescription ? `<p style="margin: 0; color: #666; font-style: italic;">"${data.ticketDescription.substring(0, 200)}${data.ticketDescription.length > 200 ? '...' : ''}"</p>` : ''}
+            </div>
+            <a href="${baseUrl}/admin" style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 10px;">View Tickets</a>
+            <p style="color: #999; font-size: 14px; margin-top: 30px;">- DiRent Admin System</p>
+          </div>
+        `;
+      }
+
+      // Send email to all admins
+      const emailResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: "DiRent <notifications@resend.dev>",
+          to: adminEmails,
+          subject,
+          html: htmlContent,
+        }),
+      });
+
+      const emailResult = await emailResponse.json();
+
+      if (!emailResponse.ok) {
+        console.error("Resend API error:", emailResult);
+        return new Response(
+          JSON.stringify({ error: emailResult.message || "Failed to send email" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      console.log("Admin notification email sent successfully:", emailResult);
+
+      return new Response(JSON.stringify({ success: true, emailResult }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // Regular user notifications require recipientUserId
+    if (!recipientUserId) {
+      return new Response(
+        JSON.stringify({ error: "recipientUserId required for user notifications" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     // Get recipient's email from auth.users
     const { data: userData, error: userError } = await supabase.auth.admin.getUserById(recipientUserId);
     
@@ -71,7 +191,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     let subject = "";
     let htmlContent = "";
-    const baseUrl = "https://fhaukvjpthkftfxfmnhm.lovableproject.com";
 
     switch (type) {
       case "message":
@@ -94,7 +213,7 @@ const handler = async (req: Request): Promise<Response> => {
             <h2 style="color: #333;">Hi ${recipientName}!</h2>
             <p style="color: #666; font-size: 16px;">Your support ticket "${data.ticketSubject || "Support Request"}" has received a response from our team.</p>
             ${data.adminNotes ? `<div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;"><p style="margin: 0; color: #166534;">${data.adminNotes}</p></div>` : ""}
-            <a href="${baseUrl}/support-tickets" style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 10px;">View Ticket</a>
+            <a href="${baseUrl}/my-issues" style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 10px;">View Ticket</a>
             <p style="color: #999; font-size: 14px; margin-top: 30px;">Best regards,<br>The DiRent Team</p>
           </div>
         `;

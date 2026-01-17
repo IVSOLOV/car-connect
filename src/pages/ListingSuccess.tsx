@@ -10,6 +10,7 @@ import { useListingSubscription } from "@/hooks/useListingSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { sendNotificationEmail } from "@/lib/notifications";
 
 // Helper to convert base64 data URL to File
 const dataURLtoFile = (dataurl: string, filename: string): File => {
@@ -127,6 +128,22 @@ const ListingSuccess = () => {
           localStorage.removeItem("pendingListing");
           localStorage.removeItem("pendingListingImages");
           setListingCreated(true);
+          
+          // Get user's name for admin notification
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("first_name, full_name")
+            .eq("user_id", user.id)
+            .single();
+          
+          const submitterName = profile?.first_name || profile?.full_name || "A user";
+          const listingTitle = `${listing.year} ${listing.make} ${listing.model}`;
+          
+          // Notify admins about new pending listing
+          sendNotificationEmail("admin_new_listing", null, {
+            listingTitle,
+            submitterName,
+          }).catch(err => console.error("Failed to send admin notification:", err));
           
           toast({
             title: "🚗 Listing Created!",

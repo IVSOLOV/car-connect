@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
+import { sendNotificationEmail } from "@/lib/notifications";
 
 const WriteToSupport = () => {
   const navigate = useNavigate();
@@ -44,6 +45,22 @@ const WriteToSupport = () => {
       });
 
       if (error) throw error;
+
+      // Get user's name for admin notification
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, full_name")
+        .eq("user_id", user.id)
+        .single();
+      
+      const submitterName = profile?.first_name || profile?.full_name || "A user";
+      
+      // Notify admins about new support ticket
+      sendNotificationEmail("admin_new_ticket", null, {
+        ticketSubject: title.trim(),
+        ticketDescription: description.trim(),
+        submitterName,
+      }).catch(err => console.error("Failed to send admin notification:", err));
 
       setSubmitted(true);
       setTitle("");

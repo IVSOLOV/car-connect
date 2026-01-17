@@ -312,6 +312,24 @@ const EditListing = () => {
       return;
     }
 
+    // Check for duplicate license plate in the same state (excluding current listing)
+    const { data: existingListing } = await supabase
+      .from('listings')
+      .select('id')
+      .ilike('license_plate', licensePlate.trim())
+      .eq('state', state)
+      .neq('id', id)
+      .maybeSingle();
+
+    if (existingListing) {
+      toast({
+        title: "Vehicle Already Listed",
+        description: "A vehicle with this license plate is already listed in this state.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -677,9 +695,6 @@ const EditListing = () => {
                 </Select>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground -mt-2">
-              License plate must be unique per state. This helps prevent duplicate listings.
-            </p>
 
             {/* Title Status */}
             <div className="space-y-2">

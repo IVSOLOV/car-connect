@@ -56,9 +56,10 @@ interface UserProfile {
   company_name: string | null;
   created_at: string;
   listings_count?: number;
+  email?: string;
 }
 
-type SortField = "created_at" | "full_name" | "listings_count";
+type SortField = "created_at" | "full_name" | "listings_count" | "email";
 type SortOrder = "asc" | "desc";
 
 const AdminPanel = () => {
@@ -163,9 +164,24 @@ const AdminPanel = () => {
           listingsCountMap[l.user_id] = (listingsCountMap[l.user_id] || 0) + 1;
         });
 
+        // Fetch user emails via edge function (admin only)
+        let userEmails: Record<string, string> = {};
+        try {
+          const { data: session } = await supabase.auth.getSession();
+          if (session?.session?.access_token) {
+            const response = await supabase.functions.invoke("get-admin-users");
+            if (response.data?.userEmails) {
+              userEmails = response.data.userEmails;
+            }
+          }
+        } catch (emailError) {
+          console.error("Error fetching user emails:", emailError);
+        }
+
         const usersWithCount = profilesData.map(profile => ({
           ...profile,
-          listings_count: listingsCountMap[profile.user_id] || 0
+          listings_count: listingsCountMap[profile.user_id] || 0,
+          email: userEmails[profile.user_id] || ""
         }));
 
         setUsers(usersWithCount);
@@ -246,7 +262,8 @@ const AdminPanel = () => {
         u.full_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
         u.first_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
         u.last_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
-        u.company_name?.toLowerCase().includes(userSearch.toLowerCase())
+        u.company_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+        u.email?.toLowerCase().includes(userSearch.toLowerCase())
       );
     }
 
@@ -261,6 +278,10 @@ const AdminPanel = () => {
         case "listings_count":
           aVal = a.listings_count || 0;
           bVal = b.listings_count || 0;
+          break;
+        case "email":
+          aVal = a.email || "";
+          bVal = b.email || "";
           break;
         default:
           aVal = new Date(a.created_at).getTime();
@@ -589,6 +610,7 @@ const AdminPanel = () => {
                         <TableRow>
                           <TableHead>User ID</TableHead>
                           <TableHead>Name</TableHead>
+                          <TableHead>Email</TableHead>
                           <TableHead>Company</TableHead>
                           <TableHead>Listings</TableHead>
                           <TableHead>Joined</TableHead>
@@ -603,6 +625,9 @@ const AdminPanel = () => {
                             </TableCell>
                             <TableCell className="font-medium">
                               {user.full_name || `${user.first_name || ""} ${user.last_name || ""}`.trim() || "—"}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {user.email || "—"}
                             </TableCell>
                             <TableCell>{user.company_name || "—"}</TableCell>
                             <TableCell>

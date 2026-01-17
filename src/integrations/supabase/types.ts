@@ -66,6 +66,7 @@ export type Database = {
           fuel_type: string | null
           id: string
           images: string[] | null
+          license_plate: string | null
           make: string
           model: string
           monthly_price: number | null
@@ -91,6 +92,7 @@ export type Database = {
           fuel_type?: string | null
           id?: string
           images?: string[] | null
+          license_plate?: string | null
           make: string
           model: string
           monthly_price?: number | null
@@ -116,6 +118,7 @@ export type Database = {
           fuel_type?: string | null
           id?: string
           images?: string[] | null
+          license_plate?: string | null
           make?: string
           model?: string
           monthly_price?: number | null

@@ -114,6 +114,7 @@ const CreateListing = () => {
   const [description, setDescription] = useState("");
   const [vehicleType, setVehicleType] = useState<VehicleType>("car");
   const [fuelType, setFuelType] = useState<FuelType>("gas");
+  const [licensePlate, setLicensePlate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentYear = new Date().getFullYear();
@@ -306,6 +307,7 @@ const CreateListing = () => {
     if (!model) missingFields.push("Model");
     if (!city) missingFields.push("City");
     if (!state) missingFields.push("State");
+    if (!licensePlate.trim()) missingFields.push("License Plate");
     if (!dailyPrice) missingFields.push("Daily Price");
     
     if (missingFields.length > 0) {
@@ -346,6 +348,7 @@ const CreateListing = () => {
           model,
           city,
           state,
+          licensePlate,
           titleStatus,
           vehicleType,
           fuelType,
@@ -419,6 +422,7 @@ const CreateListing = () => {
           model,
           city,
           state,
+          license_plate: licensePlate.trim().toUpperCase(),
           title_status: titleStatus,
           vehicle_type: vehicleType,
           fuel_type: fuelType,
@@ -613,6 +617,21 @@ const CreateListing = () => {
                 initialState={state}
                 placeholder="Start typing a city..."
               />
+            </div>
+
+            {/* License Plate */}
+            <div className="space-y-2">
+              <Label htmlFor="licensePlate">License Plate *</Label>
+              <Input
+                id="licensePlate"
+                value={licensePlate}
+                onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
+                placeholder="Enter license plate number"
+                maxLength={10}
+              />
+              <p className="text-xs text-muted-foreground">
+                Must be unique per state. This helps prevent duplicate listings.
+              </p>
             </div>
 
             {/* Title Status */}

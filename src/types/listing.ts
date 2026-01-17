@@ -9,6 +9,7 @@ export interface Listing {
   model: string;
   city: string;
   state: string;
+  license_plate: string | null;
   title_status: string;
   vehicle_type: string;
   fuel_type: string;

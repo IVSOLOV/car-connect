@@ -133,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
           "Authorization": `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "DiRent <onboarding@resend.dev>",
+          from: "DiRent <notifications@dirrental.com>",
           to: adminEmails,
           subject,
           html: htmlContent,
@@ -263,7 +263,7 @@ const handler = async (req: Request): Promise<Response> => {
         "Authorization": `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "DiRent <onboarding@resend.dev>",
+        from: "DiRent <notifications@dirrental.com>",
         to: [recipientEmail],
         subject,
         html: htmlContent,

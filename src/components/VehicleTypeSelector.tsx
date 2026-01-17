@@ -9,6 +9,7 @@ export const VEHICLE_TYPES = [
   { value: "van", label: "Van", icon: "van" },
   { value: "cargo_van", label: "Cargo Van", icon: "cargo_van" },
   { value: "box_truck", label: "Box Truck", icon: "box_truck" },
+  { value: "mobility", label: "Mobility Vehicle", icon: "mobility" },
 ] as const;
 
 export type VehicleType = typeof VEHICLE_TYPES[number]["value"];
@@ -125,6 +126,28 @@ const VehicleIcon = ({ type, className }: { type: string; className?: string }) 
           <path d="M20 2 L44 2 L44 14 L40 14 C40 11.8 38.2 10 36 10 C33.8 10 32 11.8 32 14 L20 14 Z" />
           {/* Cab window */}
           <path d="M10 5 L17 5 L17 9 L7 9 L10 5Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Front wheel */}
+          <circle cx="12" cy="14" r="3.5" />
+          <circle cx="12" cy="14" r="1.5" fill="hsl(var(--background))" />
+          {/* Rear wheel */}
+          <circle cx="36" cy="14" r="3.5" />
+          <circle cx="36" cy="14" r="1.5" fill="hsl(var(--background))" />
+        </svg>
+      );
+    case "mobility":
+      return (
+        <svg viewBox="0 0 48 20" fill="currentColor" className={iconClass}>
+          {/* Mobility van - lowered floor, wheelchair accessible */}
+          <path d="M4 14 L4 6 L8 3 L40 3 L44 6 L44 14 L40 14 C40 11.8 38.2 10 36 10 C33.8 10 32 11.8 32 14 L16 14 C16 11.8 14.2 10 12 10 C9.8 10 8 11.8 8 14 Z" />
+          {/* Windows */}
+          <path d="M5 7 L8 4 L14 4 L14 9 L5 9 Z" fill="hsl(var(--background))" opacity="0.5" />
+          <path d="M16 4 L24 4 L24 9 L16 9 Z" fill="hsl(var(--background))" opacity="0.5" />
+          {/* Side door / ramp area */}
+          <path d="M26 4 L34 4 L34 11 L26 11 Z" fill="hsl(var(--background))" opacity="0.3" />
+          {/* Wheelchair symbol */}
+          <circle cx="30" cy="6" r="1" fill="hsl(var(--primary))" />
+          <path d="M29.5 7.5 L29.5 9 L31 9" stroke="hsl(var(--primary))" strokeWidth="0.8" fill="none" />
+          <circle cx="30.5" cy="9.5" r="1" stroke="hsl(var(--primary))" strokeWidth="0.5" fill="none" />
           {/* Front wheel */}
           <circle cx="12" cy="14" r="3.5" />
           <circle cx="12" cy="14" r="1.5" fill="hsl(var(--background))" />

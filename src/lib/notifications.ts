@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-type NotificationType = "message" | "ticket_response" | "listing_approved" | "listing_rejected";
+type NotificationType = "message" | "ticket_response" | "listing_approved" | "listing_rejected" | "admin_new_listing" | "admin_new_ticket";
 
 interface NotificationData {
   senderName?: string;
@@ -9,11 +9,13 @@ interface NotificationData {
   ticketSubject?: string;
   adminNotes?: string;
   rejectionReason?: string;
+  submitterName?: string;
+  ticketDescription?: string;
 }
 
 export const sendNotificationEmail = async (
   type: NotificationType,
-  recipientUserId: string,
+  recipientUserId: string | null,
   data: NotificationData
 ): Promise<{ success: boolean; error?: string }> => {
   try {

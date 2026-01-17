@@ -649,20 +649,37 @@ const EditListing = () => {
               />
             </div>
 
-            {/* License Plate */}
-            <div className="space-y-2">
-              <Label htmlFor="licensePlate">License Plate *</Label>
-              <Input
-                id="licensePlate"
-                value={licensePlate}
-                onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
-                placeholder="Enter license plate number"
-                maxLength={10}
-              />
-              <p className="text-xs text-muted-foreground">
-                Must be unique per state. This helps prevent duplicate listings.
-              </p>
+            {/* License Plate & Registration State */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="licensePlate">License Plate *</Label>
+                <Input
+                  id="licensePlate"
+                  value={licensePlate}
+                  onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
+                  placeholder="Enter plate number"
+                  maxLength={10}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="registrationState">Registration State *</Label>
+                <Select value={state} onValueChange={setState}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {usStates.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+            <p className="text-xs text-muted-foreground -mt-2">
+              License plate must be unique per state. This helps prevent duplicate listings.
+            </p>
 
             {/* Title Status */}
             <div className="space-y-2">

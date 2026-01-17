@@ -143,10 +143,11 @@ const handler = async (req: Request): Promise<Response> => {
       const emailResult = await emailResponse.json();
 
       if (!emailResponse.ok) {
-        console.error("Resend API error:", emailResult);
+        // Log the error but don't fail - email is non-critical
+        console.warn("Resend API error (non-blocking):", emailResult);
         return new Response(
-          JSON.stringify({ error: emailResult.message || "Failed to send email" }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          JSON.stringify({ success: true, emailSkipped: true, reason: emailResult.message }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
 
@@ -272,10 +273,11 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResult = await emailResponse.json();
 
     if (!emailResponse.ok) {
-      console.error("Resend API error:", emailResult);
+      // Log the error but don't fail - email is non-critical
+      console.warn("Resend API error (non-blocking):", emailResult);
       return new Response(
-        JSON.stringify({ error: emailResult.message || "Failed to send email" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ success: true, emailSkipped: true, reason: emailResult.message }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 

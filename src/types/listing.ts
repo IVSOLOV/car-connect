@@ -1,4 +1,4 @@
-export type VehicleType = "car" | "suv" | "minivan" | "truck" | "van" | "cargo_van" | "box_truck";
+export type VehicleType = "car" | "suv" | "minivan" | "truck" | "van" | "cargo_van" | "box_truck" | "mobility";
 export type FuelType = "gas" | "diesel" | "hybrid" | "electric" | "other";
 
 export interface Listing {

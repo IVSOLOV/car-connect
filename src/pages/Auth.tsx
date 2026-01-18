@@ -276,7 +276,8 @@ const Auth = () => {
   const handleResendVerification = async () => {
     setIsResending(true);
     try {
-      const { error } = await supabase.auth.resend({
+      // First generate a new confirmation link from Supabase
+      const { error: resendError } = await supabase.auth.resend({
         type: 'signup',
         email: email,
         options: {
@@ -284,10 +285,10 @@ const Auth = () => {
         },
       });
 
-      if (error) {
+      if (resendError) {
         toast({
           title: "Failed to resend",
-          description: error.message,
+          description: resendError.message,
           variant: "destructive",
         });
       } else {

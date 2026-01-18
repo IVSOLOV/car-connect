@@ -83,6 +83,18 @@ const Messages = () => {
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (selectedConversation?.messages) {
+      scrollToBottom();
+    }
+  }, [selectedConversation?.messages]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -740,6 +752,7 @@ const Messages = () => {
                             </div>
                           </div>
                         ))}
+                        <div ref={messagesEndRef} />
                       </div>
                     )}
                   </ScrollArea>

@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      deactivated_users: {
+        Row: {
+          created_at: string
+          deactivated_by: string
+          email: string
+          id: string
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          deactivated_by: string
+          email: string
+          id?: string
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          deactivated_by?: string
+          email?: string
+          id?: string
+          reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       listing_bookings: {
         Row: {
           created_at: string

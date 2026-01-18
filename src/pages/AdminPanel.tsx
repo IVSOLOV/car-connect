@@ -10,8 +10,23 @@ import {
   Users,
   Eye,
   ChevronDown,
+  UserX,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -88,10 +103,18 @@ const AdminPanel = () => {
   const [userSortField, setUserSortField] = useState<SortField>("created_at");
   const [userSortOrder, setUserSortOrder] = useState<SortOrder>("desc");
 
+  // Deactivation state
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+  const [userToDeactivate, setUserToDeactivate] = useState<UserProfile | null>(null);
+  const [deactivateReason, setDeactivateReason] = useState("");
+  const [isDeactivating, setIsDeactivating] = useState(false);
+
   // Unique values for filters
   const [uniqueMakes, setUniqueMakes] = useState<string[]>([]);
   const [uniqueModels, setUniqueModels] = useState<string[]>([]);
   const [uniqueYears, setUniqueYears] = useState<number[]>([]);
+  
+  const { toast } = useToast();
 
   useEffect(() => {
     if (role !== "admin") {
@@ -307,6 +330,54 @@ const AdminPanel = () => {
     setDateTo("");
     setPriceSort("none");
     setCreatedSort("none");
+  };
+
+  const handleDeactivateUser = async () => {
+    if (!userToDeactivate) return;
+    
+    setIsDeactivating(true);
+    try {
+      const response = await supabase.functions.invoke("deactivate-user", {
+        body: {
+          user_id: userToDeactivate.user_id,
+          reason: deactivateReason || undefined,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to deactivate user");
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      toast({
+        title: "User deactivated",
+        description: `${userToDeactivate.email || userToDeactivate.full_name || "User"} has been deactivated and cannot create a new account with the same email.`,
+      });
+
+      // Remove user from the list
+      setUsers(prev => prev.filter(u => u.user_id !== userToDeactivate.user_id));
+      setFilteredUsers(prev => prev.filter(u => u.user_id !== userToDeactivate.user_id));
+    } catch (error) {
+      console.error("Error deactivating user:", error);
+      toast({
+        title: "Failed to deactivate user",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeactivating(false);
+      setDeactivateDialogOpen(false);
+      setUserToDeactivate(null);
+      setDeactivateReason("");
+    }
+  };
+
+  const openDeactivateDialog = (userProfile: UserProfile) => {
+    setUserToDeactivate(userProfile);
+    setDeactivateDialogOpen(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -635,11 +706,21 @@ const AdminPanel = () => {
                             </TableCell>
                             <TableCell>{format(new Date(user.created_at), "MMM d, yyyy")}</TableCell>
                             <TableCell>
-                              <Button variant="ghost" size="sm" asChild>
-                                <Link to={`/owner/${user.user_id}`}>
-                                  <Eye className="h-4 w-4" />
-                                </Link>
-                              </Button>
+                              <div className="flex gap-1">
+                                <Button variant="ghost" size="sm" asChild>
+                                  <Link to={`/owner/${user.user_id}`}>
+                                    <Eye className="h-4 w-4" />
+                                  </Link>
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => openDeactivateDialog(user)}
+                                >
+                                  <UserX className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -651,6 +732,52 @@ const AdminPanel = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Deactivate User Dialog */}
+        <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Deactivate User</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to deactivate{" "}
+                <strong>{userToDeactivate?.email || userToDeactivate?.full_name || "this user"}</strong>?
+                <br /><br />
+                This action will:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Delete the user's account</li>
+                  <li>Prevent them from creating a new account with the same email</li>
+                </ul>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-4">
+              <Label htmlFor="deactivate-reason">Reason (optional)</Label>
+              <Textarea
+                id="deactivate-reason"
+                placeholder="Enter reason for deactivation..."
+                value={deactivateReason}
+                onChange={(e) => setDeactivateReason(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeactivating}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeactivateUser}
+                disabled={isDeactivating}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeactivating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deactivating...
+                  </>
+                ) : (
+                  "Deactivate User"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );

@@ -10,8 +10,10 @@ const corsHeaders = {
 };
 
 interface NotificationEmailRequest {
-  type: "message" | "ticket_response" | "listing_approved" | "listing_rejected" | "admin_new_listing" | "admin_new_ticket";
+  type: "message" | "ticket_response" | "listing_approved" | "listing_rejected" | "admin_new_listing" | "admin_new_ticket" | "welcome";
   recipientUserId?: string;
+  recipientEmail?: string;
+  recipientName?: string;
   data: {
     senderName?: string;
     listingTitle?: string;
@@ -45,10 +47,82 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { type, recipientUserId, data }: NotificationEmailRequest = await req.json();
-    console.log("Notification request:", { type, recipientUserId, data });
+    const { type, recipientUserId, recipientEmail, recipientName, data }: NotificationEmailRequest = await req.json();
+    console.log("Notification request:", { type, recipientUserId, recipientEmail, data });
 
     const baseUrl = "https://directrental.lovable.app";
+    
+    // Handle welcome email (doesn't require recipientUserId since user just signed up)
+    if (type === "welcome" && recipientEmail) {
+      const userName = recipientName || "there";
+      const subject = "Welcome to DiRent! 🚗";
+      const htmlContent = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #333;">Welcome to DiRent, ${userName}! 🎉</h2>
+          <p style="color: #666; font-size: 16px;">Thank you for joining our community!</p>
+          
+          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #7c3aed;">
+            <h3 style="color: #7c3aed; margin-top: 0;">Important: What is DiRent?</h3>
+            <p style="color: #444; font-size: 15px; margin-bottom: 10px;">
+              <strong>DiRent is NOT a car rental company.</strong> We are a <strong>peer-to-peer marketplace platform</strong> that connects car owners (hosts) directly with renters (guests).
+            </p>
+            <p style="color: #444; font-size: 15px;">
+              This means:
+            </p>
+            <ul style="color: #444; font-size: 15px; padding-left: 20px;">
+              <li>All vehicles are listed by private owners or businesses</li>
+              <li>Rental terms and conditions are set by each host</li>
+              <li>You communicate directly with car owners</li>
+              <li>DiRent facilitates the connection but is not a party to rental agreements</li>
+            </ul>
+          </div>
+          
+          <h3 style="color: #333;">What can you do on DiRent?</h3>
+          <ul style="color: #666; font-size: 15px; padding-left: 20px;">
+            <li><strong>Browse vehicles</strong> - Find cars, trucks, and vans available for rent in your area</li>
+            <li><strong>Message owners</strong> - Contact hosts directly to ask questions or arrange rentals</li>
+            <li><strong>List your vehicle</strong> - Have a car? Become a host and earn money by renting it out</li>
+          </ul>
+          
+          <a href="${baseUrl}" style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 20px;">Start Exploring</a>
+          
+          <p style="color: #999; font-size: 14px; margin-top: 30px;">
+            If you have any questions, don't hesitate to reach out through our support system.<br><br>
+            Best regards,<br>The DiRent Team
+          </p>
+        </div>
+      `;
+
+      const emailResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: "DiRent <notifications@dirrental.com>",
+          to: [recipientEmail],
+          subject,
+          html: htmlContent,
+        }),
+      });
+
+      const emailResult = await emailResponse.json();
+
+      if (!emailResponse.ok) {
+        console.warn("Welcome email error (non-blocking):", emailResult);
+        return new Response(
+          JSON.stringify({ success: true, emailSkipped: true, reason: emailResult.message }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      console.log("Welcome email sent successfully:", emailResult);
+      return new Response(JSON.stringify({ success: true, emailResult }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
     
     // For admin notifications, get all admin emails
     if (type === "admin_new_listing" || type === "admin_new_ticket") {
@@ -178,8 +252,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const recipientEmail = userData.user.email;
-    console.log("Sending email to:", recipientEmail);
+    const userEmail = userData.user.email;
+    console.log("Sending email to:", userEmail);
 
     // Get recipient's name from profiles
     const { data: profile } = await supabase
@@ -188,7 +262,7 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("user_id", recipientUserId)
       .single();
 
-    const recipientName = profile?.first_name || profile?.full_name || "there";
+    const userName = profile?.first_name || profile?.full_name || "there";
 
     let subject = "";
     let htmlContent = "";
@@ -198,7 +272,7 @@ const handler = async (req: Request): Promise<Response> => {
         subject = `New message from ${data.senderName || "someone"} on DiRent`;
         htmlContent = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #333;">Hi ${recipientName}!</h2>
+            <h2 style="color: #333;">Hi ${userName}!</h2>
             <p style="color: #666; font-size: 16px;">You have a new message from <strong>${data.senderName || "a user"}</strong>${data.listingTitle ? ` about <strong>${data.listingTitle}</strong>` : ""}.</p>
             ${data.messagePreview ? `<div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;"><p style="margin: 0; color: #444; font-style: italic;">"${data.messagePreview}"</p></div>` : ""}
             <a href="${baseUrl}/messages" style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 10px;">View Message</a>
@@ -211,7 +285,7 @@ const handler = async (req: Request): Promise<Response> => {
         subject = "Your support ticket has been updated - DiRent";
         htmlContent = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #333;">Hi ${recipientName}!</h2>
+            <h2 style="color: #333;">Hi ${userName}!</h2>
             <p style="color: #666; font-size: 16px;">Your support ticket "${data.ticketSubject || "Support Request"}" has received a response from our team.</p>
             ${data.adminNotes ? `<div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;"><p style="margin: 0; color: #166534;">${data.adminNotes}</p></div>` : ""}
             <a href="${baseUrl}/my-issues" style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 10px;">View Ticket</a>
@@ -224,7 +298,7 @@ const handler = async (req: Request): Promise<Response> => {
         subject = "Your listing has been approved! - DiRent";
         htmlContent = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #333;">🎉 Great news, ${recipientName}!</h2>
+            <h2 style="color: #333;">🎉 Great news, ${userName}!</h2>
             <p style="color: #666; font-size: 16px;">Your listing <strong>"${data.listingTitle}"</strong> has been approved and is now live on DiRent!</p>
             <p style="color: #666; font-size: 16px;">Potential renters can now discover and inquire about your car.</p>
             <a href="${baseUrl}/dashboard" style="display: inline-block; background: #22c55e; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 10px;">View Your Dashboard</a>
@@ -237,7 +311,7 @@ const handler = async (req: Request): Promise<Response> => {
         subject = "Update on your listing submission - DiRent";
         htmlContent = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #333;">Hi ${recipientName},</h2>
+            <h2 style="color: #333;">Hi ${userName},</h2>
             <p style="color: #666; font-size: 16px;">We've reviewed your listing <strong>"${data.listingTitle}"</strong> and unfortunately, we couldn't approve it at this time.</p>
             ${data.rejectionReason ? `<div style="background: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;"><p style="margin: 0; color: #991b1b;"><strong>Reason:</strong> ${data.rejectionReason}</p></div>` : ""}
             <p style="color: #666; font-size: 16px;">Please update your listing based on the feedback and resubmit for approval.</p>
@@ -264,7 +338,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "DiRent <notifications@dirrental.com>",
-        to: [recipientEmail],
+        to: [userEmail],
         subject,
         html: htmlContent,
       }),

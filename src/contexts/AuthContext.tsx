@@ -4,6 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "guest" | "host" | "admin";
 
+const sendWelcomeEmail = async (email: string, firstName: string) => {
+  try {
+    await supabase.functions.invoke("send-notification-email", {
+      body: {
+        type: "welcome",
+        recipientEmail: email,
+        recipientName: firstName,
+        data: {},
+      },
+    });
+    console.log("Welcome email sent to:", email);
+  } catch (err) {
+    console.error("Failed to send welcome email:", err);
+  }
+};
+
 interface SignUpData {
   email: string;
   password: string;
@@ -135,6 +151,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .update({ avatar_url: urlData.publicUrl })
           .eq('user_id', signUpData.user.id);
       }
+    }
+    
+    // Send welcome email after successful signup
+    if (!error && signUpData.user) {
+      sendWelcomeEmail(email, firstName);
     }
     
     return { error: error as Error | null };

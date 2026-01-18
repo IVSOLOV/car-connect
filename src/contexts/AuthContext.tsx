@@ -140,8 +140,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     
-    // Welcome content is now included in the confirmation email template
-    // No separate welcome email call needed
+    // Send custom verification email through Resend for better deliverability
+    if (!error && signUpData.user) {
+      try {
+        await supabase.functions.invoke('send-auth-email', {
+          body: {
+            type: 'confirmation',
+            email: email,
+            redirect_to: `${window.location.origin}/`,
+          },
+        });
+        console.log('Custom verification email sent via Resend');
+      } catch (emailError) {
+        console.error('Failed to send custom verification email:', emailError);
+        // Don't fail the signup if email sending fails - Supabase's default email will still go out
+      }
+    }
     
     return { error: error as Error | null };
   };

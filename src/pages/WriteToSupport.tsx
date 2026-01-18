@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, AlertCircle, CheckCircle, History } from "lucide-react";
+import { ArrowLeft, Send, AlertCircle, CheckCircle, History, ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import SEO from "@/components/SEO";
 import { sendNotificationEmail } from "@/lib/notifications";
 
+const MAX_IMAGES = 5;
+
 const WriteToSupport = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -20,6 +22,83 @@ const WriteToSupport = () => {
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const remainingSlots = MAX_IMAGES - images.length;
+    if (remainingSlots <= 0) {
+      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+      return;
+    }
+
+    const filesToAdd = Array.from(files).slice(0, remainingSlots);
+    const validFiles = filesToAdd.filter(file => {
+      if (!file.type.startsWith("image/")) {
+        toast.error(`${file.name} is not an image`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} exceeds 5MB limit`);
+        return false;
+      }
+      return true;
+    });
+
+    const newImages = validFiles.map(file => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+
+    setImages(prev => [...prev, ...newImages]);
+    
+    if (e.target) e.target.value = "";
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => {
+      const newImages = [...prev];
+      URL.revokeObjectURL(newImages[index].preview);
+      newImages.splice(index, 1);
+      return newImages;
+    });
+  };
+
+  const uploadImages = async (): Promise<string[]> => {
+    if (images.length === 0) return [];
+    
+    setUploadingImages(true);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (const { file } of images) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("support-attachments")
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("support-attachments")
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
+      }
+      return uploadedUrls;
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      throw error;
+    } finally {
+      setUploadingImages(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,14 +116,25 @@ const WriteToSupport = () => {
 
     setSubmitting(true);
     try {
+      // Upload images first
+      const imageUrls = await uploadImages();
+      
+      // Include image URLs in description if any
+      const descriptionWithImages = imageUrls.length > 0
+        ? `${description.trim()}\n\n---\nAttached Images:\n${imageUrls.map((url, i) => `${i + 1}. ${url}`).join("\n")}`
+        : description.trim();
+
       const { error } = await supabase.from("support_tickets").insert({
         user_id: user.id,
         subject: title.trim(),
-        description: description.trim(),
+        description: descriptionWithImages,
         priority: "medium",
       });
 
       if (error) throw error;
+
+      // Clean up previews
+      images.forEach(img => URL.revokeObjectURL(img.preview));
 
       // Get user's name for admin notification
       const { data: profile } = await supabase
@@ -65,6 +155,7 @@ const WriteToSupport = () => {
       setSubmitted(true);
       setTitle("");
       setDescription("");
+      setImages([]);
     } catch (error) {
       console.error("Error submitting support request:", error);
       toast.error("Failed to submit request. Please try again.");
@@ -198,9 +289,56 @@ const WriteToSupport = () => {
                   </p>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={submitting}>
+                {/* Image Upload Section */}
+                <div className="space-y-2">
+                  <Label>Attach Screenshots (Optional)</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Upload up to {MAX_IMAGES} images to help us understand your issue better
+                  </p>
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                  
+                  <div className="flex flex-wrap gap-3">
+                    {images.map((img, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={img.preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-20 h-20 object-cover rounded-lg border border-border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {images.length < MAX_IMAGES && (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-20 h-20 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-accent transition-colors"
+                      >
+                        <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">{images.length}/{MAX_IMAGES}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={submitting || uploadingImages}>
                   <Send className="h-4 w-4 mr-2" />
-                  {submitting ? "Sending..." : "Send to Support"}
+                  {uploadingImages ? "Uploading images..." : submitting ? "Sending..." : "Send to Support"}
                 </Button>
               </form>
             </CardContent>

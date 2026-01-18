@@ -8,6 +8,7 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronDown,
+  ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,6 +55,66 @@ interface AdminNote {
   ticket_id: string;
   notes: string | null;
 }
+
+// Helper component to parse and display ticket description with images
+const TicketDescription = ({ description }: { description: string }) => {
+  // Check if description has attached images section
+  const attachedImagesMatch = description.match(/---\s*\nAttached Images:\s*([\s\S]*?)$/);
+  
+  if (!attachedImagesMatch) {
+    return <p className="mt-1 text-foreground whitespace-pre-wrap">{description}</p>;
+  }
+  
+  // Extract the main description (before the images section)
+  const mainDescription = description.replace(/---\s*\nAttached Images:[\s\S]*$/, "").trim();
+  
+  // Extract image URLs
+  const imagesSection = attachedImagesMatch[1];
+  const imageUrls = imagesSection
+    .split("\n")
+    .map(line => line.replace(/^\d+\.\s*/, "").trim())
+    .filter(url => url.startsWith("http"));
+  
+  return (
+    <div className="mt-1 space-y-4">
+      <p className="text-foreground whitespace-pre-wrap">{mainDescription}</p>
+      
+      {imageUrls.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <ImageIcon className="h-4 w-4" />
+            <span>Attached Images ({imageUrls.length})</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {imageUrls.map((url, index) => (
+              <a
+                key={index}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 hover:border-primary/50 transition-colors"
+              >
+                <img
+                  src={url}
+                  alt={`Attachment ${index + 1}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                  }}
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">
+                    Click to view
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SupportTickets = () => {
   const navigate = useNavigate();
@@ -312,7 +373,7 @@ const SupportTickets = () => {
                     <CardContent className="pt-0 space-y-4">
                       <div>
                         <Label className="text-muted-foreground">Description</Label>
-                        <p className="mt-1 text-foreground whitespace-pre-wrap">{ticket.description}</p>
+                        <TicketDescription description={ticket.description} />
                       </div>
 
                       {adminNotes[ticket.id] && !isAdmin && (

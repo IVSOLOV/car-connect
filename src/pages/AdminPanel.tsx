@@ -74,6 +74,16 @@ interface UserProfile {
   email?: string;
 }
 
+interface DeactivatedUser {
+  id: string;
+  email: string;
+  user_id: string | null;
+  deactivated_by: string;
+  reason: string | null;
+  created_at: string;
+  deactivated_by_name?: string;
+}
+
 type SortField = "created_at" | "full_name" | "listings_count" | "email";
 type SortOrder = "asc" | "desc";
 
@@ -109,6 +119,10 @@ const AdminPanel = () => {
   const [deactivateReason, setDeactivateReason] = useState("");
   const [isDeactivating, setIsDeactivating] = useState(false);
 
+  // Deactivated users history state
+  const [deactivatedUsers, setDeactivatedUsers] = useState<DeactivatedUser[]>([]);
+  const [deactivatedUsersLoading, setDeactivatedUsersLoading] = useState(true);
+
   // Unique values for filters
   const [uniqueMakes, setUniqueMakes] = useState<string[]>([]);
   const [uniqueModels, setUniqueModels] = useState<string[]>([]);
@@ -123,6 +137,7 @@ const AdminPanel = () => {
     }
     fetchListings();
     fetchUsers();
+    fetchDeactivatedUsers();
   }, [role, navigate]);
 
   const fetchListings = async () => {
@@ -214,6 +229,40 @@ const AdminPanel = () => {
       console.error("Error fetching users:", error);
     } finally {
       setUsersLoading(false);
+    }
+  };
+
+  const fetchDeactivatedUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("deactivated_users")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        // Get admin names for deactivated_by
+        const adminIds = [...new Set(data.map(d => d.deactivated_by))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, first_name, last_name")
+          .in("user_id", adminIds);
+
+        const deactivatedWithNames = data.map(d => {
+          const admin = profiles?.find(p => p.user_id === d.deactivated_by);
+          const adminName = admin?.full_name || 
+            `${admin?.first_name || ""} ${admin?.last_name || ""}`.trim() || 
+            "Unknown Admin";
+          return { ...d, deactivated_by_name: adminName } as DeactivatedUser;
+        });
+
+        setDeactivatedUsers(deactivatedWithNames);
+      }
+    } catch (error) {
+      console.error("Error fetching deactivated users:", error);
+    } finally {
+      setDeactivatedUsersLoading(false);
     }
   };
 
@@ -357,9 +406,10 @@ const AdminPanel = () => {
         description: `${userToDeactivate.email || userToDeactivate.full_name || "User"} has been deactivated and cannot create a new account with the same email.`,
       });
 
-      // Remove user from the list
+      // Remove user from the list and refresh deactivated users
       setUsers(prev => prev.filter(u => u.user_id !== userToDeactivate.user_id));
       setFilteredUsers(prev => prev.filter(u => u.user_id !== userToDeactivate.user_id));
+      fetchDeactivatedUsers();
     } catch (error) {
       console.error("Error deactivating user:", error);
       toast({
@@ -408,7 +458,7 @@ const AdminPanel = () => {
         <h1 className="text-3xl font-bold text-foreground mb-8">Admin Panel</h1>
 
         <Tabs defaultValue="listings" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="listings" className="flex items-center gap-2">
               <Car className="h-4 w-4" />
               Listings
@@ -416,6 +466,10 @@ const AdminPanel = () => {
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users
+            </TabsTrigger>
+            <TabsTrigger value="deactivated" className="flex items-center gap-2">
+              <UserX className="h-4 w-4" />
+              Deactivated
             </TabsTrigger>
           </TabsList>
 
@@ -721,6 +775,57 @@ const AdminPanel = () => {
                                   <UserX className="h-4 w-4" />
                                 </Button>
                               </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Deactivated Users Tab */}
+          <TabsContent value="deactivated" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Deactivated Users ({deactivatedUsers.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {deactivatedUsersLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : deactivatedUsers.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No deactivated users yet.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Reason</TableHead>
+                          <TableHead>Deactivated By</TableHead>
+                          <TableHead>Deactivated On</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {deactivatedUsers.map((deactivated) => (
+                          <TableRow key={deactivated.id}>
+                            <TableCell className="font-medium">
+                              {deactivated.email}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground max-w-xs truncate">
+                              {deactivated.reason || "—"}
+                            </TableCell>
+                            <TableCell>
+                              {deactivated.deactivated_by_name || "Unknown"}
+                            </TableCell>
+                            <TableCell>
+                              {format(new Date(deactivated.created_at), "MMM d, yyyy 'at' h:mm a")}
                             </TableCell>
                           </TableRow>
                         ))}

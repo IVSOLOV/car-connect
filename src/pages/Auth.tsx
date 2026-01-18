@@ -320,9 +320,12 @@ const Auth = () => {
           variant: "destructive",
         });
       } else {
+        // Sign out the user so they must log in with new password
+        await supabase.auth.signOut();
+        
         toast({
           title: "Password updated!",
-          description: "Your password has been successfully changed.",
+          description: "Please sign in with your new password.",
         });
         // Clear the hash and redirect to login
         window.history.replaceState(null, '', '/auth');

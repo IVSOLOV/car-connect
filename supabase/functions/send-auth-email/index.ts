@@ -55,6 +55,15 @@ const handler = async (req: Request): Promise<Response> => {
     let confirmationUrl = "";
     let subject = "";
     let htmlContent = "";
+    
+    // Helper function to replace Supabase domain with our app domain
+    const fixRedirectDomain = (url: string): string => {
+      // Replace the Supabase auth URL with our app URL
+      // The link format is: https://PROJECT.supabase.co/auth/v1/verify?...&redirect_to=...
+      // We need to redirect through our app which will handle the auth callback
+      const appDomain = "https://directrental.lovable.app";
+      return url.replace(/https:\/\/[^/]+\.supabase\.co/, appDomain);
+    };
 
     // Generate the appropriate auth link using Supabase Admin API
     if (type === "confirmation") {
@@ -75,7 +84,8 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      confirmationUrl = data.properties.action_link;
+      confirmationUrl = fixRedirectDomain(data.properties.action_link);
+      console.log("Generated confirmation URL:", confirmationUrl);
       subject = "Welcome to DiRent - Verify Your Email 🚗";
       htmlContent = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f5f5; margin: 0; padding: 40px 20px;">
@@ -123,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      confirmationUrl = data.properties.action_link;
+      confirmationUrl = fixRedirectDomain(data.properties.action_link);
       subject = "Reset your DiRent password";
       htmlContent = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f5f5; margin: 0; padding: 40px 20px;">
@@ -158,7 +168,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      confirmationUrl = data.properties.action_link;
+      confirmationUrl = fixRedirectDomain(data.properties.action_link);
       subject = "Your DiRent login link";
       htmlContent = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f5f5; margin: 0; padding: 40px 20px;">

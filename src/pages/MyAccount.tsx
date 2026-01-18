@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera, Building2, Loader2, HelpCircle } from "lucide-react";
+import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera, Building2, Loader2, HelpCircle, Mail, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,92 @@ interface Profile {
   show_company_as_owner: boolean | null;
   avatar_url: string | null;
 }
+
+// Email Verification Card Component
+const EmailVerificationCard = ({ email }: { email: string }) => {
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const { toast } = useToast();
+
+  const handleResendVerification = async () => {
+    setSending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) throw error;
+
+      setSent(true);
+      toast({
+        title: "Verification Email Sent",
+        description: "Please check your inbox and click the verification link.",
+      });
+    } catch (error: any) {
+      console.error("Error sending verification email:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send verification email. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <Card className="mb-8 border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20">
+      <CardContent className="pt-6">
+        <div className="flex items-start gap-4">
+          <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/50">
+            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Email Not Verified
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Your email address ({email}) has not been verified yet. Please verify your email to ensure full access to all features.
+            </p>
+            <div className="mt-3">
+              {sent ? (
+                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Verification email sent! Check your inbox.
+                </div>
+              ) : (
+                <Button 
+                  onClick={handleResendVerification} 
+                  disabled={sending}
+                  size="sm"
+                  variant="outline"
+                  className="border-amber-500 text-amber-700 hover:bg-amber-100 dark:text-amber-400 dark:hover:bg-amber-900/50"
+                >
+                  {sending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Resend Verification Email
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const MyAccount = () => {
   const navigate = useNavigate();
@@ -414,6 +500,11 @@ const MyAccount = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Email Verification Section - Show if email not confirmed */}
+          {user && !user.email_confirmed_at && (
+            <EmailVerificationCard email={user.email || ""} />
+          )}
 
           {/* Report Issue Section */}
           <Card className="mb-8">

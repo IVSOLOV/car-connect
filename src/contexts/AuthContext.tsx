@@ -4,21 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "guest" | "host" | "admin";
 
-const sendWelcomeEmail = async (email: string, firstName: string) => {
-  try {
-    await supabase.functions.invoke("send-notification-email", {
-      body: {
-        type: "welcome",
-        recipientEmail: email,
-        recipientName: firstName,
-        data: {},
-      },
-    });
-    console.log("Welcome email sent to:", email);
-  } catch (err) {
-    console.error("Failed to send welcome email:", err);
-  }
-};
+// Welcome email is now combined with the confirmation email template
+// No separate welcome email needed during signup
 
 interface SignUpData {
   email: string;
@@ -153,10 +140,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     
-    // Send welcome email after successful signup
-    if (!error && signUpData.user) {
-      sendWelcomeEmail(email, firstName);
-    }
+    // Welcome content is now included in the confirmation email template
+    // No separate welcome email call needed
     
     return { error: error as Error | null };
   };

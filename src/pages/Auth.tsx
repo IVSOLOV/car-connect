@@ -207,6 +207,28 @@ const Auth = () => {
           navigate("/");
         }
       } else {
+        // Check if email is deactivated before attempting signup
+        try {
+          const { data: deactivatedCheck, error: checkError } = await supabase.functions.invoke(
+            "check-deactivated-email",
+            { body: { email: email.toLowerCase() } }
+          );
+
+          if (checkError) {
+            console.error("Error checking deactivated email:", checkError);
+          } else if (deactivatedCheck?.isDeactivated) {
+            toast({
+              title: "Account Deactivated",
+              description: "This email has been deactivated and cannot be used to create a new account. Please contact support for assistance.",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+          }
+        } catch (checkErr) {
+          console.error("Error checking deactivated email:", checkErr);
+        }
+
         const { error } = await signUp({
           email,
           password,

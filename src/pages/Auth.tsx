@@ -58,6 +58,10 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check URL params for verified success
+    const urlParams = new URLSearchParams(window.location.search);
+    const verified = urlParams.get('verified');
+    
     // Check if this is a password reset flow
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
@@ -68,10 +72,22 @@ const Auth = () => {
       return; // Don't redirect on recovery flow
     }
     
+    // If user just verified their email and is now logged in
+    if (verified === 'true' && user) {
+      toast({
+        title: "Email verified! ✓",
+        description: "Your account is now active. Welcome to DiRent!",
+      });
+      // Clean up the URL
+      window.history.replaceState(null, '', '/auth');
+      navigate("/");
+      return;
+    }
+    
     if (user && mode !== "reset-password") {
       navigate("/");
     }
-  }, [user, navigate, mode]);
+  }, [user, navigate, mode, toast]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

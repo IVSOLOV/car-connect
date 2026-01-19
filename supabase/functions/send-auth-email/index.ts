@@ -67,9 +67,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Generate the appropriate auth link using Supabase Admin API
     if (type === "confirmation") {
-      // Use invite type to generate a confirmation link for existing unverified users
+      // Use magiclink type to generate a verification link for the newly registered user
+      // This works because the user already exists (just created by signup)
       const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-        type: "invite",
+        type: "magiclink",
         email: email,
         options: {
           redirectTo: redirect_to || "https://directrental.lovable.app/",

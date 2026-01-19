@@ -241,10 +241,10 @@ const Auth = () => {
         });
         if (error) {
           const errorMsg = error.message.toLowerCase();
-          if (errorMsg.includes("already registered") || errorMsg.includes("already been registered") || errorMsg.includes("user already registered")) {
+          if (errorMsg.includes("already registered") || errorMsg.includes("already been registered") || errorMsg.includes("already exists")) {
             toast({
-              title: "Account exists",
-              description: "This email is already registered. Try signing in instead.",
+              title: "Account already exists",
+              description: "A user with this email address has already been registered. Please sign in instead.",
               variant: "destructive",
             });
           } else {

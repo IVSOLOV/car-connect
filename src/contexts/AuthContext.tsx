@@ -113,9 +113,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
     });
     
-    // Check if user already exists - Supabase returns success with empty identities array
-    if (!error && signUpData.user && signUpData.user.identities?.length === 0) {
-      return { error: new Error("User already registered") };
+    // Check if user already exists - multiple detection methods:
+    // 1. Empty identities array (standard Supabase behavior)
+    // 2. User created_at equals updated_at with no new session (existing user, auto_confirm_email=true)
+    if (!error && signUpData.user) {
+      const identitiesEmpty = signUpData.user.identities?.length === 0;
+      const isExistingUser = signUpData.user.created_at !== signUpData.user.updated_at || 
+        (signUpData.user.email_confirmed_at && new Date(signUpData.user.email_confirmed_at) < new Date(Date.now() - 5000));
+      
+      if (identitiesEmpty || isExistingUser) {
+        return { error: new Error("A user with this email address has already been registered") };
+      }
     }
     
     // If signup successful and there's an avatar file, upload it

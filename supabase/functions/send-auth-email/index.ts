@@ -56,14 +56,8 @@ const handler = async (req: Request): Promise<Response> => {
     let subject = "";
     let htmlContent = "";
     
-    // Helper function to replace Supabase domain with our app domain
-    const fixRedirectDomain = (url: string): string => {
-      // Replace the Supabase auth URL with our app URL
-      // The link format is: https://PROJECT.supabase.co/auth/v1/verify?...&redirect_to=...
-      // We need to redirect through our app which will handle the auth callback
-      const appDomain = "https://directrental.lovable.app";
-      return url.replace(/https:\/\/[^/]+\.supabase\.co/, appDomain);
-    };
+    // The generated link from Supabase points directly to Supabase's auth endpoint
+    // Supabase will handle the token verification and then redirect to our redirect_to URL
 
     // Generate the appropriate auth link using Supabase Admin API
     if (type === "confirmation") {
@@ -73,7 +67,7 @@ const handler = async (req: Request): Promise<Response> => {
         type: "magiclink",
         email: email,
         options: {
-          redirectTo: redirect_to || "https://directrental.lovable.app/",
+          redirectTo: redirect_to || "https://directrental.lovable.app/auth?verified=true",
         },
       });
 
@@ -85,7 +79,8 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      confirmationUrl = fixRedirectDomain(data.properties.action_link);
+      // Use the Supabase auth link directly - it will handle verification and redirect
+      confirmationUrl = data.properties.action_link;
       console.log("Generated confirmation URL:", confirmationUrl);
       subject = "Welcome to DiRent - Verify Your Email 🚗";
       htmlContent = `
@@ -122,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
         type: "recovery",
         email: email,
         options: {
-          redirectTo: redirect_to || "https://directrental.lovable.app/auth",
+          redirectTo: redirect_to || "https://directrental.lovable.app/auth?reset=true",
         },
       });
 
@@ -134,7 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      confirmationUrl = fixRedirectDomain(data.properties.action_link);
+      confirmationUrl = data.properties.action_link;
       subject = "Reset your DiRent password";
       htmlContent = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f5f5; margin: 0; padding: 40px 20px;">
@@ -169,7 +164,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      confirmationUrl = fixRedirectDomain(data.properties.action_link);
+      confirmationUrl = data.properties.action_link;
       subject = "Your DiRent login link";
       htmlContent = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f5f5; margin: 0; padding: 40px 20px;">

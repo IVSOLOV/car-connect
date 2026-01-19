@@ -13,7 +13,47 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Verify authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("No authorization header provided");
+      return new Response(JSON.stringify({ error: "Authorization required" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Create a client with the user's auth token to verify identity
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    // Get the current user
+    const { data: { user: callerUser }, error: userError } = await userClient.auth.getUser();
+    if (userError || !callerUser) {
+      console.error("Failed to get user:", userError);
+      return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify the caller has admin role
+    const { data: isAdmin, error: roleError } = await userClient.rpc("has_role", {
+      _user_id: callerUser.id,
+      _role: "admin",
+    });
+
+    if (roleError || !isAdmin) {
+      console.error("Admin check failed:", roleError || "User is not admin");
+      return new Response(JSON.stringify({ error: "Admin access required" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { email } = await req.json();
     
@@ -23,6 +63,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log(`Admin ${callerUser.email} requesting to delete user: ${email}`);
 
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -63,7 +105,7 @@ serve(async (req) => {
       .delete()
       .eq("email", email.toLowerCase());
 
-    console.log("User deleted successfully:", email);
+    console.log(`User deleted successfully by admin ${callerUser.email}: ${email}`);
 
     return new Response(JSON.stringify({ success: true, email }), {
       status: 200,

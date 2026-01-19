@@ -113,15 +113,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
     });
     
-    // Check if user already exists - multiple detection methods:
-    // 1. Empty identities array (standard Supabase behavior)
-    // 2. User created_at equals updated_at with no new session (existing user, auto_confirm_email=true)
+    // Check if user already exists - empty identities array is the reliable indicator
+    // Note: Do NOT check email_confirmed_at as auto_confirm_email=true sets it immediately for new users
     if (!error && signUpData.user) {
       const identitiesEmpty = signUpData.user.identities?.length === 0;
-      const isExistingUser = signUpData.user.created_at !== signUpData.user.updated_at || 
-        (signUpData.user.email_confirmed_at && new Date(signUpData.user.email_confirmed_at) < new Date(Date.now() - 5000));
       
-      if (identitiesEmpty || isExistingUser) {
+      if (identitiesEmpty) {
         return { error: new Error("A user with this email address has already been registered") };
       }
     }

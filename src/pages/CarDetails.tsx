@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   MapPin,
@@ -19,9 +19,13 @@ import { Separator } from "@/components/ui/separator";
 import Header from "@/components/Header";
 import MessageOwnerModal from "@/components/MessageOwnerModal";
 import { mockCars } from "@/data/cars";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const CarDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -179,7 +183,14 @@ const CarDetails = () => {
                 <Separator className="my-5" />
 
                 <Button
-                  onClick={() => setIsMessageModalOpen(true)}
+                  onClick={() => {
+                    if (!user) {
+                      toast.error("Please sign in to message the owner");
+                      navigate("/auth");
+                      return;
+                    }
+                    setIsMessageModalOpen(true);
+                  }}
                   className="w-full mb-3"
                   size="lg"
                 >
@@ -187,7 +198,19 @@ const CarDetails = () => {
                   Message Owner
                 </Button>
 
-                <Button variant="outline" className="w-full" size="lg">
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  size="lg"
+                  onClick={() => {
+                    if (!user) {
+                      toast.error("Please sign in to save listings");
+                      navigate("/auth");
+                      return;
+                    }
+                    toast.info("Save functionality coming soon");
+                  }}
+                >
                   <Heart className="mr-2 h-4 w-4" />
                   Save Listing
                 </Button>

@@ -61,6 +61,20 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Generate the appropriate auth link using Supabase Admin API
     if (type === "confirmation") {
+      // First check if user is already verified by listing users with this email
+      const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      
+      if (!listError && usersData?.users) {
+        const existingUser = usersData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+        if (existingUser?.email_confirmed_at) {
+          console.log("User email already verified, skipping verification email");
+          return new Response(
+            JSON.stringify({ error: "Email already verified", alreadyVerified: true }),
+            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
+      }
+
       // Use magiclink type to generate a verification link for the newly registered user
       // This works because the user already exists (just created by signup)
       const { data, error } = await supabaseAdmin.auth.admin.generateLink({

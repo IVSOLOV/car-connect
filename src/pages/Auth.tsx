@@ -166,6 +166,33 @@ const Auth = () => {
 
     setIsLoading(true);
     try {
+      // Check if the email exists in our database
+      const { data: emailCheck, error: checkError } = await supabase.functions.invoke(
+        'check-email-exists',
+        { body: { email: email.toLowerCase() } }
+      );
+
+      if (checkError) {
+        console.error("Error checking email:", checkError);
+        toast({
+          title: "Error",
+          description: "An error occurred. Please try again.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!emailCheck?.exists) {
+        toast({
+          title: "Email not found",
+          description: "No account exists with this email address. Please check the email or create a new account.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth?reset=true`,
       });

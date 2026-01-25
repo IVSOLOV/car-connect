@@ -249,11 +249,20 @@ const Auth = () => {
       if (mode === "login") {
         const { error } = await signIn(email, password);
         if (error) {
-          toast({
-            title: "Sign in failed",
-            description: error.message,
-            variant: "destructive",
-          });
+          // Check if login failed because email is not verified
+          if (error.message.toLowerCase().includes("email not confirmed")) {
+            toast({
+              title: "Email not verified",
+              description: "Please verify your email before signing in. We'll send you a new verification link.",
+            });
+            setMode("verify-email");
+          } else {
+            toast({
+              title: "Sign in failed",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
         } else {
           toast({
             title: "Welcome back!",

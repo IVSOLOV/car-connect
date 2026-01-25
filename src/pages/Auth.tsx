@@ -74,12 +74,24 @@ const Auth = () => {
     
     // If user just verified their email and is now logged in
     if (verified === 'true' && user) {
+      // Check if user was already verified before this click (email_confirmed_at was set before the link was clicked)
+      // Since verification just happened, we show success and redirect
       toast({
         title: "Email verified! ✓",
         description: "Your account is now active. Welcome to DiRent!",
       });
       // Clean up the URL
       window.history.replaceState(null, '', '/auth');
+      navigate("/");
+      return;
+    }
+    
+    // Handle case where user clicks verification link but is already verified
+    if (user?.email_confirmed_at && mode === "verify-email") {
+      toast({
+        title: "Already verified",
+        description: "Your email has already been verified. Redirecting to home...",
+      });
       navigate("/");
       return;
     }
@@ -319,6 +331,19 @@ const Auth = () => {
   const handleResendVerification = async () => {
     setIsResending(true);
     try {
+      // Check if email is already verified by checking current session/user
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (currentUser?.email_confirmed_at) {
+        toast({
+          title: "Already verified",
+          description: "Your email has already been verified. You can now sign in.",
+        });
+        setMode("login");
+        setIsResending(false);
+        return;
+      }
+
       // First generate a new confirmation link from Supabase
       const { error: resendError } = await supabase.auth.resend({
         type: 'signup',
@@ -329,11 +354,21 @@ const Auth = () => {
       });
 
       if (resendError) {
-        toast({
-          title: "Failed to resend",
-          description: resendError.message,
-          variant: "destructive",
-        });
+        // Check if error indicates already confirmed
+        if (resendError.message.toLowerCase().includes('already confirmed') || 
+            resendError.message.toLowerCase().includes('already verified')) {
+          toast({
+            title: "Already verified",
+            description: "Your email has already been verified. You can now sign in.",
+          });
+          setMode("login");
+        } else {
+          toast({
+            title: "Failed to resend",
+            description: resendError.message,
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
           title: "Verification email sent",

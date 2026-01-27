@@ -104,7 +104,9 @@ const CreateListing = () => {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [year, setYear] = useState("");
   const [make, setMake] = useState("");
+  const [customMake, setCustomMake] = useState("");
   const [model, setModel] = useState("");
+  const [customModel, setCustomModel] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [titleStatus, setTitleStatus] = useState("clear");
@@ -120,7 +122,8 @@ const CreateListing = () => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1929 }, (_, i) => currentYear - i);
 
-  const availableModels = make ? modelsByMake[make] || [] : [];
+  // Include "Other" in available models if make is selected and not "Other"
+  const availableModels = make && make !== "Other" ? [...(modelsByMake[make] || []), "Other"] : [];
 
   // Handle payment success/cancel from Stripe redirect
   useEffect(() => {
@@ -308,6 +311,10 @@ const CreateListing = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Determine final make and model values
+    const finalMake = make === "Other" ? customMake.trim() : make;
+    const finalModel = make === "Other" ? customModel.trim() : (model === "Other" ? customModel.trim() : model);
+    
     if (images.length < 5) {
       toast({
         title: "Not Enough Images",
@@ -319,8 +326,8 @@ const CreateListing = () => {
     
     const missingFields: string[] = [];
     if (!year) missingFields.push("Year");
-    if (!make) missingFields.push("Make");
-    if (!model) missingFields.push("Model");
+    if (!finalMake) missingFields.push("Make");
+    if (!finalModel) missingFields.push("Model");
     if (!city) missingFields.push("City");
     if (!state) missingFields.push("State");
     if (!licensePlate.trim()) missingFields.push("License Plate");
@@ -353,9 +360,9 @@ const CreateListing = () => {
       return;
     }
 
-    // Check for duplicate license plate in the same state
+    // Check for duplicate license plate in the same state (now in listing_sensitive_data table)
     const { data: existingListing } = await supabase
-      .from('listings')
+      .from('listing_sensitive_data' as any)
       .select('id')
       .ilike('license_plate', licensePlate.trim())
       .eq('state', state)
@@ -377,8 +384,8 @@ const CreateListing = () => {
         // Save listing data to localStorage before redirect
         const pendingListing = {
           year,
-          make,
-          model,
+          make: finalMake,
+          model: finalModel,
           city,
           state,
           licensePlate,
@@ -451,8 +458,8 @@ const CreateListing = () => {
         .insert({
           user_id: user.id,
           year: parseInt(year),
-          make,
-          model,
+          make: finalMake,
+          model: finalModel,
           city,
           state,
           title_status: titleStatus,
@@ -624,7 +631,12 @@ const CreateListing = () => {
             {/* Make */}
             <div className="space-y-2">
               <Label htmlFor="make">Make *</Label>
-              <Select value={make} onValueChange={setMake}>
+              <Select value={make} onValueChange={(val) => { 
+                setMake(val); 
+                setModel(""); 
+                setCustomModel("");
+                if (val !== "Other") setCustomMake("");
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select make" />
                 </SelectTrigger>
@@ -634,25 +646,55 @@ const CreateListing = () => {
                       {m}
                     </SelectItem>
                   ))}
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
+              {make === "Other" && (
+                <Input
+                  placeholder="Enter custom make"
+                  value={customMake}
+                  onChange={(e) => setCustomMake(e.target.value)}
+                  className="mt-2"
+                />
+              )}
             </div>
 
             {/* Model */}
             <div className="space-y-2">
               <Label htmlFor="model">Model *</Label>
-              <Select value={model} onValueChange={setModel} disabled={!make}>
-                <SelectTrigger>
-                  <SelectValue placeholder={make ? "Select model" : "Select make first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableModels.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {make === "Other" ? (
+                <Input
+                  placeholder="Enter custom model"
+                  value={customModel}
+                  onChange={(e) => setCustomModel(e.target.value)}
+                />
+              ) : (
+                <>
+                  <Select value={model} onValueChange={(val) => {
+                    setModel(val);
+                    if (val !== "Other") setCustomModel("");
+                  }} disabled={!make}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={make ? "Select model" : "Select make first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableModels.map((m) => (
+                        <SelectItem key={m} value={m}>
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {model === "Other" && (
+                    <Input
+                      placeholder="Enter custom model"
+                      value={customModel}
+                      onChange={(e) => setCustomModel(e.target.value)}
+                      className="mt-2"
+                    />
+                  )}
+                </>
+              )}
             </div>
 
             {/* Location */}

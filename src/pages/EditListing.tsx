@@ -103,7 +103,9 @@ const EditListing = () => {
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [year, setYear] = useState("");
   const [make, setMake] = useState("");
+  const [customMake, setCustomMake] = useState("");
   const [model, setModel] = useState("");
+  const [customModel, setCustomModel] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [titleStatus, setTitleStatus] = useState("clear");
@@ -122,7 +124,8 @@ const EditListing = () => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1929 }, (_, i) => currentYear - i);
 
-  const availableModels = make ? modelsByMake[make] || [] : [];
+  // Include "Other" in available models if make is selected and not "Other"
+  const availableModels = make && make !== "Other" ? [...(modelsByMake[make] || []), "Other"] : [];
 
   useEffect(() => {
     if (!user) {
@@ -162,10 +165,26 @@ const EditListing = () => {
       // Store original listing for comparison
       setOriginalListing(listing);
       
-      // Populate form
+      // Populate form - check if make/model are custom (not in predefined lists)
+      const isCustomMake = !carMakes.includes(listing.make);
+      const isCustomModel = !isCustomMake && !(modelsByMake[listing.make] || []).includes(listing.model);
+      
       setYear(listing.year.toString());
-      setMake(listing.make);
-      setModel(listing.model);
+      
+      if (isCustomMake) {
+        setMake("Other");
+        setCustomMake(listing.make);
+        setCustomModel(listing.model);
+      } else {
+        setMake(listing.make);
+        if (isCustomModel) {
+          setModel("Other");
+          setCustomModel(listing.model);
+        } else {
+          setModel(listing.model);
+        }
+      }
+      
       setCity(listing.city);
       setState(listing.state);
       setTitleStatus(listing.title_status);
@@ -295,7 +314,11 @@ const EditListing = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!year || !make || !model || !city || !state || !licensePlate.trim() || !dailyPrice) {
+    // Determine final make and model values
+    const finalMake = make === "Other" ? customMake.trim() : make;
+    const finalModel = make === "Other" ? customModel.trim() : (model === "Other" ? customModel.trim() : model);
+    
+    if (!year || !finalMake || !finalModel || !city || !state || !licensePlate.trim() || !dailyPrice) {
       toast({
         title: "Missing Fields",
         description: "Please fill in all required fields including license plate.",
@@ -322,16 +345,16 @@ const EditListing = () => {
       return;
     }
 
-    // Check for duplicate license plate in the same state (excluding current listing)
-    const { data: existingListing } = await supabase
-      .from('listings')
-      .select('id')
+    // Check for duplicate license plate in the same state (now in listing_sensitive_data table, excluding current listing)
+    const { data: existingSensitiveData } = await supabase
+      .from('listing_sensitive_data' as any)
+      .select('listing_id')
       .ilike('license_plate', licensePlate.trim())
       .eq('state', state)
-      .neq('id', id)
+      .neq('listing_id', id)
       .maybeSingle();
 
-    if (existingListing) {
+    if (existingSensitiveData) {
       toast({
         title: "Vehicle Already Listed",
         description: "A vehicle with this license plate is already listed in this state.",
@@ -396,8 +419,8 @@ const EditListing = () => {
       // Build update object (license_plate is stored separately)
       const updateData: Record<string, any> = {
         year: parseInt(year),
-        make,
-        model,
+        make: finalMake,
+        model: finalModel,
         city,
         state,
         title_status: titleStatus,
@@ -647,7 +670,12 @@ const EditListing = () => {
             {/* Make */}
             <div className="space-y-2">
               <Label htmlFor="make">Make *</Label>
-              <Select value={make} onValueChange={(val) => { setMake(val); setModel(""); }}>
+              <Select value={make} onValueChange={(val) => { 
+                setMake(val); 
+                setModel(""); 
+                setCustomModel("");
+                if (val !== "Other") setCustomMake("");
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select make" />
                 </SelectTrigger>
@@ -657,25 +685,55 @@ const EditListing = () => {
                       {m}
                     </SelectItem>
                   ))}
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
+              {make === "Other" && (
+                <Input
+                  placeholder="Enter custom make"
+                  value={customMake}
+                  onChange={(e) => setCustomMake(e.target.value)}
+                  className="mt-2"
+                />
+              )}
             </div>
 
             {/* Model */}
             <div className="space-y-2">
               <Label htmlFor="model">Model *</Label>
-              <Select value={model} onValueChange={setModel} disabled={!make}>
-                <SelectTrigger>
-                  <SelectValue placeholder={make ? "Select model" : "Select make first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableModels.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {make === "Other" ? (
+                <Input
+                  placeholder="Enter custom model"
+                  value={customModel}
+                  onChange={(e) => setCustomModel(e.target.value)}
+                />
+              ) : (
+                <>
+                  <Select value={model} onValueChange={(val) => {
+                    setModel(val);
+                    if (val !== "Other") setCustomModel("");
+                  }} disabled={!make}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={make ? "Select model" : "Select make first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableModels.map((m) => (
+                        <SelectItem key={m} value={m}>
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {model === "Other" && (
+                    <Input
+                      placeholder="Enter custom model"
+                      value={customModel}
+                      onChange={(e) => setCustomModel(e.target.value)}
+                      className="mt-2"
+                    />
+                  )}
+                </>
+              )}
             </div>
 
             {/* Location */}

@@ -82,6 +82,41 @@ export type Database = {
           },
         ]
       }
+      listing_sensitive_data: {
+        Row: {
+          created_at: string
+          id: string
+          license_plate: string | null
+          listing_id: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          license_plate?: string | null
+          listing_id: string
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          license_plate?: string | null
+          listing_id?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_sensitive_data_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           approval_status: string
@@ -93,7 +128,6 @@ export type Database = {
           fuel_type: string | null
           id: string
           images: string[] | null
-          license_plate: string | null
           make: string
           model: string
           monthly_price: number | null
@@ -119,7 +153,6 @@ export type Database = {
           fuel_type?: string | null
           id?: string
           images?: string[] | null
-          license_plate?: string | null
           make: string
           model: string
           monthly_price?: number | null
@@ -145,7 +178,6 @@ export type Database = {
           fuel_type?: string | null
           id?: string
           images?: string[] | null
-          license_plate?: string | null
           make?: string
           model?: string
           monthly_price?: number | null

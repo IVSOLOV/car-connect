@@ -53,8 +53,19 @@ export function useListingSubscription() {
 
       if (data?.url) {
         // Redirect in same tab to prevent duplicate submissions
-        window.location.href = data.url;
-        return;
+        // Use window.open with _self for better iframe compatibility
+        const stripeUrl = data.url;
+        console.log("[startCheckout] Redirecting to Stripe:", stripeUrl);
+        
+        // Try multiple redirect methods for maximum compatibility
+        try {
+          window.location.assign(stripeUrl);
+        } catch {
+          window.location.href = stripeUrl;
+        }
+        
+        // Return a promise that never resolves to prevent further code execution
+        return new Promise(() => {});
       } else {
         throw new Error("No checkout URL returned");
       }

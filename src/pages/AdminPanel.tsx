@@ -76,7 +76,7 @@ interface UserProfile {
 
 interface DeactivatedUser {
   id: string;
-  email: string;
+  masked_email: string; // Email is masked for security
   user_id: string | null;
   deactivated_by: string;
   reason: string | null;
@@ -234,8 +234,9 @@ const AdminPanel = () => {
 
   const fetchDeactivatedUsers = async () => {
     try {
+      // Use the admin view which masks email addresses for security
       const { data, error } = await supabase
-        .from("deactivated_users")
+        .from("deactivated_users_admin" as any)
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -243,13 +244,13 @@ const AdminPanel = () => {
 
       if (data) {
         // Get admin names for deactivated_by
-        const adminIds = [...new Set(data.map(d => d.deactivated_by))];
+        const adminIds = [...new Set(data.map((d: any) => d.deactivated_by))];
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, full_name, first_name, last_name")
           .in("user_id", adminIds);
 
-        const deactivatedWithNames = data.map(d => {
+        const deactivatedWithNames = data.map((d: any) => {
           const admin = profiles?.find(p => p.user_id === d.deactivated_by);
           const adminName = admin?.full_name || 
             `${admin?.first_name || ""} ${admin?.last_name || ""}`.trim() || 
@@ -816,7 +817,7 @@ const AdminPanel = () => {
                         {deactivatedUsers.map((deactivated) => (
                           <TableRow key={deactivated.id}>
                             <TableCell className="font-medium">
-                              {deactivated.email}
+                              {deactivated.masked_email}
                             </TableCell>
                             <TableCell className="text-muted-foreground max-w-xs truncate">
                               {deactivated.reason || "—"}

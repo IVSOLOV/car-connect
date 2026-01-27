@@ -469,7 +469,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      deactivated_users_admin: {
+        Row: {
+          created_at: string | null
+          deactivated_by: string | null
+          id: string | null
+          masked_email: string | null
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deactivated_by?: string | null
+          id?: string | null
+          masked_email?: never
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deactivated_by?: string | null
+          id?: string | null
+          masked_email?: never
+          reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_role: {

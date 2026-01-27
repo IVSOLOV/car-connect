@@ -411,16 +411,8 @@ const CreateListing = () => {
         const imageDataUrls = await Promise.all(imagePromises);
         localStorage.setItem("pendingListingImages", JSON.stringify(imageDataUrls));
         
-        const result = await startCheckout(1);
-        
-        if (result?.success) {
-          // Checkout opened in new tab - show success message
-          toast({
-            title: "Checkout Opened",
-            description: "Complete your payment in the new tab. After payment, you'll be redirected back.",
-          });
-          setIsSubmitting(false);
-        }
+        // Redirect to Stripe checkout in same tab - code below won't execute due to navigation
+        await startCheckout(1);
       } catch (error) {
         toast({
           title: "Error",

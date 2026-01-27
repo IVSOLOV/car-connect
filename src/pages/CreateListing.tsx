@@ -416,10 +416,26 @@ const CreateListing = () => {
         
         if (result?.url) {
           console.log("[CreateListing] Redirecting to Stripe:", result.url);
-          // Navigate in same tab - use window.location.href directly
-          window.location.href = result.url;
-          // Return never-resolving promise to keep button disabled during navigation
-          return new Promise(() => {});
+          
+          // Check if we're in an iframe (Lovable preview) - if so, use new tab
+          // In production (not in iframe), navigate in same tab
+          const isInIframe = window !== window.top;
+          
+          if (isInIframe) {
+            // In iframe: open in new tab (only option that works)
+            window.open(result.url, "_blank");
+            toast({
+              title: "Checkout Opened",
+              description: "Complete your payment in the new tab, then return here.",
+            });
+            setIsSubmitting(false);
+            return;
+          } else {
+            // Not in iframe: navigate in same tab (prevents duplicate submissions)
+            window.location.href = result.url;
+            // Return never-resolving promise to keep button disabled during navigation
+            return new Promise(() => {});
+          }
         } else {
           throw new Error("No checkout URL returned");
         }

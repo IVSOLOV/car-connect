@@ -411,7 +411,16 @@ const CreateListing = () => {
         const imageDataUrls = await Promise.all(imagePromises);
         localStorage.setItem("pendingListingImages", JSON.stringify(imageDataUrls));
         
-        await startCheckout(1);
+        const result = await startCheckout(1);
+        
+        if (result?.success) {
+          // Checkout opened in new tab - show success message
+          toast({
+            title: "Checkout Opened",
+            description: "Complete your payment in the new tab. After payment, you'll be redirected back.",
+          });
+          setIsSubmitting(false);
+        }
       } catch (error) {
         toast({
           title: "Error",
@@ -420,7 +429,6 @@ const CreateListing = () => {
         });
         localStorage.removeItem("pendingListing");
         localStorage.removeItem("pendingListingImages");
-      } finally {
         setIsSubmitting(false);
       }
       return;

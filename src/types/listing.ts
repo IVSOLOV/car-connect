@@ -9,7 +9,6 @@ export interface Listing {
   model: string;
   city: string;
   state: string;
-  license_plate: string | null;
   title_status: string;
   vehicle_type: string;
   fuel_type: string;
@@ -26,4 +25,14 @@ export interface Listing {
   approval_status: string;
   rejection_reason: string | null;
   deactivation_reason: string | null;
+}
+
+// Sensitive listing data stored in separate table with restricted access
+export interface ListingSensitiveData {
+  id: string;
+  listing_id: string;
+  license_plate: string | null;
+  state: string;
+  created_at: string;
+  updated_at: string;
 }

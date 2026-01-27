@@ -446,7 +446,7 @@ const CreateListing = () => {
       }
 
       // Create listing in database
-      const { error } = await supabase
+      const { data: listingData, error } = await supabase
         .from('listings' as any)
         .insert({
           user_id: user.id,
@@ -455,7 +455,6 @@ const CreateListing = () => {
           model,
           city,
           state,
-          license_plate: licensePlate.trim().toUpperCase(),
           title_status: titleStatus,
           vehicle_type: vehicleType,
           fuel_type: fuelType,
@@ -464,9 +463,27 @@ const CreateListing = () => {
           monthly_price: monthlyPrice ? parseInt(monthlyPrice) : null,
           description: description || null,
           images: uploadedImageUrls,
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Store license plate in separate sensitive data table (only visible to owner/admin)
+      if (listingData && licensePlate.trim()) {
+        const { error: sensitiveError } = await supabase
+          .from('listing_sensitive_data' as any)
+          .insert({
+            listing_id: (listingData as any).id,
+            license_plate: licensePlate.trim().toUpperCase(),
+            state: state,
+          });
+
+        if (sensitiveError) {
+          console.error("Error saving sensitive data:", sensitiveError);
+          // Non-blocking - listing was created successfully
+        }
+      }
 
       toast({
         title: "Listing Submitted!",

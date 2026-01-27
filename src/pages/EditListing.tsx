@@ -175,8 +175,18 @@ const EditListing = () => {
       setDescription(listing.description || "");
       setVehicleType((listing.vehicle_type as VehicleType) || "car");
       setFuelType((listing.fuel_type as FuelType) || "gas");
-      setLicensePlate(listing.license_plate || "");
       setExistingImages(listing.images || []);
+
+      // Fetch sensitive data (license plate) from separate table
+      const { data: sensitiveData } = await supabase
+        .from("listing_sensitive_data" as any)
+        .select("license_plate")
+        .eq("listing_id", id)
+        .maybeSingle();
+
+      if (sensitiveData) {
+        setLicensePlate((sensitiveData as any).license_plate || "");
+      }
     } catch (error) {
       console.error("Error fetching listing:", error);
       toast({ title: "Error", description: "Failed to load listing.", variant: "destructive" });
@@ -383,14 +393,13 @@ const EditListing = () => {
       // Skip approval if only image order changed, price decreased, or vehicle type changed
       const skipApproval = coreFieldsUnchanged && sameImages && pricesNotIncreased;
 
-      // Build update object
+      // Build update object (license_plate is stored separately)
       const updateData: Record<string, any> = {
         year: parseInt(year),
         make,
         model,
         city,
         state,
-        license_plate: licensePlate.trim().toUpperCase(),
         title_status: titleStatus,
         vehicle_type: vehicleType,
         fuel_type: fuelType,
@@ -433,6 +442,22 @@ const EditListing = () => {
         .eq('id', id);
 
       if (error) throw error;
+
+      // Update license plate in sensitive data table (upsert)
+      if (licensePlate.trim()) {
+        const { error: sensitiveError } = await supabase
+          .from('listing_sensitive_data' as any)
+          .upsert({
+            listing_id: id,
+            license_plate: licensePlate.trim().toUpperCase(),
+            state: state,
+          }, { onConflict: 'listing_id' });
+
+        if (sensitiveError) {
+          console.error("Error updating sensitive data:", sensitiveError);
+          // Non-blocking - listing was updated successfully
+        }
+      }
 
       const successMessage = skipApproval && originalListing?.approval_status === "approved"
         ? "Your changes have been saved."

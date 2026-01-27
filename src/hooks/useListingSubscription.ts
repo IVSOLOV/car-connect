@@ -44,32 +44,20 @@ export function useListingSubscription() {
   }, [checkSubscription]);
 
   const startCheckout = async (quantity: number = 1) => {
-    try {
-      const { data, error: funcError } = await supabase.functions.invoke("create-listing-checkout", {
-        body: { quantity },
-      });
+    const { data, error: funcError } = await supabase.functions.invoke("create-listing-checkout", {
+      body: { quantity },
+    });
 
-      if (funcError) throw funcError;
+    if (funcError) throw funcError;
 
-      if (data?.url) {
-        const stripeUrl = data.url;
-        console.log("[startCheckout] Redirecting to Stripe in same tab:", stripeUrl);
-        
-        // Navigate in same tab - try top-level window first for iframe compatibility
-        if (window.top && window.top !== window) {
-          window.top.location.href = stripeUrl;
-        } else {
-          window.location.href = stripeUrl;
-        }
-        
-        // Return a promise that never resolves to prevent state updates during navigation
-        return new Promise(() => {});
-      } else {
-        throw new Error("No checkout URL returned");
-      }
-    } catch (err) {
-      console.error("Error starting checkout:", err);
-      throw err;
+    if (data?.url) {
+      const stripeUrl = data.url;
+      console.log("[startCheckout] Got Stripe URL:", stripeUrl);
+      
+      // Return the URL - the calling component will handle the redirect
+      return { url: stripeUrl };
+    } else {
+      throw new Error("No checkout URL returned");
     }
   };
 

@@ -411,8 +411,14 @@ const CreateListing = () => {
         const imageDataUrls = await Promise.all(imagePromises);
         localStorage.setItem("pendingListingImages", JSON.stringify(imageDataUrls));
         
-        // Redirect to Stripe checkout in same tab - code below won't execute due to navigation
-        await startCheckout(1);
+        // Get Stripe checkout URL
+        const result = await startCheckout(1);
+        
+        if (result?.url) {
+          console.log("[CreateListing] Redirecting to Stripe:", result.url);
+          // Redirect to Stripe in same tab
+          window.location.href = result.url;
+        }
       } catch (error) {
         toast({
           title: "Error",

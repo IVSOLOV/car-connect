@@ -416,10 +416,16 @@ const CreateListing = () => {
         
         if (result?.url) {
           console.log("[CreateListing] Redirecting to Stripe:", result.url);
-          // Redirect to Stripe in same tab
-          window.location.href = result.url;
+          // Use window.top for iframe compatibility, fallback to window.location
+          const targetWindow = window.top || window;
+          targetWindow.location.href = result.url;
+          // Return a never-resolving promise to keep button disabled during navigation
+          return new Promise(() => {});
+        } else {
+          throw new Error("No checkout URL returned");
         }
       } catch (error) {
+        console.error("[CreateListing] Checkout error:", error);
         toast({
           title: "Error",
           description: "Failed to start checkout. Please try again.",

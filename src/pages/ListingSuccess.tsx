@@ -38,8 +38,23 @@ const ListingSuccess = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setHasWaited(true);
-    }, 3000); // Wait 3 seconds before allowing redirect
+    }, 1500); // Wait 1.5 seconds for session to restore
     return () => clearTimeout(timer);
+  }, []);
+
+  // Actively try to restore session on mount
+  useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log("[ListingSuccess] Session restored:", session.user.email);
+        }
+      } catch (error) {
+        console.error("[ListingSuccess] Error restoring session:", error);
+      }
+    };
+    restoreSession();
   }, []);
 
   useEffect(() => {
@@ -167,14 +182,22 @@ const ListingSuccess = () => {
     }
   }, [user, hasWaited, isCreatingListing, listingCreated, toast]);
 
-  // Only redirect to auth AFTER loading is complete, we've waited, AND there's no user
+  // Only redirect to auth if we're absolutely sure there's no session
+  // Give multiple attempts to restore the session before giving up
   useEffect(() => {
     if (!loading && hasWaited && !user) {
-      // Give it one more attempt to restore session
-      const finalCheck = setTimeout(() => {
-        if (!user) {
+      // Try to get session one more time
+      const attemptSessionRestore = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          // Still no session after waiting - redirect to auth
+          console.log("[ListingSuccess] No session found after waiting, redirecting to auth");
           navigate("/auth");
         }
+      };
+      
+      const finalCheck = setTimeout(() => {
+        attemptSessionRestore();
       }, 2000);
       return () => clearTimeout(finalCheck);
     }
@@ -236,7 +259,7 @@ const ListingSuccess = () => {
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate("/dashboard")} 
+                  onClick={() => navigate("/my-account")} 
                   className="flex-1 gap-2"
                 >
                   <Car className="h-4 w-4" />
@@ -246,10 +269,10 @@ const ListingSuccess = () => {
 
               <Button 
                 variant="ghost" 
-                onClick={() => navigate("/my-account")}
+                onClick={() => navigate("/dashboard")}
                 className="text-muted-foreground"
               >
-                Go to My Account
+                Browse All Cars
               </Button>
             </CardContent>
           </Card>

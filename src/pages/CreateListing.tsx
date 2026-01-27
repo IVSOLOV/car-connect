@@ -416,11 +416,14 @@ const CreateListing = () => {
         
         if (result?.url) {
           console.log("[CreateListing] Redirecting to Stripe:", result.url);
-          // Use window.top for iframe compatibility, fallback to window.location
-          const targetWindow = window.top || window;
-          targetWindow.location.href = result.url;
-          // Return a never-resolving promise to keep button disabled during navigation
-          return new Promise(() => {});
+          // Open Stripe in a new tab since iframe navigation is blocked
+          window.open(result.url, "_blank");
+          toast({
+            title: "Checkout Opened",
+            description: "Complete your payment in the new tab, then return here.",
+          });
+          setIsSubmitting(false);
+          return;
         } else {
           throw new Error("No checkout URL returned");
         }

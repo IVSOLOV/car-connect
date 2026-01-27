@@ -52,20 +52,26 @@ export function useListingSubscription() {
       if (funcError) throw funcError;
 
       if (data?.url) {
-        // Redirect in same tab to prevent duplicate submissions
-        // Use window.open with _self for better iframe compatibility
         const stripeUrl = data.url;
         console.log("[startCheckout] Redirecting to Stripe:", stripeUrl);
         
-        // Try multiple redirect methods for maximum compatibility
-        try {
-          window.location.assign(stripeUrl);
-        } catch {
-          window.location.href = stripeUrl;
+        // Open in new tab - this works better in iframe environments
+        // and prevents duplicate submission issues
+        const newWindow = window.open(stripeUrl, "_blank");
+        
+        // If popup was blocked, try top-level navigation
+        if (!newWindow || newWindow.closed) {
+          console.log("[startCheckout] Popup blocked, trying top navigation");
+          // Try to navigate the top-level window
+          if (window.top && window.top !== window) {
+            window.top.location.href = stripeUrl;
+          } else {
+            window.location.href = stripeUrl;
+          }
         }
         
-        // Return a promise that never resolves to prevent further code execution
-        return new Promise(() => {});
+        // Return success - the user will complete payment in new tab
+        return { success: true, url: stripeUrl };
       } else {
         throw new Error("No checkout URL returned");
       }

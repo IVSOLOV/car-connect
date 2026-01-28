@@ -61,42 +61,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Generate the appropriate auth link using Supabase Admin API
     if (type === "confirmation") {
-      // First check if user is already verified by listing users with this email
-      const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      // With auto_confirm_email enabled, we send a welcome email without verification requirement
+      // The link will take users directly to the app
+      const appUrl = redirect_to || "https://directrental.lovable.app/";
       
-      if (!listError && usersData?.users) {
-        const existingUser = usersData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
-        if (existingUser?.email_confirmed_at) {
-          console.log("User email already verified, skipping verification email");
-          return new Response(
-            JSON.stringify({ error: "Email already verified", alreadyVerified: true }),
-            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-          );
-        }
-      }
-
-      // Use magiclink type to generate a verification link for the newly registered user
-      // This works because the user already exists (just created by signup)
-      const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email: email,
-        options: {
-          redirectTo: redirect_to || "https://directrental.lovable.app/auth?verified=true",
-        },
-      });
-
-      if (error) {
-        console.error("Failed to generate confirmation link:", error);
-        return new Response(
-          JSON.stringify({ error: "Failed to generate confirmation link: " + error.message }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
-
-      // Use the Supabase auth link directly - it will handle verification and redirect
-      confirmationUrl = data.properties.action_link;
-      console.log("Generated confirmation URL:", confirmationUrl);
-      subject = "Welcome to DiRent - Verify Your Email 🚗";
+      subject = "Welcome to DiRent! 🚗";
       htmlContent = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f5f5; margin: 0; padding: 40px 20px;">
           <div style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
@@ -105,14 +74,14 @@ const handler = async (req: Request): Promise<Response> => {
               Thanks for joining <strong style="color: #1a1a1a;">DiRent</strong> — the trusted marketplace for vehicle rentals!
             </p>
             <p style="color: #4a4a4a; font-size: 16px; line-height: 1.5; margin: 0 0 24px 0;">
-              To get started, please verify your email address (${email}) by clicking the button below:
+              Your account has been created successfully for <strong>${email}</strong>. You're all set to start exploring!
             </p>
-            <a href="${confirmationUrl}" style="display: inline-block; background-color: #000000; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 500; font-size: 16px;">
-              Verify Email & Get Started
+            <a href="${appUrl}" style="display: inline-block; background-color: #000000; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 500; font-size: 16px;">
+              Start Exploring DiRent
             </a>
             <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e5e5;">
               <p style="color: #4a4a4a; font-size: 14px; line-height: 1.5; margin: 0 0 12px 0;">
-                <strong>What's next?</strong>
+                <strong>What you can do:</strong>
               </p>
               <ul style="color: #666666; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
                 <li>Browse available vehicles in your area</li>

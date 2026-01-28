@@ -155,8 +155,12 @@ const BecomeHost = () => {
             
             <div className="bg-card border border-border rounded-2xl p-8 shadow-card">
               <div className="text-center mb-6">
-                <span className="text-5xl font-bold text-gradient">{pricing.price}</span>
-                <p className="text-muted-foreground mt-2">{pricing.period}</p>
+                <div className="flex items-center justify-center gap-3 mb-1">
+                  <span className="text-2xl font-medium text-muted-foreground line-through">$14.99</span>
+                  <span className="text-5xl font-bold text-gradient">{pricing.price}</span>
+                </div>
+                <p className="text-muted-foreground">{pricing.period}</p>
+                <p className="text-sm text-primary font-medium mt-2">Only $4.99 for early hosts!</p>
               </div>
               
               <ul className="space-y-3 mb-8">

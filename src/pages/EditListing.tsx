@@ -897,6 +897,10 @@ const EditListing = () => {
                 placeholder="Describe your vehicle, features, rental terms, etc."
                 rows={4}
               />
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium">Tip:</span> Include vehicle features (leather seats, sunroof, backup camera), 
+                performance details (fuel economy, engine power), mileage, and any rental terms or requirements.
+              </p>
             </div>
 
             <div className="flex gap-4 pt-4">

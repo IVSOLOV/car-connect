@@ -885,6 +885,10 @@ const CreateListing = () => {
                 placeholder="Describe your vehicle..."
                 rows={4}
               />
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium">Tip:</span> Include vehicle features (leather seats, sunroof, backup camera), 
+                performance details (fuel economy, engine power), mileage, and any rental terms or requirements.
+              </p>
             </div>
 
             {/* Submit Button */}

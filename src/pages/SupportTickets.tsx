@@ -264,7 +264,8 @@ const SupportTickets = () => {
         const fileExt = file.name.split('.').pop() || 'png';
         const prefix = isComment ? 'comment' : 'admin';
         const fileName = `${prefix}-${ticketId}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `${prefix}-responses/${fileName}`;
+        // Storage policy requires user ID as first folder
+        const filePath = `${user!.id}/${prefix}-responses/${fileName}`;
         
         const { error: uploadError } = await supabase.storage
           .from('support-attachments')
@@ -311,7 +312,7 @@ const SupportTickets = () => {
 
     const currentImages = commentImages[ticketId] || [];
     if (currentImages.length >= MAX_COMMENT_IMAGES) {
-      return; // Don't process more images if at max
+      return;
     }
 
     for (const item of Array.from(items)) {
@@ -319,8 +320,11 @@ const SupportTickets = () => {
         e.preventDefault();
         const file = item.getAsFile();
         if (file) {
+          // For pasted images, create a new file with a proper name based on MIME type
+          const ext = item.type.split('/')[1] || 'png';
+          const newFile = new File([file], `pasted-image.${ext}`, { type: item.type });
           const dataTransfer = new DataTransfer();
-          dataTransfer.items.add(file);
+          dataTransfer.items.add(newFile);
           await handleImageUpload(ticketId, dataTransfer.files, true);
         }
         break;

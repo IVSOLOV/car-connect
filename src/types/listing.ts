@@ -25,6 +25,7 @@ export interface Listing {
   approval_status: string;
   rejection_reason: string | null;
   deactivation_reason: string | null;
+  delivery_available: boolean;
 }
 
 // Sensitive listing data stored in separate table with restricted access

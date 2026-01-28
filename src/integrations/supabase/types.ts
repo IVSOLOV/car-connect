@@ -124,6 +124,7 @@ export type Database = {
           created_at: string
           daily_price: number
           deactivation_reason: string | null
+          delivery_available: boolean
           description: string | null
           fuel_type: string | null
           id: string
@@ -149,6 +150,7 @@ export type Database = {
           created_at?: string
           daily_price: number
           deactivation_reason?: string | null
+          delivery_available?: boolean
           description?: string | null
           fuel_type?: string | null
           id?: string
@@ -174,6 +176,7 @@ export type Database = {
           created_at?: string
           daily_price?: number
           deactivation_reason?: string | null
+          delivery_available?: boolean
           description?: string | null
           fuel_type?: string | null
           id?: string

@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Upload, X, Loader2, Star } from "lucide-react";
+import { ArrowLeft, Upload, X, Loader2, Star, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -116,6 +117,7 @@ const EditListing = () => {
   const [vehicleType, setVehicleType] = useState<VehicleType>("car");
   const [fuelType, setFuelType] = useState<FuelType>("gas");
   const [licensePlate, setLicensePlate] = useState("");
+  const [deliveryAvailable, setDeliveryAvailable] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Track original values to detect price-only changes
@@ -195,6 +197,7 @@ const EditListing = () => {
       setVehicleType((listing.vehicle_type as VehicleType) || "car");
       setFuelType((listing.fuel_type as FuelType) || "gas");
       setExistingImages(listing.images || []);
+      setDeliveryAvailable((listing as any).delivery_available || false);
 
       // Fetch sensitive data (license plate) from separate table
       const { data: sensitiveData } = await supabase
@@ -430,6 +433,7 @@ const EditListing = () => {
         weekly_price: newWeeklyPrice,
         monthly_price: newMonthlyPrice,
         description: description || null,
+        delivery_available: deliveryAvailable,
         images: uploadedImageUrls,
       };
 
@@ -819,6 +823,26 @@ const EditListing = () => {
                   <Label htmlFor="other" className="cursor-pointer">Other</Label>
                 </div>
               </RadioGroup>
+            </div>
+
+            {/* Delivery Available */}
+            <div className="flex items-center space-x-3 p-4 rounded-lg border border-border bg-secondary/30">
+              <Checkbox
+                id="deliveryAvailable"
+                checked={deliveryAvailable}
+                onCheckedChange={(checked) => setDeliveryAvailable(checked === true)}
+              />
+              <div className="flex items-center gap-2">
+                <Truck className="h-5 w-5 text-primary" />
+                <div>
+                  <Label htmlFor="deliveryAvailable" className="cursor-pointer font-medium">
+                    Delivery Available
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    I can deliver the car to the guest's location
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Pricing */}

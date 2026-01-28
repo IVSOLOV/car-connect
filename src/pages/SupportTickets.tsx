@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, forwardRef } from "react";
+import { useState, useEffect, useRef, forwardRef, ClipboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import {
@@ -12,6 +12,7 @@ import {
   Upload,
   X,
   Loader2,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +59,16 @@ interface AdminNote {
   ticket_id: string;
   notes: string | null;
   images: string[] | null;
+}
+
+interface TicketComment {
+  id: string;
+  ticket_id: string;
+  user_id: string;
+  is_admin: boolean;
+  message: string;
+  images: string[];
+  created_at: string;
 }
 
 // Helper component to parse and display ticket description with images
@@ -124,6 +135,8 @@ const TicketDescription = forwardRef<HTMLDivElement, { description: string }>(
 
 TicketDescription.displayName = "TicketDescription";
 
+const MAX_COMMENT_IMAGES = 3;
+
 const SupportTickets = () => {
   const navigate = useNavigate();
   const { user, role } = useAuth();
@@ -137,7 +150,14 @@ const SupportTickets = () => {
   const [adminImagesFromDb, setAdminImagesFromDb] = useState<Record<string, string[]>>({});
   const [uploadingImages, setUploadingImages] = useState<Record<string, boolean>>({});
   const [updatingTicket, setUpdatingTicket] = useState<string | null>(null);
+  const [comments, setComments] = useState<Record<string, TicketComment[]>>({});
+  const [newComment, setNewComment] = useState<Record<string, string>>({});
+  const [commentImages, setCommentImages] = useState<Record<string, string[]>>({});
+  const [uploadingCommentImages, setUploadingCommentImages] = useState<Record<string, boolean>>({});
+  const [submittingComment, setSubmittingComment] = useState<Record<string, boolean>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const commentFileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
 
   const isAdmin = role === "admin";
 
@@ -175,6 +195,21 @@ const SupportTickets = () => {
       setAdminImages(images);
       setAdminImagesFromDb(images);
 
+      // Fetch comments
+      const { data: commentsData } = await supabase
+        .from("support_ticket_comments")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      const commentsByTicket: Record<string, TicketComment[]> = {};
+      commentsData?.forEach((c: TicketComment) => {
+        if (!commentsByTicket[c.ticket_id]) {
+          commentsByTicket[c.ticket_id] = [];
+        }
+        commentsByTicket[c.ticket_id].push(c);
+      });
+      setComments(commentsByTicket);
+
       if (data && isAdmin) {
         // Fetch user info for each ticket
         const userIds = [...new Set(data.map(t => t.user_id))];
@@ -202,22 +237,34 @@ const SupportTickets = () => {
     }
   };
 
-  const handleImageUpload = async (ticketId: string, files: FileList) => {
+  const handleImageUpload = async (ticketId: string, files: FileList, isComment: boolean = false) => {
     if (!files.length) return;
     
-    setUploadingImages(prev => ({ ...prev, [ticketId]: true }));
+    const currentImages = isComment ? (commentImages[ticketId] || []) : (adminImages[ticketId] || []);
+    const maxImages = isComment ? MAX_COMMENT_IMAGES : 5;
+    
+    if (currentImages.length >= maxImages) {
+      toast.error(`Maximum ${maxImages} images allowed`);
+      return;
+    }
+    
+    const setUploading = isComment ? setUploadingCommentImages : setUploadingImages;
+    setUploading(prev => ({ ...prev, [ticketId]: true }));
     const uploadedUrls: string[] = [];
     
     try {
-      for (const file of Array.from(files)) {
+      const filesToProcess = Array.from(files).slice(0, maxImages - currentImages.length);
+      
+      for (const file of filesToProcess) {
         if (file.size > 5 * 1024 * 1024) {
           toast.error(`File ${file.name} is too large. Max 5MB.`);
           continue;
         }
         
-        const fileExt = file.name.split('.').pop();
-        const fileName = `admin-${ticketId}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `admin-responses/${fileName}`;
+        const fileExt = file.name.split('.').pop() || 'png';
+        const prefix = isComment ? 'comment' : 'admin';
+        const fileName = `${prefix}-${ticketId}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${prefix}-responses/${fileName}`;
         
         const { error: uploadError } = await supabase.storage
           .from('support-attachments')
@@ -237,47 +284,128 @@ const SupportTickets = () => {
       }
       
       if (uploadedUrls.length > 0) {
-        setAdminImages(prev => ({
-          ...prev,
-          [ticketId]: [...(prev[ticketId] || []), ...uploadedUrls]
-        }));
+        if (isComment) {
+          setCommentImages(prev => ({
+            ...prev,
+            [ticketId]: [...(prev[ticketId] || []), ...uploadedUrls]
+          }));
+        } else {
+          setAdminImages(prev => ({
+            ...prev,
+            [ticketId]: [...(prev[ticketId] || []), ...uploadedUrls]
+          }));
+        }
         toast.success(`${uploadedUrls.length} image(s) uploaded`);
       }
     } catch (error) {
       console.error("Error uploading images:", error);
       toast.error("Failed to upload images");
     } finally {
-      setUploadingImages(prev => ({ ...prev, [ticketId]: false }));
+      setUploading(prev => ({ ...prev, [ticketId]: false }));
     }
   };
 
-  const removeAdminImage = (ticketId: string, imageUrl: string) => {
-    setAdminImages(prev => ({
-      ...prev,
-      [ticketId]: (prev[ticketId] || []).filter(url => url !== imageUrl)
-    }));
+  const handlePaste = async (e: ClipboardEvent<HTMLTextAreaElement>, ticketId: string) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const currentImages = commentImages[ticketId] || [];
+    if (currentImages.length >= MAX_COMMENT_IMAGES) {
+      return; // Don't process more images if at max
+    }
+
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          await handleImageUpload(ticketId, dataTransfer.files, true);
+        }
+        break;
+      }
+    }
+  };
+
+  const removeImage = (ticketId: string, imageUrl: string, isComment: boolean = false) => {
+    if (isComment) {
+      setCommentImages(prev => ({
+        ...prev,
+        [ticketId]: (prev[ticketId] || []).filter(url => url !== imageUrl)
+      }));
+    } else {
+      setAdminImages(prev => ({
+        ...prev,
+        [ticketId]: (prev[ticketId] || []).filter(url => url !== imageUrl)
+      }));
+    }
+  };
+
+  const submitComment = async (ticketId: string) => {
+    const message = newComment[ticketId]?.trim();
+    const images = commentImages[ticketId] || [];
+    
+    if (!message && images.length === 0) {
+      toast.error("Please add a message or image");
+      return;
+    }
+
+    setSubmittingComment(prev => ({ ...prev, [ticketId]: true }));
+    
+    try {
+      const { error } = await supabase
+        .from("support_ticket_comments")
+        .insert({
+          ticket_id: ticketId,
+          user_id: user!.id,
+          is_admin: isAdmin,
+          message: message || "",
+          images: images,
+        });
+
+      if (error) throw error;
+
+      // Reset response_read_at if admin is commenting (so user gets notified)
+      if (isAdmin) {
+        await supabase
+          .from("support_tickets")
+          .update({ response_read_at: null })
+          .eq("id", ticketId);
+
+        // Send notification email to ticket owner
+        const ticket = tickets.find(t => t.id === ticketId);
+        if (ticket) {
+          sendNotificationEmail("ticket_response", ticket.user_id, {
+            ticketSubject: ticket.subject,
+            adminNotes: message || "Admin added images to your ticket.",
+          }).catch(err => console.error("Failed to send email notification:", err));
+        }
+      }
+
+      // Clear form
+      setNewComment(prev => ({ ...prev, [ticketId]: "" }));
+      setCommentImages(prev => ({ ...prev, [ticketId]: [] }));
+      
+      toast.success("Comment added");
+      fetchTickets();
+    } catch (error) {
+      console.error("Error submitting comment:", error);
+      toast.error("Failed to add comment");
+    } finally {
+      setSubmittingComment(prev => ({ ...prev, [ticketId]: false }));
+    }
   };
 
   const updateTicketStatus = async (ticketId: string, newStatus: string) => {
     setUpdatingTicket(ticketId);
     try {
-      const ticket = tickets.find(t => t.id === ticketId);
-      const currentNotes = adminNotes[ticketId] || null;
-      const previousNotes = adminNotesFromDb[ticketId] || null;
-      const currentImages = adminImages[ticketId] || [];
-      const previousImages = adminImagesFromDb[ticketId] || [];
-      const notesChanged = currentNotes !== previousNotes;
-      const imagesChanged = JSON.stringify(currentImages) !== JSON.stringify(previousImages);
-      const hasChanges = notesChanged || imagesChanged;
-      
-      // Update ticket status
-      const updateData: any = { 
-        status: newStatus,
-        response_read_at: hasChanges ? null : undefined, // Reset so user gets notified of new response
-      };
+      const updateData: any = { status: newStatus };
       
       if (newStatus === "resolved") {
         updateData.resolved_at = new Date().toISOString();
+      } else {
+        updateData.resolved_at = null;
       }
 
       const { error } = await supabase
@@ -287,47 +415,13 @@ const SupportTickets = () => {
 
       if (error) throw error;
 
-      // Update or insert admin notes and images in separate table
-      if (currentNotes || currentImages.length > 0) {
-        const { error: notesError } = await supabase
-          .from("support_ticket_admin_notes")
-          .upsert({
-            ticket_id: ticketId,
-            notes: currentNotes,
-            images: currentImages,
-          }, { onConflict: "ticket_id" });
-        
-        if (notesError) throw notesError;
-      }
-
-      // Send email notification to ticket owner if there's new admin notes or images
-      if (ticket && hasChanges) {
-        sendNotificationEmail("ticket_response", ticket.user_id, {
-          ticketSubject: ticket.subject,
-          adminNotes: currentNotes || "Admin attached images to your ticket.",
-        }).catch(err => console.error("Failed to send email notification:", err));
-      }
-
-      toast.success("Ticket updated successfully");
+      toast.success("Status updated");
       fetchTickets();
     } catch (error) {
       console.error("Error updating ticket:", error);
-      toast.error("Failed to update ticket");
+      toast.error("Failed to update status");
     } finally {
       setUpdatingTicket(null);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "open":
-        return <Badge className="bg-blue-500/20 text-blue-500 border-blue-500/30"><Clock className="h-3 w-3 mr-1" />Open</Badge>;
-      case "in_progress":
-        return <Badge className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30"><AlertCircle className="h-3 w-3 mr-1" />In Progress</Badge>;
-      case "resolved":
-        return <Badge className="bg-green-500/20 text-green-500 border-green-500/30"><CheckCircle className="h-3 w-3 mr-1" />Resolved</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
@@ -404,9 +498,10 @@ const SupportTickets = () => {
                 open={expandedTicket === ticket.id}
                 onOpenChange={async (open) => {
                   setExpandedTicket(open ? ticket.id : null);
-                  // Mark as read when user expands a ticket with admin notes
-                  const hasAdminNotes = adminNotes[ticket.id];
-                  if (open && !isAdmin && hasAdminNotes && !ticket.response_read_at) {
+                  // Mark as read when user expands a ticket with new responses
+                  const ticketComments = comments[ticket.id] || [];
+                  const hasAdminComments = ticketComments.some(c => c.is_admin);
+                  if (open && !isAdmin && hasAdminComments && !ticket.response_read_at) {
                     const { error } = await supabase
                       .from("support_tickets")
                       .update({ response_read_at: new Date().toISOString() })
@@ -427,10 +522,10 @@ const SupportTickets = () => {
                   <CollapsibleTrigger asChild>
                     <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                       <div className="flex items-start justify-between">
-                        <div className="space-y-1">
+                        <div className="space-y-1 flex-1 min-w-0">
                           <CardTitle className="text-lg flex items-center gap-2">
-                            {ticket.subject}
-                            <ChevronDown className={`h-4 w-4 transition-transform ${expandedTicket === ticket.id ? "rotate-180" : ""}`} />
+                            <span className="truncate">{ticket.subject}</span>
+                            <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${expandedTicket === ticket.id ? "rotate-180" : ""}`} />
                           </CardTitle>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             {isAdmin && <span className="font-medium">{ticket.user_name}</span>}
@@ -438,9 +533,60 @@ const SupportTickets = () => {
                             <span>{format(new Date(ticket.created_at), "MMM d, yyyy 'at' h:mm a")}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           {getPriorityBadge(ticket.priority)}
-                          {getStatusBadge(ticket.status)}
+                          {isAdmin ? (
+                            <Select
+                              value={ticket.status}
+                              onValueChange={(value) => {
+                                // Prevent collapsible from toggling
+                                updateTicketStatus(ticket.id, value);
+                              }}
+                              disabled={updatingTicket === ticket.id}
+                            >
+                              <SelectTrigger 
+                                className="w-[130px] h-8 text-xs"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent onClick={(e) => e.stopPropagation()}>
+                                <SelectItem value="open">
+                                  <span className="flex items-center gap-1.5">
+                                    <Clock className="h-3 w-3 text-blue-500" />
+                                    Open
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="in_progress">
+                                  <span className="flex items-center gap-1.5">
+                                    <AlertCircle className="h-3 w-3 text-yellow-500" />
+                                    In Progress
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="resolved">
+                                  <span className="flex items-center gap-1.5">
+                                    <CheckCircle className="h-3 w-3 text-green-500" />
+                                    Resolved
+                                  </span>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            // Non-admin users see the badge
+                            ticket.status === "open" ? (
+                              <Badge className="bg-blue-500/20 text-blue-500 border-blue-500/30">
+                                <Clock className="h-3 w-3 mr-1" />Open
+                              </Badge>
+                            ) : ticket.status === "in_progress" ? (
+                              <Badge className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30">
+                                <AlertCircle className="h-3 w-3 mr-1" />In Progress
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
+                                <CheckCircle className="h-3 w-3 mr-1" />Resolved
+                              </Badge>
+                            )
+                          )}
                         </div>
                       </div>
                     </CardHeader>
@@ -453,6 +599,7 @@ const SupportTickets = () => {
                         <TicketDescription description={ticket.description} />
                       </div>
 
+                      {/* Legacy admin notes display (for backward compatibility) */}
                       {(adminNotes[ticket.id] || (adminImages[ticket.id] && adminImages[ticket.id].length > 0)) && !isAdmin && (
                         <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
                           <Label className="text-primary">Admin Response</Label>
@@ -495,111 +642,151 @@ const SupportTickets = () => {
                         </div>
                       )}
 
-                      {isAdmin && (
-                        <div className="space-y-4 pt-4 border-t">
-                          <div className="space-y-2">
-                            <Label>Admin Notes</Label>
-                            <Textarea
-                              placeholder="Add notes or response..."
-                              value={adminNotes[ticket.id] || ""}
-                              onChange={(e) => setAdminNotes(prev => ({
-                                ...prev,
-                                [ticket.id]: e.target.value
-                              }))}
-                              rows={3}
-                            />
-                          </div>
-
-                          {/* Admin Image Upload */}
-                          <div className="space-y-2">
-                            <Label>Attach Images</Label>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="file"
-                                ref={(el) => { fileInputRefs.current[ticket.id] = el; }}
-                                className="hidden"
-                                accept="image/*"
-                                multiple
-                                onChange={(e) => {
-                                  if (e.target.files) {
-                                    handleImageUpload(ticket.id, e.target.files);
-                                    e.target.value = '';
-                                  }
-                                }}
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => fileInputRefs.current[ticket.id]?.click()}
-                                disabled={uploadingImages[ticket.id]}
-                              >
-                                {uploadingImages[ticket.id] ? (
-                                  <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Uploading...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Upload className="h-4 w-4 mr-2" />
-                                    Upload Images
-                                  </>
-                                )}
-                              </Button>
-                              <span className="text-xs text-muted-foreground">Max 5MB per image</span>
-                            </div>
-
-                            {/* Show uploaded images */}
-                            {adminImages[ticket.id] && adminImages[ticket.id].length > 0 && (
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                                {adminImages[ticket.id].map((url, index) => (
-                                  <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
-                                    <img
-                                      src={url}
-                                      alt={`Attachment ${index + 1}`}
-                                      className="w-full h-full object-cover"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => removeAdminImage(ticket.id, url)}
-                                      className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center gap-4">
-                            <div className="flex-1">
-                              <Label>Update Status</Label>
-                              <Select
-                                value={ticket.status}
-                                onValueChange={(value) => updateTicketStatus(ticket.id, value)}
-                                disabled={updatingTicket === ticket.id}
-                              >
-                                <SelectTrigger className="mt-1">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="open">Open</SelectItem>
-                                  <SelectItem value="in_progress">In Progress</SelectItem>
-                                  <SelectItem value="resolved">Resolved</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Button
-                              onClick={() => updateTicketStatus(ticket.id, ticket.status)}
-                              disabled={updatingTicket === ticket.id}
-                              className="mt-6"
+                      {/* Comments section */}
+                      {comments[ticket.id] && comments[ticket.id].length > 0 && (
+                        <div className="space-y-3 pt-4 border-t">
+                          <Label className="text-muted-foreground">Comments</Label>
+                          {comments[ticket.id].map((comment) => (
+                            <div 
+                              key={comment.id} 
+                              className={`p-3 rounded-lg space-y-2 ${
+                                comment.is_admin 
+                                  ? "bg-primary/5 border border-primary/20" 
+                                  : "bg-muted/50 border border-border"
+                              }`}
                             >
-                              {updatingTicket === ticket.id ? "Saving..." : "Save Response"}
-                            </Button>
-                          </div>
+                              <div className="flex items-center justify-between">
+                                <span className={`text-xs font-medium ${comment.is_admin ? "text-primary" : "text-muted-foreground"}`}>
+                                  {comment.is_admin ? "Admin" : "You"}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {format(new Date(comment.created_at), "MMM d, yyyy 'at' h:mm a")}
+                                </span>
+                              </div>
+                              {comment.message && (
+                                <p className="text-sm text-foreground whitespace-pre-wrap">{comment.message}</p>
+                              )}
+                              {comment.images && comment.images.length > 0 && (
+                                <div className="grid grid-cols-3 gap-2">
+                                  {comment.images.map((url, index) => (
+                                    <a
+                                      key={index}
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50"
+                                    >
+                                      <img
+                                        src={url}
+                                        alt={`Attachment ${index + 1}`}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).src = "/placeholder.svg";
+                                        }}
+                                      />
+                                    </a>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       )}
+
+                      {/* Add comment section - for both users and admins */}
+                      <div className="space-y-3 pt-4 border-t">
+                        <Label>Add Comment</Label>
+                        <Textarea
+                          ref={(el) => { textareaRefs.current[ticket.id] = el; }}
+                          placeholder="Type your message... (paste images with Ctrl+V)"
+                          value={newComment[ticket.id] || ""}
+                          onChange={(e) => setNewComment(prev => ({
+                            ...prev,
+                            [ticket.id]: e.target.value
+                          }))}
+                          onPaste={(e) => handlePaste(e, ticket.id)}
+                          rows={2}
+                          className="resize-none"
+                        />
+                        
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="file"
+                            ref={(el) => { commentFileInputRefs.current[ticket.id] = el; }}
+                            className="hidden"
+                            accept="image/*"
+                            multiple
+                            onChange={(e) => {
+                              if (e.target.files) {
+                                handleImageUpload(ticket.id, e.target.files, true);
+                                e.target.value = '';
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => commentFileInputRefs.current[ticket.id]?.click()}
+                            disabled={uploadingCommentImages[ticket.id] || (commentImages[ticket.id]?.length || 0) >= MAX_COMMENT_IMAGES}
+                          >
+                            {uploadingCommentImages[ticket.id] ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Upload
+                              </>
+                            )}
+                          </Button>
+                          <span className="text-xs text-muted-foreground">
+                            {commentImages[ticket.id]?.length || 0}/{MAX_COMMENT_IMAGES} images (max 5MB each)
+                          </span>
+                          <div className="flex-1" />
+                          <Button
+                            size="sm"
+                            onClick={() => submitComment(ticket.id)}
+                            disabled={submittingComment[ticket.id] || (!newComment[ticket.id]?.trim() && !commentImages[ticket.id]?.length)}
+                          >
+                            {submittingComment[ticket.id] ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-4 w-4 mr-2" />
+                                Send
+                              </>
+                            )}
+                          </Button>
+                        </div>
+
+                        {/* Show pending images */}
+                        {commentImages[ticket.id] && commentImages[ticket.id].length > 0 && (
+                          <div className="grid grid-cols-3 gap-2">
+                            {commentImages[ticket.id].map((url, index) => (
+                              <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
+                                <img
+                                  src={url}
+                                  alt={`Pending ${index + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(ticket.id, url, true)}
+                                  className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
                       {ticket.resolved_at && (
                         <p className="text-sm text-muted-foreground">

@@ -898,8 +898,7 @@ const EditListing = () => {
                 rows={4}
               />
               <p className="text-sm text-muted-foreground">
-                <span className="font-medium">Tip:</span> Include vehicle features (leather seats, sunroof, backup camera), 
-                performance details (fuel economy, engine power), mileage, and any rental terms or requirements.
+                <span className="font-medium">Tip:</span> A good description helps attract more renters. Include key features, condition, and any rental terms.
               </p>
             </div>
 

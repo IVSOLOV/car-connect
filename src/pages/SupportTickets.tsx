@@ -31,6 +31,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,8 +76,8 @@ interface TicketComment {
 }
 
 // Helper component to parse and display ticket description with images
-const TicketDescription = forwardRef<HTMLDivElement, { description: string }>(
-  ({ description }, ref) => {
+const TicketDescription = forwardRef<HTMLDivElement, { description: string; onImageClick?: (url: string) => void }>(
+  ({ description, onImageClick }, ref) => {
     // Check if description has attached images section
     const attachedImagesMatch = description.match(/---\s*\nAttached Images:\s*([\s\S]*?)$/);
     
@@ -103,12 +107,11 @@ const TicketDescription = forwardRef<HTMLDivElement, { description: string }>(
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {imageUrls.map((url, index) => (
-                <a
+                <button
                   key={index}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 hover:border-primary/50 transition-colors"
+                  type="button"
+                  onClick={() => onImageClick?.(url)}
+                  className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"
                 >
                   <img
                     src={url}
@@ -123,7 +126,7 @@ const TicketDescription = forwardRef<HTMLDivElement, { description: string }>(
                       Click to view
                     </span>
                   </div>
-                </a>
+                </button>
               ))}
             </div>
           </div>
@@ -155,6 +158,7 @@ const SupportTickets = () => {
   const [commentImages, setCommentImages] = useState<Record<string, string[]>>({});
   const [uploadingCommentImages, setUploadingCommentImages] = useState<Record<string, boolean>>({});
   const [submittingComment, setSubmittingComment] = useState<Record<string, boolean>>({});
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const commentFileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
@@ -600,7 +604,7 @@ const SupportTickets = () => {
                     <CardContent className="pt-0 space-y-4">
                       <div>
                         <Label className="text-muted-foreground">Description</Label>
-                        <TicketDescription description={ticket.description} />
+                        <TicketDescription description={ticket.description} onImageClick={setSelectedImage} />
                       </div>
 
                       {/* Legacy admin notes display (for backward compatibility) */}
@@ -618,12 +622,11 @@ const SupportTickets = () => {
                               </div>
                               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                 {adminImages[ticket.id].map((url, index) => (
-                                  <a
+                                  <button
                                     key={index}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 hover:border-primary/50 transition-colors"
+                                    type="button"
+                                    onClick={() => setSelectedImage(url)}
+                                    className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"
                                   >
                                     <img
                                       src={url}
@@ -638,7 +641,7 @@ const SupportTickets = () => {
                                         Click to view
                                       </span>
                                     </div>
-                                  </a>
+                                  </button>
                                 ))}
                               </div>
                             </div>
@@ -673,12 +676,11 @@ const SupportTickets = () => {
                               {comment.images && comment.images.length > 0 && (
                                 <div className="grid grid-cols-3 gap-2">
                                   {comment.images.map((url, index) => (
-                                    <a
+                                    <button
                                       key={index}
-                                      href={url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50"
+                                      type="button"
+                                      onClick={() => setSelectedImage(url)}
+                                      className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 cursor-pointer"
                                     >
                                       <img
                                         src={url}
@@ -688,7 +690,7 @@ const SupportTickets = () => {
                                           (e.target as HTMLImageElement).src = "/placeholder.svg";
                                         }}
                                       />
-                                    </a>
+                                    </button>
                                   ))}
                                 </div>
                               )}
@@ -777,7 +779,8 @@ const SupportTickets = () => {
                                 <img
                                   src={url}
                                   alt={`Pending ${index + 1}`}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover cursor-pointer"
+                                  onClick={() => setSelectedImage(url)}
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).src = "/placeholder.svg";
                                   }}
@@ -808,6 +811,19 @@ const SupportTickets = () => {
           </div>
         )}
       </main>
+
+      {/* Image Lightbox */}
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-4xl p-2 bg-background/95 backdrop-blur">
+          {selectedImage && (
+            <img
+              src={selectedImage}
+              alt="Full size"
+              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

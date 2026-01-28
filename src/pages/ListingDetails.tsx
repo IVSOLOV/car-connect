@@ -614,9 +614,6 @@ const ListingDetails = () => {
             {/* Details */}
             <div className="animate-slide-up" style={{ animationDelay: "100ms" }}>
               <div className="mb-4 sm:mb-6">
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                  <Badge variant="secondary" className="text-xs sm:text-sm">{listing.make}</Badge>
-                </div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground md:text-4xl">
                   {title}
                 </h1>

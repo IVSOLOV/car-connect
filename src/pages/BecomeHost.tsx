@@ -160,7 +160,7 @@ const BecomeHost = () => {
                   <span className="text-5xl font-bold text-gradient">{pricing.price}</span>
                 </div>
                 <p className="text-muted-foreground">{pricing.period}</p>
-                <p className="text-sm text-primary font-medium mt-2">Only $4.99 for early hosts!</p>
+                <p className="text-sm text-primary font-medium mt-2">NOW only $4.99 for early hosts!</p>
               </div>
               
               <ul className="space-y-3 mb-8">
@@ -279,7 +279,7 @@ const BecomeHost = () => {
               <span className="text-3xl font-bold text-gradient">$4.99</span>
               <span className="text-muted-foreground">/ car / month</span>
             </div>
-            <p className="text-sm text-primary font-medium">Only $4.99 for early hosts!</p>
+            <p className="text-sm text-primary font-medium">NOW only $4.99 for early hosts!</p>
           </div>
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <p className="text-sm text-muted-foreground">

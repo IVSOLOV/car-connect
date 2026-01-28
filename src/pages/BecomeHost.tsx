@@ -250,10 +250,10 @@ const BecomeHost = () => {
               <div className="divide-y divide-border">
                 {[
                   { feature: "Commission per rental", dirent: "0%", others: "15-30%" },
-                  { feature: "Monthly fee per car", dirent: "$4.99", others: "Free*" },
+                  { feature: "Monthly fee per car", dirent: "$4.99", others: "30-50% of every rental" },
                   { feature: "Direct owner contact", dirent: "Yes", others: "Limited" },
                   { feature: "Price control", dirent: "Full", others: "Platform sets" },
-                  { feature: "Keep your earnings", dirent: "100%", others: "70-85%" },
+                  { feature: "Keep your earnings", dirent: "100%", others: "50-70%" },
                 ].map((row, index) => (
                   <div key={index} className="grid grid-cols-3 gap-4 p-4">
                     <div className="text-muted-foreground">{row.feature}</div>
@@ -264,7 +264,7 @@ const BecomeHost = () => {
               </div>
             </div>
             <p className="text-sm text-muted-foreground text-center mt-4">
-              * "Free" platforms take 15-30% of every rental
+              * Other platforms take 30-50% of every rental
             </p>
           </div>
         </div>

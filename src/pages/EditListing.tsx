@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Upload, X, Loader2, Star, Truck } from "lucide-react";
+import { ArrowLeft, Upload, X, Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -826,22 +826,19 @@ const EditListing = () => {
             </div>
 
             {/* Delivery Available */}
-            <div className="flex items-center space-x-3 p-4 rounded-lg border border-border bg-secondary/30">
+            <div className="flex items-center space-x-3">
               <Checkbox
                 id="deliveryAvailable"
                 checked={deliveryAvailable}
                 onCheckedChange={(checked) => setDeliveryAvailable(checked === true)}
               />
-              <div className="flex items-center gap-2">
-                <Truck className="h-5 w-5 text-primary" />
-                <div>
-                  <Label htmlFor="deliveryAvailable" className="cursor-pointer font-medium">
-                    Delivery Available
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    I can deliver the car to the guest's location
-                  </p>
-                </div>
+              <div>
+                <Label htmlFor="deliveryAvailable" className="cursor-pointer font-medium">
+                  Delivery Available
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  I can deliver the car to the guest's location
+                </p>
               </div>
             </div>
 

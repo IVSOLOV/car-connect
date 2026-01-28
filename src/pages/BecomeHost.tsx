@@ -66,6 +66,7 @@ const BecomeHost = () => {
     price: "$4.99",
     period: "per car / month",
     features: [
+      "Keep 100% of your earnings",
       "No additional or hidden fees",
       "Direct messaging with renters",
       "Featured placement options",

@@ -24,6 +24,10 @@ import {
   MessageSquare,
   Facebook,
   Twitter,
+  Fuel,
+  Car,
+  Truck,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -667,6 +671,42 @@ const ListingDetails = () => {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Vehicle Details */}
+              <Separator className="my-6 sm:my-8" />
+              <div className="mb-6 sm:mb-8">
+                <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-bold text-foreground">Vehicle Details</h2>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <Car className="h-5 w-5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Vehicle Type</p>
+                      <p className="text-sm font-medium text-foreground capitalize">{listing.vehicle_type?.replace("_", " ") || "Car"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <Fuel className="h-5 w-5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Fuel Type</p>
+                      <p className="text-sm font-medium text-foreground capitalize">{listing.fuel_type || "Gas"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <FileText className="h-5 w-5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Title Status</p>
+                      <p className="text-sm font-medium text-foreground capitalize">{listing.title_status}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <Truck className="h-5 w-5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Delivery</p>
+                      <p className="text-sm font-medium text-foreground">{listing.delivery_available ? "Available" : "Not available"}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {listing.description && (

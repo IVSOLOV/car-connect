@@ -181,10 +181,13 @@ const handler = async (req: Request): Promise<Response> => {
         "Authorization": `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "DiRent <noreply@dirrental.com>",
+        from: "DiRent Notifications <noreply@dirrental.com>",
         to: [email],
         subject,
         html: htmlContent,
+        headers: {
+          "X-Entity-Ref-ID": `dirent-auth-${Date.now()}`,
+        },
       }),
     });
 

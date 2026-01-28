@@ -29,6 +29,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import type { Listing } from "@/types/listing";
@@ -77,6 +78,7 @@ const Dashboard = () => {
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedVehicleType, setSelectedVehicleType] = useState<VehicleType | "">("");
   const [selectedFuelType, setSelectedFuelType] = useState<string>("");
+  const [deliveryOnly, setDeliveryOnly] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
 
@@ -90,7 +92,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [listings, bookings, searchQuery, selectedMake, selectedState, selectedPriceRange, selectedYear, selectedVehicleType, selectedFuelType, startDate, endDate]);
+  }, [listings, bookings, searchQuery, selectedMake, selectedState, selectedPriceRange, selectedYear, selectedVehicleType, selectedFuelType, deliveryOnly, startDate, endDate]);
 
   const fetchListings = async () => {
     try {
@@ -185,6 +187,11 @@ const Dashboard = () => {
       results = results.filter((listing) => listing.fuel_type === selectedFuelType);
     }
 
+    // Delivery filter
+    if (deliveryOnly) {
+      results = results.filter((listing) => listing.delivery_available);
+    }
+
     // Price range filter
     if (selectedPriceRange) {
       results = results.filter((listing) => {
@@ -215,11 +222,12 @@ const Dashboard = () => {
     setSelectedYear("");
     setSelectedVehicleType("");
     setSelectedFuelType("");
+    setDeliveryOnly(false);
     setStartDate(undefined);
     setEndDate(undefined);
   };
 
-  const hasActiveFilters = searchQuery || selectedMake || selectedState || selectedPriceRange || selectedYear || selectedVehicleType || selectedFuelType || startDate || endDate;
+  const hasActiveFilters = searchQuery || selectedMake || selectedState || selectedPriceRange || selectedYear || selectedVehicleType || selectedFuelType || deliveryOnly || startDate || endDate;
 
   const handleMakeChange = (value: string) => setSelectedMake(value === "all" ? "" : value);
   const handleStateChange = (value: string) => setSelectedState(value === "all" ? "" : value);
@@ -262,6 +270,18 @@ const Dashboard = () => {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Delivery Filter */}
+      <div className="flex items-center space-x-3">
+        <Checkbox
+          id="deliveryOnly"
+          checked={deliveryOnly}
+          onCheckedChange={(checked) => setDeliveryOnly(checked === true)}
+        />
+        <Label htmlFor="deliveryOnly" className="cursor-pointer">
+          Delivery available
+        </Label>
       </div>
 
       {/* Date Range Filter */}

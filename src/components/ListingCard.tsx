@@ -1,7 +1,6 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { MapPin, DollarSign, Truck } from "lucide-react";
+import { MapPin, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import type { Listing } from "@/types/listing";
 
 interface ListingCardProps {
@@ -42,12 +41,6 @@ const ListingCard = ({ listing, index = 0, startDate, endDate }: ListingCardProp
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-          {listing.delivery_available && (
-            <Badge className="absolute right-3 top-3 bg-primary/90 text-primary-foreground backdrop-blur-sm flex items-center gap-1">
-              <Truck className="h-3 w-3" />
-              Delivery
-            </Badge>
-          )}
         </div>
 
         <CardContent className="p-5">

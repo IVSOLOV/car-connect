@@ -771,18 +771,21 @@ const SupportTickets = () => {
 
                         {/* Show pending images */}
                         {commentImages[ticket.id] && commentImages[ticket.id].length > 0 && (
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             {commentImages[ticket.id].map((url, index) => (
-                              <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
+                              <div key={index} className="relative group w-16 h-16 rounded-lg overflow-hidden border border-border bg-muted">
                                 <img
                                   src={url}
                                   alt={`Pending ${index + 1}`}
                                   className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                                  }}
                                 />
                                 <button
                                   type="button"
                                   onClick={() => removeImage(ticket.id, url, true)}
-                                  className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="absolute top-0.5 right-0.5 p-0.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   <X className="h-3 w-3" />
                                 </button>

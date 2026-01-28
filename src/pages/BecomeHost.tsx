@@ -66,7 +66,7 @@ const BecomeHost = () => {
     price: "$4.99",
     period: "per car / month",
     features: [
-      "Unlimited photos per listing",
+      "Up to 10 photos per listing",
       "Direct messaging with renters",
       "Listing analytics",
       "Featured placement options",

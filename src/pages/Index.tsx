@@ -157,7 +157,10 @@ const Index = () => {
               <p className="mt-2 text-muted-foreground">Owner Contact</p>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
-              <p className="text-4xl font-bold text-gradient">$4.99</p>
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xl text-muted-foreground line-through">$14.99</span>
+                <p className="text-4xl font-bold text-gradient">$4.99</p>
+              </div>
               <p className="mt-2 text-muted-foreground">Per Car / Month</p>
               <p className="mt-1 text-sm text-primary font-medium">1 Month Free Trial</p>
             </div>

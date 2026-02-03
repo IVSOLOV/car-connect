@@ -13,7 +13,32 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const emailSchema = z.string().email("Please enter a valid email address");
-const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
+
+// Common weak passwords and patterns to block
+const weakPatterns = [
+  /^12345/,
+  /^123456/,
+  /^password/i,
+  /^qwerty/i,
+  /^abc123/i,
+  /^111111/,
+  /^000000/,
+  /^letmein/i,
+  /^welcome/i,
+  /^admin/i,
+  /^(.)\1{5,}/, // Same character repeated 6+ times
+];
+
+const passwordSchema = z.string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~]/, "Password must contain at least one special character")
+  .refine((password) => !weakPatterns.some(pattern => pattern.test(password)), {
+    message: "Password is too common or weak. Please choose a stronger password.",
+  });
+
 const nameSchema = z.string().min(2, "Must be at least 2 characters");
 const phoneSchema = z.string().regex(/^\(\d{3}\) \d{3}-\d{4}$/, "Please enter a valid US phone number");
 
@@ -545,6 +570,11 @@ const Auth = () => {
                 {errors.newPassword && (
                   <p className="text-sm text-destructive">{errors.newPassword}</p>
                 )}
+                {!errors.newPassword && (
+                  <p className="text-xs text-muted-foreground">
+                    Min 8 characters with uppercase, lowercase, number & special character
+                  </p>
+                )}
               </div>
               
               <div className="space-y-2">
@@ -838,6 +868,11 @@ const Auth = () => {
                   {errors.password && (
                     <p className="text-sm text-destructive">{errors.password}</p>
                   )}
+                  {mode === "signup" && !errors.password && (
+                    <p className="text-xs text-muted-foreground">
+                      Min 8 characters with uppercase, lowercase, number & special character
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -867,10 +902,10 @@ const Auth = () => {
                     <p className="text-sm text-destructive">{errors.signupConfirmPassword}</p>
                   )}
                   {signupConfirmPassword && password && signupConfirmPassword !== password && !errors.signupConfirmPassword && (
-                    <p className="text-sm text-amber-500">Passwords do not match</p>
+                    <p className="text-sm text-amber-600 dark:text-amber-400">Passwords do not match</p>
                   )}
                   {signupConfirmPassword && password && signupConfirmPassword === password && (
-                    <p className="text-sm text-green-500">Passwords match</p>
+                    <p className="text-sm text-emerald-600 dark:text-emerald-400">Passwords match</p>
                   )}
                 </div>
               )}

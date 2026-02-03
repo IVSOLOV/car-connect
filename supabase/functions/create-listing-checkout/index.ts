@@ -83,8 +83,8 @@ serve(async (req) => {
         trial_period_days: 30,
         description: "30-day free trial. You will be charged $4.99/month per listing after the trial ends.",
       },
-      success_url: `${req.headers.get("origin")}/listing-success`,
-      cancel_url: `${req.headers.get("origin")}/create-listing?payment=canceled`,
+      success_url: `${req.headers.get("origin") || "https://directrental.lovable.app"}/listing-success`,
+      cancel_url: `${req.headers.get("origin") || "https://directrental.lovable.app"}/create-listing?payment=canceled`,
       custom_text: {
         submit: {
           message: "Start your 30-day free trial. You will be charged $4.99/month per listing after the trial period.",

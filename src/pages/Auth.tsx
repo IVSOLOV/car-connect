@@ -230,14 +230,22 @@ const Auth = () => {
         return;
       }
 
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
-      });
+      // Use our custom DiRent-branded email via Resend instead of Supabase's default
+      const { data: emailResult, error: emailError } = await supabase.functions.invoke(
+        'send-auth-email',
+        {
+          body: {
+            type: 'recovery',
+            email: email.toLowerCase(),
+            redirect_to: `${window.location.origin}/auth?reset=true`,
+          },
+        }
+      );
 
-      if (error) {
+      if (emailError || emailResult?.error) {
         toast({
           title: "Error",
-          description: error.message,
+          description: emailResult?.error || emailError?.message || "Failed to send reset email",
           variant: "destructive",
         });
       } else {

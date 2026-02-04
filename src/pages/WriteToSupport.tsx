@@ -72,26 +72,24 @@ const WriteToSupport = () => {
     if (images.length === 0) return [];
     
     setUploadingImages(true);
-    const uploadedUrls: string[] = [];
+    const uploadedPaths: string[] = [];
 
     try {
       for (const { file } of images) {
         const fileExt = file.name.split(".").pop();
-        const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        // Store the file path (not public URL) for signed URL access
+        const filePath = `${user!.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from("support-attachments")
-          .upload(fileName, file);
+          .upload(filePath, file);
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from("support-attachments")
-          .getPublicUrl(fileName);
-
-        uploadedUrls.push(publicUrl);
+        // Store the path, not the public URL (bucket is now private)
+        uploadedPaths.push(filePath);
       }
-      return uploadedUrls;
+      return uploadedPaths;
     } catch (error) {
       console.error("Error uploading images:", error);
       throw error;

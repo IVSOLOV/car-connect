@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, forwardRef, ClipboardEvent } from "react";
+import { useState, useEffect, useRef, forwardRef, ClipboardEvent, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import {
@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
+import SupportAttachmentImage from "@/components/SupportAttachmentImage";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserTicketResponses } from "@/hooks/useUserTicketResponses";
@@ -76,7 +77,7 @@ interface TicketComment {
 }
 
 // Helper component to parse and display ticket description with images
-const TicketDescription = forwardRef<HTMLDivElement, { description: string; onImageClick?: (url: string) => void }>(
+const TicketDescription = forwardRef<HTMLDivElement, { description: string; onImageClick?: (signedUrl: string) => void }>(
   ({ description, onImageClick }, ref) => {
     // Check if description has attached images section
     const attachedImagesMatch = description.match(/---\s*\nAttached Images:\s*([\s\S]*?)$/);
@@ -88,45 +89,31 @@ const TicketDescription = forwardRef<HTMLDivElement, { description: string; onIm
     // Extract the main description (before the images section)
     const mainDescription = description.replace(/---\s*\nAttached Images:[\s\S]*$/, "").trim();
     
-    // Extract image URLs
+    // Extract image paths/URLs
     const imagesSection = attachedImagesMatch[1];
-    const imageUrls = imagesSection
+    const imagePaths = imagesSection
       .split("\n")
       .map(line => line.replace(/^\d+\.\s*/, "").trim())
-      .filter(url => url.startsWith("http"));
+      .filter(path => path.length > 0);
     
     return (
       <div ref={ref} className="mt-1 space-y-4">
         <p className="text-foreground whitespace-pre-wrap">{mainDescription}</p>
         
-        {imageUrls.length > 0 && (
+        {imagePaths.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <ImageIcon className="h-4 w-4" />
-              <span>Attached Images ({imageUrls.length})</span>
+              <span>Attached Images ({imagePaths.length})</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {imageUrls.map((url, index) => (
-                <button
+              {imagePaths.map((path, index) => (
+                <TicketImageThumbnail
                   key={index}
-                  type="button"
-                  onClick={() => onImageClick?.(url)}
-                  className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"
-                >
-                  <img
-                    src={url}
-                    alt={`Attachment ${index + 1}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/placeholder.svg";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">
-                      Click to view
-                    </span>
-                  </div>
-                </button>
+                  path={path}
+                  alt={`Attachment ${index + 1}`}
+                  onImageClick={onImageClick}
+                />
               ))}
             </div>
           </div>
@@ -137,6 +124,43 @@ const TicketDescription = forwardRef<HTMLDivElement, { description: string; onIm
 );
 
 TicketDescription.displayName = "TicketDescription";
+
+// Helper component for ticket image thumbnails with signed URL support
+const TicketImageThumbnail = ({ 
+  path, 
+  alt, 
+  onImageClick 
+}: { 
+  path: string; 
+  alt: string; 
+  onImageClick?: (signedUrl: string) => void;
+}) => {
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  
+  const handleSignedUrlReady = useCallback((url: string) => {
+    setSignedUrl(url);
+  }, []);
+  
+  return (
+    <button
+      type="button"
+      onClick={() => signedUrl && onImageClick?.(signedUrl)}
+      className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"
+    >
+      <SupportAttachmentImage
+        path={path}
+        alt={alt}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+        onSignedUrlReady={handleSignedUrlReady}
+      />
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+        <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">
+          Click to view
+        </span>
+      </div>
+    </button>
+  );
+};
 
 const MAX_COMMENT_IMAGES = 3;
 
@@ -281,11 +305,8 @@ const SupportTickets = () => {
           continue;
         }
         
-        const { data: urlData } = supabase.storage
-          .from('support-attachments')
-          .getPublicUrl(filePath);
-        
-        uploadedUrls.push(urlData.publicUrl);
+        // Store the path, not the public URL (bucket is now private)
+        uploadedUrls.push(filePath);
       }
       
       if (uploadedUrls.length > 0) {
@@ -621,27 +642,13 @@ const SupportTickets = () => {
                                 <span>Attached Images ({adminImages[ticket.id].length})</span>
                               </div>
                               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                {adminImages[ticket.id].map((url, index) => (
-                                  <button
+                                {adminImages[ticket.id].map((path, index) => (
+                                  <TicketImageThumbnail
                                     key={index}
-                                    type="button"
-                                    onClick={() => setSelectedImage(url)}
-                                    className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"
-                                  >
-                                    <img
-                                      src={url}
-                                      alt={`Admin attachment ${index + 1}`}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                      onError={(e) => {
-                                        (e.target as HTMLImageElement).src = "/placeholder.svg";
-                                      }}
-                                    />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                      <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">
-                                        Click to view
-                                      </span>
-                                    </div>
-                                  </button>
+                                    path={path}
+                                    alt={`Admin attachment ${index + 1}`}
+                                    onImageClick={setSelectedImage}
+                                  />
                                 ))}
                               </div>
                             </div>
@@ -675,22 +682,13 @@ const SupportTickets = () => {
                               )}
                               {comment.images && comment.images.length > 0 && (
                                 <div className="grid grid-cols-3 gap-2">
-                                  {comment.images.map((url, index) => (
-                                    <button
+                                  {comment.images.map((path, index) => (
+                                    <TicketImageThumbnail
                                       key={index}
-                                      type="button"
-                                      onClick={() => setSelectedImage(url)}
-                                      className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 cursor-pointer"
-                                    >
-                                      <img
-                                        src={url}
-                                        alt={`Attachment ${index + 1}`}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                        onError={(e) => {
-                                          (e.target as HTMLImageElement).src = "/placeholder.svg";
-                                        }}
-                                      />
-                                    </button>
+                                      path={path}
+                                      alt={`Attachment ${index + 1}`}
+                                      onImageClick={setSelectedImage}
+                                    />
                                   ))}
                                 </div>
                               )}
@@ -774,20 +772,20 @@ const SupportTickets = () => {
                         {/* Show pending images */}
                         {commentImages[ticket.id] && commentImages[ticket.id].length > 0 && (
                           <div className="flex gap-2 flex-wrap">
-                            {commentImages[ticket.id].map((url, index) => (
+                            {commentImages[ticket.id].map((path, index) => (
                               <div key={index} className="relative group w-16 h-16 rounded-lg overflow-hidden border border-border bg-muted">
-                                <img
-                                  src={url}
+                                <SupportAttachmentImage
+                                  path={path}
                                   alt={`Pending ${index + 1}`}
                                   className="w-full h-full object-cover cursor-pointer"
-                                  onClick={() => setSelectedImage(url)}
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                                  onSignedUrlReady={(signedUrl) => {
+                                    // Store for lightbox click
                                   }}
+                                  onClick={() => {}}
                                 />
                                 <button
                                   type="button"
-                                  onClick={() => removeImage(ticket.id, url, true)}
+                                  onClick={() => removeImage(ticket.id, path, true)}
                                   className="absolute top-0.5 right-0.5 p-0.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   <X className="h-3 w-3" />

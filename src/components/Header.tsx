@@ -24,21 +24,13 @@ const Header = () => {
   const { openCount } = useOpenTickets();
   const { responseCount } = useUserTicketResponses();
 
-  // Detect iOS devices where env(safe-area-inset-top) may return 0 in Capacitor WebView
-  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
-  // On iOS (Capacitor app), use max() to ensure at least 3.5rem padding even if env() returns 0
-  const safeAreaStyle = isIOS 
-    ? { paddingTop: 'max(env(safe-area-inset-top, 0px), 3rem)' } 
-    : undefined;
-
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/95 backdrop-blur-xl safe-top" style={safeAreaStyle}>
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/95 backdrop-blur-xl safe-top">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center">

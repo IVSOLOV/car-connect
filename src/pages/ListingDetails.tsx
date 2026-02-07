@@ -234,6 +234,7 @@ const ListingDetails = () => {
   const toggleSaveListing = async () => {
     if (!user || !id) {
       toast.error("Please login to save listings");
+      navigate("/auth");
       return;
     }
 

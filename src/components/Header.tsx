@@ -24,13 +24,18 @@ const Header = () => {
   const { openCount } = useOpenTickets();
   const { responseCount } = useUserTicketResponses();
 
+  // Detect if running in Capacitor or standalone PWA mode
+  const isNativeApp = typeof (window as any).Capacitor !== 'undefined' || 
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true;
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/95 backdrop-blur-xl safe-top">
+    <header className={`fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/95 backdrop-blur-xl safe-top ${isNativeApp ? 'pt-11' : ''}`}>
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center">

@@ -80,11 +80,21 @@
 
   /* Safe area padding for notched devices */
   .safe-top {
-    padding-top: env(safe-area-inset-top);
+    padding-top: constant(safe-area-inset-top); /* iOS 11.0-11.2 */
+    padding-top: env(safe-area-inset-top, 0px); /* iOS 11.2+ */
   }
 
   .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: constant(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Standalone PWA / Capacitor fallback for safe areas */
+  @media (display-mode: standalone) {
+    .safe-top {
+      padding-top: constant(safe-area-inset-top);
+      padding-top: env(safe-area-inset-top, 2.75rem);
+    }
   }
 
   /* Better touch targets on mobile */

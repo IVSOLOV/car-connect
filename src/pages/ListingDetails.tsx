@@ -498,7 +498,7 @@ const ListingDetails = () => {
                     </PopoverTrigger>
                     <PopoverContent className="w-48 p-2" align="end">
                       <div className="flex flex-col gap-1">
-                        {typeof navigator.share !== 'undefined' && (
+                        {typeof navigator !== 'undefined' && 'share' in navigator && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -523,9 +523,25 @@ const ListingDetails = () => {
                           variant="ghost"
                           size="sm"
                           className="justify-start"
-                          onClick={() => {
-                            navigator.clipboard.writeText(window.location.href);
-                            toast.success("Link copied to clipboard!");
+                          onClick={async () => {
+                            try {
+                              if (navigator.clipboard && navigator.clipboard.writeText) {
+                                await navigator.clipboard.writeText(window.location.href);
+                              } else {
+                                // Fallback for Capacitor/older WebViews
+                                const textArea = document.createElement("textarea");
+                                textArea.value = window.location.href;
+                                textArea.style.position = "fixed";
+                                textArea.style.left = "-9999px";
+                                document.body.appendChild(textArea);
+                                textArea.select();
+                                document.execCommand("copy");
+                                document.body.removeChild(textArea);
+                              }
+                              toast.success("Link copied to clipboard!");
+                            } catch (err) {
+                              toast.error("Failed to copy link");
+                            }
                           }}
                         >
                           <Copy className="mr-2 h-4 w-4" />
@@ -536,7 +552,7 @@ const ListingDetails = () => {
                           size="sm"
                           className="justify-start"
                           onClick={() => {
-                            window.open(`sms:?body=Check out this ${encodeURIComponent(title)} for rent! ${encodeURIComponent(window.location.href)}`, '_blank');
+                            window.location.href = `sms:&body=Check out this ${encodeURIComponent(title)} for rent! ${encodeURIComponent(window.location.href)}`;
                           }}
                         >
                           <MessageSquare className="mr-2 h-4 w-4" />
@@ -547,7 +563,7 @@ const ListingDetails = () => {
                           size="sm"
                           className="justify-start"
                           onClick={() => {
-                            window.open(`mailto:?subject=${encodeURIComponent(`Check out this ${title}`)}&body=${encodeURIComponent(`I found this car rental you might like:\n\n${title}\n${window.location.href}`)}`, '_blank');
+                            window.location.href = `mailto:?subject=${encodeURIComponent(`Check out this ${title}`)}&body=${encodeURIComponent(`I found this car rental you might like:\n\n${title}\n${window.location.href}`)}`;
                           }}
                         >
                           <Mail className="mr-2 h-4 w-4" />
@@ -558,7 +574,7 @@ const ListingDetails = () => {
                           size="sm"
                           className="justify-start"
                           onClick={() => {
-                            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this ${title} for rent! ${window.location.href}`)}`, '_blank');
+                            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this ${title} for rent! ${window.location.href}`)}`);
                           }}
                         >
                           <MessageCircle className="mr-2 h-4 w-4" />
@@ -569,7 +585,7 @@ const ListingDetails = () => {
                           size="sm"
                           className="justify-start"
                           onClick={() => {
-                            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank', 'width=600,height=400');
+                            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`);
                           }}
                         >
                           <Facebook className="mr-2 h-4 w-4" />
@@ -580,7 +596,7 @@ const ListingDetails = () => {
                           size="sm"
                           className="justify-start"
                           onClick={() => {
-                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this ${title} for rent!`)}&url=${encodeURIComponent(window.location.href)}`, '_blank', 'width=600,height=400');
+                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this ${title} for rent!`)}&url=${encodeURIComponent(window.location.href)}`);
                           }}
                         >
                           <Twitter className="mr-2 h-4 w-4" />

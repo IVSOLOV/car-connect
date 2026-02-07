@@ -623,44 +623,44 @@ const ListingDetails = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:gap-4 rounded-xl bg-secondary/50 p-4 sm:p-5 sm:grid-cols-2 md:grid-cols-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 rounded-xl bg-secondary/50 p-3 sm:p-5">
                 <div className="text-center">
-                  <DollarSign className="mx-auto mb-1.5 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                  <p className="text-xs sm:text-sm text-muted-foreground">Daily Rate</p>
-                  <div className="flex items-center justify-center gap-2">
+                  <DollarSign className="mx-auto mb-1 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <p className="text-[10px] sm:text-sm text-muted-foreground">Daily Rate</p>
+                  <div className="flex flex-col items-center">
                     {listing.original_daily_price && listing.original_daily_price > listing.daily_price && (
-                      <span className="text-sm text-muted-foreground line-through">
+                      <span className="text-[10px] sm:text-sm text-muted-foreground line-through">
                         {formatPrice(listing.original_daily_price)}
                       </span>
                     )}
-                    <p className="text-sm sm:text-base font-semibold text-foreground">{formatPrice(listing.daily_price)}</p>
+                    <p className="text-xs sm:text-base font-semibold text-foreground">{formatPrice(listing.daily_price)}</p>
                   </div>
                 </div>
                 {listing.weekly_price && (
-                  <div className="text-center col-span-2 md:col-span-1">
-                    <DollarSign className="mx-auto mb-1.5 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                    <p className="text-xs sm:text-sm text-muted-foreground">Weekly Rate</p>
-                    <div className="flex items-center justify-center gap-2">
+                  <div className="text-center">
+                    <DollarSign className="mx-auto mb-1 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <p className="text-[10px] sm:text-sm text-muted-foreground">Weekly Rate</p>
+                    <div className="flex flex-col items-center">
                       {listing.original_weekly_price && listing.original_weekly_price > listing.weekly_price && (
-                        <span className="text-sm text-muted-foreground line-through">
+                        <span className="text-[10px] sm:text-sm text-muted-foreground line-through">
                           {formatPrice(listing.original_weekly_price)}
                         </span>
                       )}
-                      <p className="text-sm sm:text-base font-semibold text-foreground">{formatPrice(listing.weekly_price)}</p>
+                      <p className="text-xs sm:text-base font-semibold text-foreground">{formatPrice(listing.weekly_price)}</p>
                     </div>
                   </div>
                 )}
                 {listing.monthly_price && (
-                  <div className="text-center col-span-2 md:col-span-1">
-                    <DollarSign className="mx-auto mb-1.5 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                    <p className="text-xs sm:text-sm text-muted-foreground">Monthly Rate</p>
-                    <div className="flex items-center justify-center gap-2">
+                  <div className="text-center">
+                    <DollarSign className="mx-auto mb-1 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <p className="text-[10px] sm:text-sm text-muted-foreground">Monthly Rate</p>
+                    <div className="flex flex-col items-center">
                       {listing.original_monthly_price && listing.original_monthly_price > listing.monthly_price && (
-                        <span className="text-sm text-muted-foreground line-through">
+                        <span className="text-[10px] sm:text-sm text-muted-foreground line-through">
                           {formatPrice(listing.original_monthly_price)}
                         </span>
                       )}
-                      <p className="text-sm sm:text-base font-semibold text-foreground">{formatPrice(listing.monthly_price)}</p>
+                      <p className="text-xs sm:text-base font-semibold text-foreground">{formatPrice(listing.monthly_price)}</p>
                     </div>
                   </div>
                 )}

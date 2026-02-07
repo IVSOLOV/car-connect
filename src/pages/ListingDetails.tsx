@@ -736,33 +736,39 @@ const ListingDetails = () => {
             <div className="space-y-4 sm:space-y-6">
               {/* Price Card */}
               <div className="rounded-xl sm:rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-card">
-                <p className="text-xs sm:text-sm text-muted-foreground">Daily Rate</p>
-                <div className="flex items-center gap-2">
-                  {listing.original_daily_price && listing.original_daily_price > listing.daily_price && (
-                    <span className="text-lg sm:text-xl text-muted-foreground line-through">
-                      {formatPrice(listing.original_daily_price)}
-                    </span>
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <div className="text-center">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Daily</p>
+                    {listing.original_daily_price && listing.original_daily_price > listing.daily_price && (
+                      <p className="text-[10px] sm:text-xs text-muted-foreground line-through">
+                        {formatPrice(listing.original_daily_price)}
+                      </p>
+                    )}
+                    <p className="text-base sm:text-xl font-bold text-gradient">{formatPrice(listing.daily_price)}</p>
+                  </div>
+                  {listing.weekly_price && (
+                    <div className="text-center border-x border-border">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Weekly</p>
+                      {listing.original_weekly_price && listing.original_weekly_price > listing.weekly_price && (
+                        <p className="text-[10px] sm:text-xs text-muted-foreground line-through">
+                          {formatPrice(listing.original_weekly_price)}
+                        </p>
+                      )}
+                      <p className="text-base sm:text-xl font-bold text-gradient">{formatPrice(listing.weekly_price)}</p>
+                    </div>
                   )}
-                  <p className="text-2xl sm:text-3xl font-bold text-gradient">{formatPrice(listing.daily_price)}<span className="text-sm sm:text-lg font-normal text-muted-foreground">/day</span></p>
+                  {listing.monthly_price && (
+                    <div className="text-center">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Monthly</p>
+                      {listing.original_monthly_price && listing.original_monthly_price > listing.monthly_price && (
+                        <p className="text-[10px] sm:text-xs text-muted-foreground line-through">
+                          {formatPrice(listing.original_monthly_price)}
+                        </p>
+                      )}
+                      <p className="text-base sm:text-xl font-bold text-gradient">{formatPrice(listing.monthly_price)}</p>
+                    </div>
+                  )}
                 </div>
-                
-                {listing.weekly_price && (
-                  <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground">
-                    {listing.original_weekly_price && listing.original_weekly_price > listing.weekly_price && (
-                      <span className="line-through mr-2">{formatPrice(listing.original_weekly_price)}</span>
-                    )}
-                    {formatPrice(listing.weekly_price)}/week
-                  </p>
-                )}
-                
-                {listing.monthly_price && (
-                  <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground">
-                    {listing.original_monthly_price && listing.original_monthly_price > listing.monthly_price && (
-                      <span className="line-through mr-2">{formatPrice(listing.original_monthly_price)}</span>
-                    )}
-                    {formatPrice(listing.monthly_price)}/month
-                  </p>
-                )}
 
                 <Separator className="my-4 sm:my-5" />
 

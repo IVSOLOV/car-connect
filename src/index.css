@@ -89,11 +89,11 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  /* Standalone PWA / Capacitor fallback for safe areas */
-  @media (display-mode: standalone) {
+  /* Fallback for Capacitor/touch devices where env() may return 0 */
+  @media (hover: none) and (pointer: coarse) {
     .safe-top {
-      padding-top: constant(safe-area-inset-top);
-      padding-top: env(safe-area-inset-top, 2.75rem);
+      padding-top: max(constant(safe-area-inset-top), 3.75rem);
+      padding-top: max(env(safe-area-inset-top, 0px), 3.75rem);
     }
   }
 

@@ -82,12 +82,29 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Listen for PASSWORD_RECOVERY auth event to reliably detect reset flow
   useEffect(() => {
-    // Check URL params for verified success
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setMode("reset-password");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Check URL params for verified success and reset flow
     const urlParams = new URLSearchParams(window.location.search);
     const verified = urlParams.get('verified');
+    const resetParam = urlParams.get('reset');
     
-    // Check if this is a password reset flow
+    // Check if this is a password reset flow via query param (most reliable for redirects)
+    if (resetParam === 'true') {
+      setMode("reset-password");
+      return; // Don't redirect on recovery flow
+    }
+    
+    // Also check hash params as fallback
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
     const accessToken = hashParams.get('access_token');

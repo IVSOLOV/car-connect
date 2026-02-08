@@ -34,7 +34,7 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center">
-            <img src={logo} alt="DiRent" className="h-16" />
+            <img src={logo} alt="DiRent" className="h-16 mix-blend-lighten" />
           </Link>
 
           <nav className="hidden items-center gap-2 md:flex rounded-full border border-border bg-card/80 p-1">

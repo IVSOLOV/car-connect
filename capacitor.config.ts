@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'directrental',
   webDir: 'dist',
   server: {
-    url: 'https://directrental.lovable.app?forceHideBadge=true&v=20260208_1',
+    url: 'https://directrental.lovable.app?forceHideBadge=true&v=20260208_2',
     cleartext: true
   },
   plugins: {

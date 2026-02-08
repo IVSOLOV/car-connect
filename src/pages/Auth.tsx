@@ -540,7 +540,9 @@ const Auth = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <img src={logo} alt="DiRent" className="h-20" />
+            <div className="bg-background/95 rounded-md inline-flex">
+              <img src={logo} alt="DiRent" className="h-20 mix-blend-screen" />
+            </div>
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">
             {getHeading()}

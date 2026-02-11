@@ -77,6 +77,7 @@ const Auth = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isRecoveryRef = useRef(false);
 
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -84,8 +85,22 @@ const Auth = () => {
 
   // Listen for PASSWORD_RECOVERY auth event to reliably detect reset flow
   useEffect(() => {
+    // Check URL params immediately and synchronously set the ref
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reset') === 'true') {
+      isRecoveryRef.current = true;
+      setMode("reset-password");
+    }
+
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    if (hashParams.get('type') === 'recovery') {
+      isRecoveryRef.current = true;
+      setMode("reset-password");
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
+        isRecoveryRef.current = true;
         setMode("reset-password");
       }
     });
@@ -93,36 +108,21 @@ const Auth = () => {
   }, []);
 
   useEffect(() => {
-    // Check URL params for verified success and reset flow
+    // If recovery ref is set, never redirect away
+    if (isRecoveryRef.current) {
+      return;
+    }
+
+    // Check URL params for verified success
     const urlParams = new URLSearchParams(window.location.search);
     const verified = urlParams.get('verified');
-    const resetParam = urlParams.get('reset');
-    
-    // Check if this is a password reset flow via query param (most reliable for redirects)
-    if (resetParam === 'true') {
-      setMode("reset-password");
-      return; // Don't redirect on recovery flow
-    }
-    
-    // Also check hash params as fallback
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get('type');
-    const accessToken = hashParams.get('access_token');
-    
-    if (type === 'recovery' && accessToken) {
-      setMode("reset-password");
-      return; // Don't redirect on recovery flow
-    }
     
     // If user just verified their email and is now logged in
     if (verified === 'true' && user) {
-      // Check if user was already verified before this click (email_confirmed_at was set before the link was clicked)
-      // Since verification just happened, we show success and redirect
       toast({
         title: "Email verified! ✓",
         description: "Your account is now active. Welcome to DiRent!",
       });
-      // Clean up the URL
       window.history.replaceState(null, '', '/auth');
       navigate("/");
       return;

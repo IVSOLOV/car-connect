@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Session } from "@supabase/supabase-js";
 import { useNavigate, Link } from "react-router-dom";
 import { z } from "zod";
 import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Building2, Camera, Loader2, Eye, EyeOff } from "lucide-react";
@@ -78,6 +79,7 @@ const Auth = () => {
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isRecoveryRef = useRef(false);
+  const recoverySessionRef = useRef<Session | null>(null);
 
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -98,9 +100,10 @@ const Auth = () => {
       setMode("reset-password");
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         isRecoveryRef.current = true;
+        recoverySessionRef.current = session;
         setMode("reset-password");
       }
     });
@@ -471,6 +474,14 @@ const Auth = () => {
     
     setIsLoading(true);
     try {
+      // Restore the recovery session before updating password to avoid reauthentication error
+      if (recoverySessionRef.current) {
+        await supabase.auth.setSession({
+          access_token: recoverySessionRef.current.access_token,
+          refresh_token: recoverySessionRef.current.refresh_token,
+        });
+      }
+
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       
       if (error) {

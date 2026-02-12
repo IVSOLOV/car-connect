@@ -99,17 +99,43 @@ const Auth = () => {
     // Sync the ref with initial mode (already set synchronously via getInitialMode)
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (urlParams.get('reset') === 'true' || hashParams.get('type') === 'recovery') {
+    const hasResetParam = urlParams.get('reset') === 'true' || hashParams.get('type') === 'recovery';
+    
+    if (hasResetParam) {
       isRecoveryRef.current = true;
     }
 
+    let recoveryReceived = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
+        recoveryReceived = true;
         isRecoveryRef.current = true;
         recoverySessionRef.current = session;
         setMode("reset-password");
       }
     });
+
+    // If URL says reset but no valid recovery event fires within 3s, the token is expired/used
+    if (hasResetParam) {
+      const timeout = setTimeout(() => {
+        if (!recoveryReceived && !recoverySessionRef.current) {
+          isRecoveryRef.current = false;
+          setMode("login");
+          window.history.replaceState(null, '', '/auth');
+          toast({
+            title: "Reset link expired",
+            description: "This password reset link has already been used or has expired. Please request a new one.",
+            variant: "destructive",
+          });
+        }
+      }, 3000);
+      return () => {
+        clearTimeout(timeout);
+        subscription.unsubscribe();
+      };
+    }
+
     return () => subscription.unsubscribe();
   }, []);
 

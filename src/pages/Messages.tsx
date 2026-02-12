@@ -576,7 +576,7 @@ const Messages = () => {
       />
       <Header />
       
-      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pt-20 sm:pt-24">
+      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pt-24 sm:pt-24">
         <div className="max-w-4xl mx-auto">
           <Card className="h-[calc(100vh-6rem)] sm:h-[calc(100vh-8rem)] overflow-hidden">
             <CardHeader className="border-b py-3 sm:py-4 px-3 sm:px-6">
@@ -671,10 +671,10 @@ const Messages = () => {
                                 )}
                                 <button
                                   onClick={() => confirmDeleteMessage(msg.id)}
-                                  className="p-1 hover:bg-destructive/20 rounded"
+                                  className="p-1 rounded"
                                   title="Delete message"
                                 >
-                                  <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                                  <Trash2 className="h-3 w-3 text-destructive" />
                                 </button>
                               </div>
                             )}
@@ -825,7 +825,7 @@ const Messages = () => {
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
                         placeholder="Type a message..."
-                        className="flex-1 min-w-0 px-3 sm:px-4 py-2 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                        className="flex-1 min-w-0 px-3 sm:px-4 py-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                       />
                       <Button 
                         onClick={sendMessage} 

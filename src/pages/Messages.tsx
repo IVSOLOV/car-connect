@@ -161,7 +161,7 @@ const Messages = () => {
       // Fetch user profiles
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("user_id, first_name, last_name, company_name, avatar_url")
+        .select("user_id, first_name, last_name, company_name, show_company_as_owner, avatar_url")
         .in("user_id", userIds);
 
       // Build conversation list
@@ -175,6 +175,9 @@ const Messages = () => {
         const profile = profilesData?.find(p => p.user_id === otherUserId);
 
         const getUserName = () => {
+          if (profile?.show_company_as_owner && profile?.company_name) {
+            return profile.company_name;
+          }
           if (profile?.first_name || profile?.last_name) {
             return `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
           }

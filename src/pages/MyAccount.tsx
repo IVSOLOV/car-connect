@@ -509,7 +509,7 @@ const MyAccount = () => {
           {/* Report Issue Section */}
           <Card className="mb-8">
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <h3 className="font-semibold text-foreground flex items-center gap-2">
                     <HelpCircle className="h-5 w-5" />
@@ -519,7 +519,7 @@ const MyAccount = () => {
                     Report any issues or get support from our team
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button variant="outline" size="sm" onClick={() => navigate("/support-tickets")}>
                     View Tickets
                   </Button>
@@ -563,73 +563,75 @@ const MyAccount = () => {
                   {listings.map((listing) => (
                     <div 
                       key={listing.id} 
-                      className="flex items-center gap-4 p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                      className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
                     >
-                      <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                        {listing.images && listing.images.length > 0 ? (
-                          <img 
-                            src={listing.images[0]} 
-                            alt={`${listing.year} ${listing.make} ${listing.model}`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Car className="h-8 w-8 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-foreground truncate">
-                            {listing.year} {listing.make} {listing.model}
-                          </h3>
-                          {listing.approval_status === "approved" && (
-                            <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-xs">
-                              Listed
-                            </Badge>
-                          )}
-                          {listing.approval_status === "pending" && (
-                            <Badge variant="secondary" className="text-xs">
-                              Pending Review
-                            </Badge>
-                          )}
-                          {listing.approval_status === "rejected" && (
-                            <Badge variant="destructive" className="text-xs">
-                              Rejected
-                            </Badge>
-                          )}
-                          {listing.approval_status === "deactivated" && (
-                            <Badge variant="outline" className="text-xs border-orange-500 text-orange-500">
-                              Deactivated
-                            </Badge>
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                          {listing.images && listing.images.length > 0 ? (
+                            <img 
+                              src={listing.images[0]} 
+                              alt={`${listing.year} ${listing.make} ${listing.model}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Car className="h-8 w-8 text-muted-foreground" />
+                            </div>
                           )}
                         </div>
-                        {listing.approval_status === "rejected" && listing.rejection_reason && (
-                          <p className="text-sm text-destructive mt-1">
-                            Reason: {listing.rejection_reason}
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
+                              {listing.year} {listing.make} {listing.model}
+                            </h3>
+                            {listing.approval_status === "approved" && (
+                              <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-xs">
+                                Listed
+                              </Badge>
+                            )}
+                            {listing.approval_status === "pending" && (
+                              <Badge variant="secondary" className="text-xs">
+                                Pending Review
+                              </Badge>
+                            )}
+                            {listing.approval_status === "rejected" && (
+                              <Badge variant="destructive" className="text-xs">
+                                Rejected
+                              </Badge>
+                            )}
+                            {listing.approval_status === "deactivated" && (
+                              <Badge variant="outline" className="text-xs border-orange-500 text-orange-500">
+                                Deactivated
+                              </Badge>
+                            )}
+                          </div>
+                          {listing.approval_status === "rejected" && listing.rejection_reason && (
+                            <p className="text-xs sm:text-sm text-destructive mt-1">
+                              Reason: {listing.rejection_reason}
+                            </p>
+                          )}
+                          {listing.approval_status === "deactivated" && listing.deactivation_reason && (
+                            <p className="text-xs sm:text-sm text-orange-500 mt-1">
+                              Reason: {listing.deactivation_reason}
+                            </p>
+                          )}
+                          <p className="text-xs sm:text-sm text-muted-foreground">
+                            {listing.city}, {listing.state}
                           </p>
-                        )}
-                        {listing.approval_status === "deactivated" && listing.deactivation_reason && (
-                          <p className="text-sm text-orange-500 mt-1">
-                            Reason: {listing.deactivation_reason}
+                          <p className="text-xs sm:text-sm font-medium text-primary">
+                            ${listing.daily_price}/day
+                            {listing.monthly_price && ` · $${listing.monthly_price}/month`}
                           </p>
-                        )}
-                        <p className="text-sm text-muted-foreground">
-                          {listing.city}, {listing.state}
-                        </p>
-                        <p className="text-sm font-medium text-primary">
-                          ${listing.daily_price}/day
-                          {listing.monthly_price && ` · $${listing.monthly_price}/month`}
-                        </p>
+                        </div>
                       </div>
                       
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 sm:flex-shrink-0 justify-end">
                         <Button 
                           variant="ghost" 
                           size="icon"
                           onClick={() => navigate(`/listing/${listing.id}`)}
-                          className="text-muted-foreground hover:text-foreground"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
                           title="View listing"
                         >
                           <Eye className="h-4 w-4" />
@@ -641,7 +643,7 @@ const MyAccount = () => {
                             setSelectedListing(listing);
                             setShowBookingModal(true);
                           }}
-                          className="text-muted-foreground hover:text-primary"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
                           title="Manage bookings"
                         >
                           <CalendarDays className="h-4 w-4" />
@@ -650,7 +652,7 @@ const MyAccount = () => {
                           variant="ghost" 
                           size="icon"
                           onClick={() => navigate(`/edit-listing/${listing.id}`)}
-                          className="text-muted-foreground hover:text-primary"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
                           title="Edit listing"
                         >
                           <Pencil className="h-4 w-4" />
@@ -659,7 +661,7 @@ const MyAccount = () => {
                           variant="ghost" 
                           size="icon"
                           onClick={() => handleDeleteClick(listing)}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                           title="Delete listing"
                         >
                           <Trash2 className="h-4 w-4" />

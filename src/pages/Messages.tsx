@@ -778,7 +778,7 @@ const Messages = () => {
                     </div>
                   )}
                   
-                  <div className="border-t p-2 sm:p-4 safe-bottom">
+                  <div className="border-t p-2 sm:p-4 pb-8 sm:pb-4 safe-bottom">
                     {/* Pending files preview */}
                     {pendingFiles.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-2 sm:mb-3">

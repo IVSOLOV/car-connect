@@ -865,8 +865,8 @@ const ListingDetails = () => {
                 )}
               </div>
 
-              {/* Owner Card - Only show for authenticated users */}
-              {user && (
+              {/* Owner Card - Only show for authenticated users viewing someone else's listing */}
+              {user && !isOwner && (
                 <Link 
                   to={`/owner/${listing.user_id}`}
                   className="block rounded-2xl border border-border bg-card p-6 shadow-card transition-all hover:shadow-card-hover hover:border-primary/30"

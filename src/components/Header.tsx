@@ -128,7 +128,7 @@ const Header = () => {
                     My Account
                   </DropdownMenuItem>
                   {(role === "host" || role === "admin") && (
-                    <DropdownMenuItem onClick={() => navigate("/my-account")}>
+                    <DropdownMenuItem onClick={() => navigate("/my-listings")}>
                       My Listings
                     </DropdownMenuItem>
                   )}

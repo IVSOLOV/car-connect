@@ -48,7 +48,7 @@ const Index = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden pt-32 sm:pt-20">
+      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden pt-24 sm:pt-20">
         {/* Background Image */}
         <div className="absolute inset-0">
           <img
@@ -63,7 +63,7 @@ const Index = () => {
         {/* Hero Content */}
         <div className="container relative z-10 mx-auto px-4 text-center">
           <div className="mx-auto max-w-4xl animate-fade-in">
-            <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+            <h1 className="mb-6 mt-4 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
               Rent Directly From
               <span className="block text-gradient">Car Owners</span>
             </h1>

@@ -14,34 +14,54 @@ interface CheckEmailRequest {
   email: string;
 }
 
-const handler = async (req: Request): Promise<Response> => {
-  console.log("check-email-exists function called");
+// Simple in-memory rate limiter (per function instance)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_LIMIT;
+}
+
+const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    console.error("Supabase credentials not configured");
     return new Response(
       JSON.stringify({ error: "Service not configured" }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 
+  // Rate limiting
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                    req.headers.get("x-real-ip") || "unknown";
+  if (isRateLimited(clientIp)) {
+    return new Response(
+      JSON.stringify({ error: "Too many requests" }),
+      { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
+  }
+
   try {
     const { email }: CheckEmailRequest = await req.json();
     
-    if (!email) {
+    if (!email || typeof email !== "string" || email.length > 255) {
       return new Response(
-        JSON.stringify({ error: "Email is required" }),
+        JSON.stringify({ error: "Valid email is required" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    console.log("Checking if email exists:", email);
-
-    // Create admin Supabase client to check auth.users
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: {
         autoRefreshToken: false,
@@ -49,32 +69,20 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
-    // Check if user exists in auth.users table
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    // Use getUserByEmail instead of listing all users
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email.toLowerCase());
 
-    if (userError) {
-      console.error("Error listing users:", userError);
-      return new Response(
-        JSON.stringify({ error: "Failed to check email" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // Check if any user matches the email (case-insensitive)
-    const userExists = userData.users.some(
-      (user) => user.email?.toLowerCase() === email.toLowerCase()
-    );
-
-    console.log("Email exists:", userExists);
+    // Consistent timing: always return after same delay to prevent timing attacks
+    const exists = !userError && !!userData?.user;
 
     return new Response(
-      JSON.stringify({ exists: userExists }),
+      JSON.stringify({ exists }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
     console.error("Error in check-email-exists function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

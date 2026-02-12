@@ -579,7 +579,7 @@ const Messages = () => {
       />
       <Header />
       
-      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pt-24 sm:pt-24">
+      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pt-32 sm:pt-24">
         <div className="max-w-4xl mx-auto">
           <Card className="h-[calc(100vh-6rem)] sm:h-[calc(100vh-8rem)] overflow-hidden">
             <CardHeader className="border-b py-3 sm:py-4 px-3 sm:px-6">

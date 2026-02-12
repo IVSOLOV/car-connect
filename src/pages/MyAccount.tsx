@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera, Building2, Loader2, HelpCircle, Mail, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera, Building2, Loader2, HelpCircle, Mail, AlertTriangle, CheckCircle2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,7 @@ interface Profile {
   company_name: string | null;
   show_company_as_owner: boolean | null;
   avatar_url: string | null;
+  phone: string | null;
 }
 
 // Email Verification Card Component
@@ -151,6 +152,7 @@ const MyAccount = () => {
   const [editLastName, setEditLastName] = useState("");
   const [editCompanyName, setEditCompanyName] = useState("");
   const [editShowCompany, setEditShowCompany] = useState(false);
+  const [editPhone, setEditPhone] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -177,7 +179,17 @@ const MyAccount = () => {
         .single();
 
       if (error) throw error;
-      setProfile(data);
+
+      // Fetch phone from private_profiles
+      let phone: string | null = null;
+      const { data: privateData } = await supabase
+        .from("private_profiles")
+        .select("phone")
+        .eq("user_id", user?.id!)
+        .single();
+      if (privateData) phone = privateData.phone;
+
+      setProfile({ ...data, phone });
     } catch (error) {
       console.error("Error fetching profile:", error);
     }
@@ -254,6 +266,7 @@ const MyAccount = () => {
     setEditLastName(profile?.last_name || "");
     setEditCompanyName(profile?.company_name || "");
     setEditShowCompany(profile?.show_company_as_owner || false);
+    setEditPhone(profile?.phone || "");
     setIsEditing(true);
   };
 
@@ -263,6 +276,7 @@ const MyAccount = () => {
     setEditLastName("");
     setEditCompanyName("");
     setEditShowCompany(false);
+    setEditPhone("");
   };
 
   const handleSaveProfile = async () => {
@@ -282,12 +296,21 @@ const MyAccount = () => {
 
       if (error) throw error;
 
+      // Update phone in private_profiles
+      const { error: phoneError } = await supabase
+        .from("private_profiles")
+        .update({ phone: editPhone })
+        .eq("user_id", user.id);
+
+      if (phoneError) throw phoneError;
+
       setProfile((prev) => prev ? {
         ...prev,
         first_name: editFirstName,
         last_name: editLastName,
         company_name: editCompanyName,
         show_company_as_owner: editShowCompany,
+        phone: editPhone,
       } : null);
       setIsEditing(false);
       toast({
@@ -381,25 +404,30 @@ const MyAccount = () => {
       
       <main className="container mx-auto px-4 py-8 pt-32">
         <div className="max-w-4xl mx-auto">
+          {/* Email Verification Section - Show if email not confirmed */}
+          {user && !user.email_confirmed_at && (
+            <EmailVerificationCard email={user.email || ""} />
+          )}
+
           {/* User Info Section */}
-          <Card className="mb-8">
+          <Card>
             <CardContent className="pt-6">
-              <div className="flex items-start gap-6">
-                {/* Avatar with edit button */}
-                <div className="relative">
+              <div className="flex items-start gap-4 sm:gap-6">
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
                   <div 
                     onClick={handleAvatarClick}
-                    className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden cursor-pointer group relative"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden cursor-pointer group relative"
                   >
                     {uploadingAvatar ? (
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                     ) : profile?.avatar_url ? (
                       <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <User className="h-10 w-10 text-primary" />
+                      <User className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
                     )}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
-                      <Camera className="h-6 w-6 text-white" />
+                      <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                   </div>
                   <input
@@ -411,53 +439,110 @@ const MyAccount = () => {
                   />
                 </div>
 
-                {/* Name and email */}
-                <div className="flex-1">
-                  {isEditing ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="firstName">First Name</Label>
-                          <Input
-                            id="firstName"
-                            value={editFirstName}
-                            onChange={(e) => setEditFirstName(e.target.value)}
-                            placeholder="First name"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="lastName">Last Name</Label>
-                          <Input
-                            id="lastName"
-                            value={editLastName}
-                            onChange={(e) => setEditLastName(e.target.value)}
-                            placeholder="Last name"
-                          />
-                        </div>
+                {/* Form fields */}
+                <div className="flex-1 min-w-0">
+                  {/* Edit icon row */}
+                  <div className="flex justify-end mb-2">
+                    {!isEditing && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={handleStartEditing}
+                        className="h-8 w-8"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* First & Last Name */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      <div>
+                        <Label htmlFor="firstName" className="text-xs sm:text-sm">First Name</Label>
+                        <Input
+                          id="firstName"
+                          value={isEditing ? editFirstName : (profile?.first_name || "")}
+                          onChange={(e) => setEditFirstName(e.target.value)}
+                          placeholder="First name"
+                          readOnly={!isEditing}
+                          className={!isEditing ? "bg-muted/50 cursor-default" : ""}
+                        />
                       </div>
                       <div>
-                        <Label htmlFor="companyName">Company Name (LLC)</Label>
-                        <div className="relative">
-                          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="companyName"
-                            value={editCompanyName}
-                            onChange={(e) => setEditCompanyName(e.target.value)}
-                            placeholder="Your company name"
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="showCompany"
-                          checked={editShowCompany}
-                          onCheckedChange={(checked) => setEditShowCompany(checked === true)}
+                        <Label htmlFor="lastName" className="text-xs sm:text-sm">Last Name</Label>
+                        <Input
+                          id="lastName"
+                          value={isEditing ? editLastName : (profile?.last_name || "")}
+                          onChange={(e) => setEditLastName(e.target.value)}
+                          placeholder="Last name"
+                          readOnly={!isEditing}
+                          className={!isEditing ? "bg-muted/50 cursor-default" : ""}
                         />
-                        <Label htmlFor="showCompany" className="text-sm font-normal cursor-pointer">
-                          Display company name as owner on listings
-                        </Label>
                       </div>
+                    </div>
+
+                    {/* Email (always read-only) */}
+                    <div>
+                      <Label htmlFor="email" className="text-xs sm:text-sm">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="email"
+                          value={user?.email || ""}
+                          readOnly
+                          className="pl-10 bg-muted/50 cursor-default"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Phone */}
+                    <div>
+                      <Label htmlFor="phone" className="text-xs sm:text-sm">Phone Number</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="phone"
+                          value={isEditing ? editPhone : (profile?.phone || "")}
+                          onChange={(e) => setEditPhone(e.target.value)}
+                          placeholder="Phone number"
+                          readOnly={!isEditing}
+                          className={`pl-10 ${!isEditing ? "bg-muted/50 cursor-default" : ""}`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Company Name */}
+                    <div>
+                      <Label htmlFor="companyName" className="text-xs sm:text-sm">Company Name (LLC)</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="companyName"
+                          value={isEditing ? editCompanyName : (profile?.company_name || "")}
+                          onChange={(e) => setEditCompanyName(e.target.value)}
+                          placeholder="Your company name"
+                          readOnly={!isEditing}
+                          className={`pl-10 ${!isEditing ? "bg-muted/50 cursor-default" : ""}`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Show company checkbox */}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="showCompany"
+                        checked={isEditing ? editShowCompany : (profile?.show_company_as_owner || false)}
+                        onCheckedChange={(checked) => isEditing && setEditShowCompany(checked === true)}
+                        disabled={!isEditing}
+                      />
+                      <Label htmlFor="showCompany" className="text-xs sm:text-sm font-normal cursor-pointer">
+                        Display company name as owner on listings
+                      </Label>
+                    </div>
+
+                    {/* Save / Cancel buttons */}
+                    {isEditing && (
                       <div className="flex gap-2">
                         <Button onClick={handleSaveProfile} disabled={saving} size="sm">
                           {saving ? (
@@ -473,39 +558,12 @@ const MyAccount = () => {
                           Cancel
                         </Button>
                       </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-bold text-foreground">{getDisplayName()}</h1>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={handleStartEditing}
-                          className="h-8 w-8"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{user?.email}</p>
-                      {profile?.company_name && !profile?.show_company_as_owner && (
-                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                          <Building2 className="h-3 w-3" />
-                          {profile.company_name}
-                        </p>
-                      )}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
-
-          {/* Email Verification Section - Show if email not confirmed */}
-          {user && !user.email_confirmed_at && (
-            <EmailVerificationCard email={user.email || ""} />
-          )}
-
         </div>
 
         {/* Booking Calendar Modal */}

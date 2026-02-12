@@ -580,7 +580,7 @@ const EditListing = () => {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeExistingImage(index); }}
-                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                        className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -618,7 +618,7 @@ const EditListing = () => {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeNewImage(index); }}
-                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                        className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5"
                       >
                         <X className="h-3 w-3" />
                       </button>

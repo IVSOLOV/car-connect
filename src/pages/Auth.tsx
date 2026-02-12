@@ -53,8 +53,17 @@ const formatPhoneNumber = (value: string) => {
 
 type AuthMode = "login" | "signup" | "forgot" | "verify-email" | "reset-password";
 
+// Determine initial mode synchronously to prevent race conditions with auth redirects
+const getInitialMode = (): AuthMode => {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('reset') === 'true') return "reset-password";
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  if (hashParams.get('type') === 'recovery') return "reset-password";
+  return "login";
+};
+
 const Auth = () => {
-  const [mode, setMode] = useState<AuthMode>("login");
+  const [mode, setMode] = useState<AuthMode>(getInitialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -87,17 +96,11 @@ const Auth = () => {
 
   // Listen for PASSWORD_RECOVERY auth event to reliably detect reset flow
   useEffect(() => {
-    // Check URL params immediately and synchronously set the ref
+    // Sync the ref with initial mode (already set synchronously via getInitialMode)
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('reset') === 'true') {
-      isRecoveryRef.current = true;
-      setMode("reset-password");
-    }
-
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (hashParams.get('type') === 'recovery') {
+    if (urlParams.get('reset') === 'true' || hashParams.get('type') === 'recovery') {
       isRecoveryRef.current = true;
-      setMode("reset-password");
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {

@@ -625,7 +625,7 @@ const CreateListing = () => {
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); removeImage(index); }}
-                          className="absolute -top-0.5 -right-0.5 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-px transition-colors"
+                          className="img-delete-btn absolute -top-0.5 -right-0.5 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-px transition-colors"
                         >
                           <X className="h-2.5 w-2.5" />
                         </button>

@@ -99,9 +99,10 @@
     }
   }
 
-  /* Better touch targets on mobile */
+  /* Better touch targets on mobile — exclude radios, checkboxes, and tiny icon buttons */
   @media (max-width: 640px) {
-    button, a {
+    button:not([role="radio"]):not([role="checkbox"]):not(.img-delete-btn), 
+    a {
       min-height: 44px;
       min-width: 44px;
     }
@@ -151,15 +152,7 @@
   }
 }
 
-/* Scale down interactive controls on touch/mobile devices */
-@media (pointer: coarse), (max-width: 768px) {
-  [role="radio"] {
-    transform: scale(0.55);
-  }
-  [role="checkbox"] {
-    transform: scale(0.55);
-  }
-}
+/* No transform scaling needed — controls are properly sized via component classes */
 
 @keyframes fadeIn {
   from {

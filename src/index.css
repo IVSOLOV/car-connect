@@ -154,10 +154,10 @@
 /* Scale down interactive controls on touch/mobile devices */
 @media (pointer: coarse) {
   [role="radio"] {
-    transform: scale(0.75);
+    transform: scale(0.55);
   }
   [role="checkbox"] {
-    transform: scale(0.75);
+    transform: scale(0.55);
   }
 }
 

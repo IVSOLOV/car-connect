@@ -349,6 +349,8 @@ const Auth = () => {
           toast({
             title: "Welcome back!",
             description: "You've successfully signed in.",
+            variant: "success" as any,
+            duration: 1000,
           });
           navigate("/");
         }

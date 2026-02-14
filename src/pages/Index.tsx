@@ -180,7 +180,7 @@ const Index = () => {
               <p className="text-sm text-muted-foreground">
                 © 2025 DiRent. All rights reserved.
               </p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Build: v1.001</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">Build: v1.002</p>
             </div>
             <div className="flex gap-6">
               <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">

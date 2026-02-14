@@ -48,7 +48,7 @@ const Index = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden pt-24 sm:pt-20">
+      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden pt-36 sm:pt-20">
         {/* Background Image */}
         <div className="absolute inset-0">
           <img
@@ -180,7 +180,7 @@ const Index = () => {
               <p className="text-sm text-muted-foreground">
                 © 2025 DiRent. All rights reserved.
               </p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Build: v1.006</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">Build: v1.007</p>
             </div>
             <div className="flex gap-6">
               <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">

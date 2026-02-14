@@ -152,7 +152,7 @@
 }
 
 /* Scale down interactive controls on touch/mobile devices */
-@media (pointer: coarse) {
+@media (pointer: coarse), (max-width: 768px) {
   [role="radio"] {
     transform: scale(0.55);
   }

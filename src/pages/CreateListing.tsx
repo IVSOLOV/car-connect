@@ -549,7 +549,7 @@ const CreateListing = () => {
       />
       <Header />
       
-      <main className="container mx-auto px-4 py-8 pt-24">
+      <main className="container mx-auto px-4 py-8 pt-32 sm:pt-24">
         <div className="max-w-2xl mx-auto">
           <button 
             onClick={() => navigate(-1)} 

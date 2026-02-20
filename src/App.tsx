@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import PushNotificationProvider from "@/components/PushNotificationProvider";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BecomeHost from "./pages/BecomeHost";
@@ -36,8 +37,9 @@ const App = () => (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
+          <PushNotificationProvider>
+            <TooltipProvider>
+              <Toaster />
             <Sonner />
             <BrowserRouter>
               <Routes>
@@ -66,7 +68,8 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
-          </TooltipProvider>
+            </TooltipProvider>
+          </PushNotificationProvider>
         </AuthProvider>
       </QueryClientProvider>
     </HelmetProvider>

@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          resource_id: string | null
+          resource_type: string
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          resource_id?: string | null
+          resource_type: string
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          resource_id?: string | null
+          resource_type?: string
+        }
+        Relationships: []
+      }
       deactivated_users: {
         Row: {
           created_at: string
@@ -566,6 +596,35 @@ export type Database = {
       }
     }
     Functions: {
+      admin_get_private_profile: {
+        Args: { _target_user_id: string }
+        Returns: {
+          created_at: string
+          phone: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
+      admin_list_deactivated_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          deactivated_by: string
+          id: string
+          masked_email: string
+          reason: string
+          user_id: string
+        }[]
+      }
+      admin_list_private_profiles: {
+        Args: never
+        Returns: {
+          created_at: string
+          phone: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

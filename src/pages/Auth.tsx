@@ -253,16 +253,25 @@ const Auth = () => {
     setIsLoading(true);
     try {
       // Check if the email exists in our database
-      const { data: emailCheck, error: checkError } = await supabase.functions.invoke(
-        'check-email-exists',
-        { body: { email: email.toLowerCase() } }
-      );
+      let emailCheck;
+      let checkError;
+      try {
+        const result = await supabase.functions.invoke(
+          'check-email-exists',
+          { body: { email: email.toLowerCase() } }
+        );
+        emailCheck = result.data;
+        checkError = result.error;
+      } catch (invokeErr) {
+        console.error("check-email-exists invoke failed:", invokeErr);
+        checkError = invokeErr;
+      }
 
       if (checkError) {
         console.error("Error checking email:", checkError);
         toast({
           title: "Error",
-          description: "An error occurred. Please try again.",
+          description: "Could not verify email. Please try again.",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -280,21 +289,31 @@ const Auth = () => {
       }
 
       // Use our custom DiRent-branded email via Resend instead of Supabase's default
-      const { data: emailResult, error: emailError } = await supabase.functions.invoke(
-        'send-auth-email',
-        {
-          body: {
-            type: 'recovery',
-            email: email.toLowerCase(),
-            redirect_to: `${window.location.origin}/auth?reset=true`,
-          },
-        }
-      );
+      let emailResult;
+      let emailError;
+      try {
+        const result = await supabase.functions.invoke(
+          'send-auth-email',
+          {
+            body: {
+              type: 'recovery',
+              email: email.toLowerCase(),
+              redirect_to: `${window.location.origin}/auth?reset=true`,
+            },
+          }
+        );
+        emailResult = result.data;
+        emailError = result.error;
+      } catch (invokeErr) {
+        console.error("send-auth-email invoke failed:", invokeErr);
+        emailError = invokeErr;
+      }
 
       if (emailError || emailResult?.error) {
+        console.error("Reset email error:", emailError, emailResult?.error);
         toast({
           title: "Error",
-          description: emailResult?.error || emailError?.message || "Failed to send reset email",
+          description: "Failed to send reset email. Please try again.",
           variant: "destructive",
         });
       } else {

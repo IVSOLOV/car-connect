@@ -104,6 +104,8 @@ const handler = async (req: Request): Promise<Response> => {
         },
       });
 
+      console.log("Generated recovery link data:", JSON.stringify(data?.properties));
+      
       if (error) {
         console.error("Failed to generate recovery link:", error);
         return new Response(
@@ -112,7 +114,26 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      confirmationUrl = data.properties.action_link;
+      // The action_link from generateLink points to the Supabase auth endpoint
+      // which then redirects to our redirect_to URL after verifying the token.
+      // However, the redirect_to in the generated link may use the wrong site_url.
+      // We need to ensure it uses the production URL.
+      let actionLink = data.properties.action_link;
+      
+      // Replace any preview/localhost redirect_to with the production URL
+      const productionRedirect = encodeURIComponent(redirect_to || "https://directrental.lovable.app/auth?reset=true");
+      
+      // The action link format is: {supabase_url}/auth/v1/verify?token=...&type=recovery&redirect_to=...
+      // Replace the redirect_to parameter to ensure it points to production
+      if (actionLink.includes("redirect_to=")) {
+        actionLink = actionLink.replace(
+          /redirect_to=[^&]*/,
+          `redirect_to=${productionRedirect}`
+        );
+      }
+      
+      confirmationUrl = actionLink;
+
       subject = "Reset your DiRent password";
       htmlContent = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f5f5; margin: 0; padding: 40px 20px;">

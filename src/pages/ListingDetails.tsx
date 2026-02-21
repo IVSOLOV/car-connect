@@ -282,13 +282,24 @@ const ListingDetails = () => {
       // Get sender's profile for the email notification
       const { data: senderProfile } = await supabase
         .from("profiles")
-        .select("first_name, last_name, full_name")
+        .select("first_name, last_name, full_name, company_name, show_company_as_owner")
         .eq("user_id", user.id)
         .single();
       
-      const senderName = senderProfile?.full_name || 
-        `${senderProfile?.first_name || ""} ${senderProfile?.last_name || ""}`.trim() || 
-        "A user";
+      // Check if sender has their own listings (only show company name if they're also a host)
+      const { data: senderListings } = await supabase
+        .from("listings")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1);
+      
+      const senderHasListings = (senderListings?.length || 0) > 0;
+      
+      const senderName = (senderHasListings && senderProfile?.show_company_as_owner && senderProfile?.company_name)
+        ? senderProfile.company_name
+        : senderProfile?.full_name || 
+          `${senderProfile?.first_name || ""} ${senderProfile?.last_name || ""}`.trim() || 
+          "A user";
 
       const listingTitle = `${listing.year} ${listing.make} ${listing.model}`;
 

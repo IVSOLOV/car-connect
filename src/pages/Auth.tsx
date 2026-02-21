@@ -339,9 +339,13 @@ const Auth = () => {
 
       if (resetError) {
         console.error("Reset email error:", resetError);
+        const isRateLimit = resetError.message?.toLowerCase().includes('rate limit') || 
+                           (resetError as any)?.status === 429;
         toast({
-          title: "Error",
-          description: "Failed to send reset email. Please try again.",
+          title: isRateLimit ? "Too many attempts" : "Error",
+          description: isRateLimit 
+            ? "You've requested too many reset emails. Please wait a few minutes before trying again."
+            : "Failed to send reset email. Please try again.",
           variant: "destructive",
         });
       } else {

@@ -1,9 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 
 const TermsOfService = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -15,6 +18,13 @@ const TermsOfService = () => {
 
       <main className="container mx-auto px-4 pt-36 sm:pt-24 pb-8">
         <div className="mx-auto max-w-3xl">
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-4 inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </button>
           <h1 className="mb-8 text-4xl font-bold text-foreground">Terms of Service for DiRent</h1>
           <p className="mb-6 text-muted-foreground">Last updated: December 2025</p>
 

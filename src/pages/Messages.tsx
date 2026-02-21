@@ -165,6 +165,14 @@ const Messages = () => {
         .select("user_id, first_name, last_name, company_name, show_company_as_owner, avatar_url")
         .in("user_id", userIds);
 
+      // Check which users have their own listings (to determine if company name should be shown)
+      const { data: usersWithListings } = await supabase
+        .from("listings")
+        .select("user_id")
+        .in("user_id", userIds);
+      
+      const userIdsWithListings = new Set(usersWithListings?.map(l => l.user_id) || []);
+
       // Build conversation list
       const convList: Conversation[] = [];
       
@@ -174,15 +182,16 @@ const Messages = () => {
         
         const listing = listingsData?.find(l => l.id === listingId);
         const profile = profilesData?.find(p => p.user_id === otherUserId);
+        const hasListings = userIdsWithListings.has(otherUserId);
 
         const getUserName = () => {
-          if (profile?.show_company_as_owner && profile?.company_name) {
+          if (hasListings && profile?.show_company_as_owner && profile?.company_name) {
             return profile.company_name;
           }
           if (profile?.first_name || profile?.last_name) {
             return `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
           }
-          if (profile?.company_name) return profile.company_name;
+          if (hasListings && profile?.company_name) return profile.company_name;
           return "Unknown User";
         };
 
@@ -385,13 +394,24 @@ const Messages = () => {
       // Get sender's profile for the email
       const { data: senderProfile } = await supabase
         .from("profiles")
-        .select("first_name, last_name, full_name")
+        .select("first_name, last_name, full_name, company_name, show_company_as_owner")
         .eq("user_id", user.id)
         .single();
       
-      const senderName = senderProfile?.full_name || 
-        `${senderProfile?.first_name || ""} ${senderProfile?.last_name || ""}`.trim() || 
-        "A user";
+      // Check if sender has their own listings (to determine if company name should be used)
+      const { data: senderListings } = await supabase
+        .from("listings")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1);
+      
+      const senderHasListings = (senderListings?.length || 0) > 0;
+      
+      const senderName = (senderHasListings && senderProfile?.show_company_as_owner && senderProfile?.company_name)
+        ? senderProfile.company_name
+        : senderProfile?.full_name || 
+          `${senderProfile?.first_name || ""} ${senderProfile?.last_name || ""}`.trim() || 
+          "A user";
 
       // Send email notification to recipient (fire and forget)
       sendNotificationEmail("message", selectedConversation.other_user_id, {

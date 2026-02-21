@@ -1,9 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 
 const PrivacyPolicy = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       <SEO 
@@ -14,6 +17,13 @@ const PrivacyPolicy = () => {
       <Header />
       <main className="container mx-auto px-4 pt-36 sm:pt-24 pb-8">
         <div className="mx-auto max-w-3xl">
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-4 inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </button>
           <h1 className="text-4xl font-bold mb-8 text-foreground">Privacy Policy for DiRent</h1>
           
           <p className="text-muted-foreground mb-6">Last updated: December 29, 2025</p>

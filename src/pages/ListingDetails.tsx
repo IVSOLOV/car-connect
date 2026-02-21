@@ -22,8 +22,6 @@ import {
   Copy,
   Mail,
   MessageSquare,
-  Facebook,
-  Twitter,
   Fuel,
   Car,
   Truck,
@@ -569,39 +567,6 @@ const ListingDetails = () => {
                         >
                           <Mail className="mr-2 h-4 w-4" />
                           Email
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="justify-start"
-                          onClick={() => {
-                            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this ${title} for rent! ${window.location.href}`)}`);
-                          }}
-                        >
-                          <MessageCircle className="mr-2 h-4 w-4" />
-                          WhatsApp
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="justify-start"
-                          onClick={() => {
-                            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`);
-                          }}
-                        >
-                          <Facebook className="mr-2 h-4 w-4" />
-                          Facebook
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="justify-start"
-                          onClick={() => {
-                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this ${title} for rent!`)}&url=${encodeURIComponent(window.location.href)}`);
-                          }}
-                        >
-                          <Twitter className="mr-2 h-4 w-4" />
-                          X (Twitter)
                         </Button>
                       </div>
                     </PopoverContent>

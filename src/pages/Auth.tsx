@@ -298,7 +298,7 @@ const Auth = () => {
             body: {
               type: 'recovery',
               email: email.toLowerCase(),
-              redirect_to: `${window.location.origin}/auth?reset=true`,
+              redirect_to: 'https://directrental.lovable.app/auth?reset=true',
             },
           }
         );

@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import MessageOwnerModal from "@/components/MessageOwnerModal";
 import { mockCars } from "@/data/cars";
 import { useAuth } from "@/contexts/AuthContext";
@@ -242,6 +243,7 @@ const CarDetails = () => {
         isOpen={isMessageModalOpen}
         onClose={() => setIsMessageModalOpen(false)}
       />
+      <Footer />
     </div>
   );
 };

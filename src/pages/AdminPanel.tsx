@@ -53,6 +53,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -885,6 +886,7 @@ const AdminPanel = () => {
           </AlertDialogContent>
         </AlertDialog>
       </main>
+      <Footer />
     </div>
   );
 };

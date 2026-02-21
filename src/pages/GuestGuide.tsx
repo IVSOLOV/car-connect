@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Footer from "@/components/Footer";
 import { 
   FileText, 
   Shield, 
@@ -266,29 +267,7 @@ const GuestGuide = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <div className="text-center sm:text-left">
-              <p className="text-sm text-muted-foreground">
-                © 2025 DiRent. All rights reserved.
-              </p>
-              <p className="text-xs text-muted-foreground/70 mt-1">
-                DiRent is a marketplace platform owned and operated by Solo Star Inc.
-              </p>
-            </div>
-            <div className="flex gap-6">
-              <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                Privacy Policy
-              </Link>
-              <Link to="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                Terms of Service
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

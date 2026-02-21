@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { VehicleTypeSelector, type VehicleType } from "@/components/VehicleTypeSelector";
@@ -925,6 +926,7 @@ const EditListing = () => {
           </form>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

@@ -224,21 +224,45 @@ const Auth = () => {
       const file = e.target.files?.[0];
       if (!file) return;
       
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > 10 * 1024 * 1024) {
         toast({
           title: "File too large",
-          description: "Please select an image under 5MB.",
+          description: "Please select an image under 10MB.",
           variant: "destructive",
         });
-        // Reset the input so user can try again
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
-      setAvatarFile(file);
-      
-      // Use URL.createObjectURL instead of FileReader for better mobile compatibility
+
+      // Compress large images for avatar use (max 800px wide)
       const objectUrl = URL.createObjectURL(file);
-      setAvatarPreview(objectUrl);
+      const img = new Image();
+      img.onload = () => {
+        const maxWidth = 800;
+        if (img.width > maxWidth || file.size > 2 * 1024 * 1024) {
+          const canvas = document.createElement('canvas');
+          const ratio = Math.min(maxWidth / img.width, 1);
+          canvas.width = img.width * ratio;
+          canvas.height = img.height * ratio;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              setAvatarFile(new File([blob], file.name, { type: 'image/jpeg' }));
+            } else {
+              setAvatarFile(file);
+            }
+          }, 'image/jpeg', 0.8);
+        } else {
+          setAvatarFile(file);
+        }
+        setAvatarPreview(objectUrl);
+      };
+      img.onerror = () => {
+        setAvatarFile(file);
+        setAvatarPreview(objectUrl);
+      };
+      img.src = objectUrl;
     } catch (err) {
       console.error("Avatar upload error:", err);
       toast({
@@ -880,7 +904,7 @@ const Auth = () => {
                         >
                           {avatarPreview ? "Change Photo" : "Upload Photo"}
                         </Button>
-                        <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG or PNG</p>
+                        <p className="text-xs text-muted-foreground mt-1">Max 10MB, JPG or PNG</p>
                       </div>
                       <input
                         ref={fileInputRef}

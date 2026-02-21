@@ -137,6 +137,52 @@ const EmailVerificationCard = ({ email }: { email: string }) => {
   );
 };
 
+// Small inline verify email button
+const EmailVerifyButton = ({ email }: { email: string }) => {
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const { toast } = useToast();
+
+  const handleVerify = async () => {
+    setSending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) throw error;
+      setSent(true);
+      toast({ title: "Verification email sent", description: "Check your inbox." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to send.", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (sent) {
+    return (
+      <p className="text-xs text-green-500 mt-1 flex items-center gap-1">
+        <CheckCircle2 className="h-3 w-3" /> Verification email sent!
+      </p>
+    );
+  }
+
+  return (
+    <Button
+      onClick={handleVerify}
+      disabled={sending}
+      variant="link"
+      size="sm"
+      className="h-auto p-0 mt-1 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700"
+    >
+      {sending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Mail className="mr-1 h-3 w-3" />}
+      {sending ? "Sending..." : "Verify Email"}
+    </Button>
+  );
+};
+
 const MyAccount = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -492,9 +538,15 @@ const MyAccount = () => {
                           id="email"
                           value={user?.email || ""}
                           readOnly
-                          className="pl-10 bg-muted/50 cursor-default"
+                          className="pl-10 pr-10 bg-muted/50 cursor-default"
                         />
+                        {user?.email_confirmed_at && (
+                          <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                        )}
                       </div>
+                      {user && !user.email_confirmed_at && (
+                        <EmailVerifyButton email={user.email || ""} />
+                      )}
                     </div>
 
                     {/* Phone */}

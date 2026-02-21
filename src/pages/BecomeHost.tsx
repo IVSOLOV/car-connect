@@ -85,7 +85,7 @@ const BecomeHost = () => {
       <Header />
 
       {/* Hero */}
-      <section className="pt-32 sm:pt-24 pb-16">
+      <section className="pt-36 sm:pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl mb-6">

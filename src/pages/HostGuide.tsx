@@ -53,7 +53,7 @@ const HostGuide = () => {
         description="Best practices for renting out your personal vehicle on DiRent."
       />
       <Header />
-      <main className="container mx-auto px-4 pt-32 sm:pt-24 pb-8 max-w-2xl">
+      <main className="container mx-auto px-4 pt-36 sm:pt-24 pb-8 max-w-2xl">
         <button
           onClick={() => navigate(-1)}
           className="mb-4 inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"

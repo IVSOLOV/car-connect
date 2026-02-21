@@ -183,7 +183,7 @@ const OwnerProfile = () => {
       />
       <Header />
 
-      <main className="container mx-auto px-4 pt-32 sm:pt-24 pb-12">
+      <main className="container mx-auto px-4 pt-36 sm:pt-24 pb-12">
         <Link
           to="/"
           className="mb-6 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"

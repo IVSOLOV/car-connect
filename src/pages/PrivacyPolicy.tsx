@@ -12,7 +12,7 @@ const PrivacyPolicy = () => {
         canonicalUrl="/privacy"
       />
       <Header />
-      <main className="container mx-auto px-4 pt-32 sm:pt-24 pb-8">
+      <main className="container mx-auto px-4 pt-36 sm:pt-24 pb-8">
         <div className="mx-auto max-w-3xl">
           <h1 className="text-4xl font-bold mb-8 text-foreground">Privacy Policy for DiRent</h1>
           

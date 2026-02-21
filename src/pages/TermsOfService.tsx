@@ -13,7 +13,7 @@ const TermsOfService = () => {
       />
       <Header />
 
-      <main className="container mx-auto px-4 pt-32 sm:pt-24 pb-8">
+      <main className="container mx-auto px-4 pt-36 sm:pt-24 pb-8">
         <div className="mx-auto max-w-3xl">
           <h1 className="mb-8 text-4xl font-bold text-foreground">Terms of Service for DiRent</h1>
           <p className="mb-6 text-muted-foreground">Last updated: December 2025</p>

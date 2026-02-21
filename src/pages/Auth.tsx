@@ -446,6 +446,12 @@ const Auth = () => {
               description: "A user with this email address has already been registered. Please sign in instead.",
               variant: "destructive",
             });
+          } else if (errorMsg.includes("rate limit") || errorMsg.includes("rate_limit") || (error as any)?.status === 429) {
+            toast({
+              title: "Too many attempts",
+              description: "Please wait a few minutes before trying again.",
+              variant: "destructive",
+            });
           } else {
             toast({
               title: "Sign up failed",

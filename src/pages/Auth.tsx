@@ -183,10 +183,14 @@ const Auth = () => {
       newErrors.email = emailResult.error.errors[0].message;
     }
 
-    if (mode !== "forgot") {
+    if (mode === "signup") {
       const passwordResult = passwordSchema.safeParse(password);
       if (!passwordResult.success) {
         newErrors.password = passwordResult.error.errors[0].message;
+      }
+    } else if (mode === "login") {
+      if (!password) {
+        newErrors.password = "Password is required";
       }
     }
 

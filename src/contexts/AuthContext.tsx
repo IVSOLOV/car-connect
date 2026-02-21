@@ -152,7 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           body: {
             type: 'confirmation',
             email: email,
-            redirect_to: `${window.location.origin}/`,
+            redirect_to: `${window.location.origin}/auth?verified=true`,
           },
         });
         console.log('Custom verification email sent via Resend');

@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, AlertCircle, CheckCircle, History, ImagePlus, X } from "lucide-react";
+import { ArrowLeft, Send, AlertCircle, CheckCircle, History, ImagePlus, X, Copy, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -174,7 +174,25 @@ const WriteToSupport = () => {
           <Card className="max-w-md mx-auto">
             <CardContent className="pt-6 text-center">
               <p className="text-muted-foreground mb-4">Please login to contact support</p>
-              <Button onClick={() => navigate("/auth")}>Sign In</Button>
+              <Button onClick={() => navigate("/auth")} className="mb-6">Sign In</Button>
+              <div className="border-t border-border pt-4">
+                <p className="text-sm text-muted-foreground mb-2">Or email us directly:</p>
+                <div className="flex items-center justify-center gap-2">
+                  <Mail className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">dirrenthelp@yahoo.com</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => {
+                      navigator.clipboard.writeText("dirrenthelp@yahoo.com");
+                      toast.success("Email copied to clipboard");
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

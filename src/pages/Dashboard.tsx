@@ -434,6 +434,11 @@ const Dashboard = () => {
         </Select>
       </div>
 
+      <Button className="w-full" onClick={() => setMobileFiltersOpen(false)}>
+        <Search className="mr-2 h-4 w-4" />
+        Search
+      </Button>
+
       {hasActiveFilters && (
         <Button variant="outline" className="w-full" onClick={clearFilters}>
           <X className="mr-2 h-4 w-4" />

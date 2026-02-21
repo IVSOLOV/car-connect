@@ -220,22 +220,33 @@ const Auth = () => {
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    try {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
       if (file.size > 5 * 1024 * 1024) {
         toast({
           title: "File too large",
           description: "Please select an image under 5MB.",
           variant: "destructive",
         });
+        // Reset the input so user can try again
+        if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
       setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      
+      // Use URL.createObjectURL instead of FileReader for better mobile compatibility
+      const objectUrl = URL.createObjectURL(file);
+      setAvatarPreview(objectUrl);
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+      toast({
+        title: "Upload failed",
+        description: "Could not load image. Please try again.",
+        variant: "destructive",
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -843,7 +854,11 @@ const Auth = () => {
                     <div className="flex items-center gap-4">
                       <div 
                         className="w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden cursor-pointer border-2 border-dashed border-border hover:border-primary transition-colors"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          fileInputRef.current?.click();
+                        }}
                       >
                         {avatarPreview ? (
                           <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
@@ -856,7 +871,11 @@ const Auth = () => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => fileInputRef.current?.click()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            fileInputRef.current?.click();
+                          }}
                           disabled={isLoading}
                         >
                           {avatarPreview ? "Change Photo" : "Upload Photo"}

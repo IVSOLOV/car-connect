@@ -515,9 +515,14 @@ const SupportTickets = () => {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-3">
                 {isAdmin ? "No support tickets yet" : "You haven't submitted any tickets yet"}
               </p>
+              {!isAdmin && (
+                <Button variant="outline" size="sm" onClick={() => navigate("/write-to-support")}>
+                  Write to Support
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (

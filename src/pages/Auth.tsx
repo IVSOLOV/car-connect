@@ -52,7 +52,7 @@ const formatPhoneNumber = (value: string) => {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 };
 
-type AuthMode = "login" | "signup" | "forgot" | "verify-email" | "reset-password";
+type AuthMode = "login" | "signup" | "forgot" | "verify-email" | "reset-password" | "password-updated";
 
 // Determine initial mode synchronously to prevent race conditions with auth redirects
 const getInitialMode = (): AuthMode => {
@@ -171,7 +171,7 @@ const Auth = () => {
       return;
     }
     
-    if (user && mode !== "reset-password") {
+    if (user && mode !== "reset-password" && mode !== "password-updated") {
       navigate("/");
     }
   }, [user, navigate, mode, toast]);
@@ -571,16 +571,13 @@ const Auth = () => {
       } else {
         // Sign out the user so they must log in with new password
         await supabase.auth.signOut();
+        isRecoveryRef.current = false;
         
-        toast({
-          title: "Password updated!",
-          description: "Please sign in with your new password.",
-        });
-        // Clear the hash and redirect to login
+        // Clear the hash and show success screen
         window.history.replaceState(null, '', '/auth');
-        setMode("login");
         setNewPassword("");
         setConfirmPassword("");
+        setMode("password-updated");
       }
     } catch (error) {
       toast({
@@ -605,6 +602,8 @@ const Auth = () => {
         return "Verify your email";
       case "reset-password":
         return "Set new password";
+      case "password-updated":
+        return "Password Updated!";
     }
   };
 
@@ -620,6 +619,8 @@ const Auth = () => {
         return "We've sent you a verification link";
       case "reset-password":
         return "Choose a new password for your account";
+      case "password-updated":
+        return "Your password has been successfully changed";
     }
   };
 
@@ -660,7 +661,44 @@ const Auth = () => {
 
         {/* Form */}
         <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
-          {mode === "reset-password" ? (
+          {mode === "password-updated" ? (
+            <div className="space-y-6 text-center py-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Lock className="h-8 w-8 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-foreground font-medium">Your password has been successfully updated.</p>
+                <p className="text-sm text-muted-foreground">
+                  Please open the <strong>DiRent app</strong> on your device and sign in with your new password for the best experience.
+                </p>
+              </div>
+
+              {/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && (
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    window.location.href = 'com.solostar.dirent://auth';
+                  }}
+                >
+                  <Smartphone className="mr-2 h-4 w-4" />
+                  Open DiRent App
+                </Button>
+              )}
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">or</span></div>
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setMode("login")}
+              >
+                Sign in on Web
+              </Button>
+            </div>
+          ) : mode === "reset-password" ? (
             <form onSubmit={(e) => { e.preventDefault(); handleResetPassword(); }} className="space-y-4">
               {/* Mobile app banner - detect mobile devices */}
               {/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && (

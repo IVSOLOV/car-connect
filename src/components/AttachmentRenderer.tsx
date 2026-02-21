@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FileText, Download, Loader2 } from "lucide-react";
+import { FileText, Download, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Attachment {
@@ -26,19 +26,18 @@ const AttachmentRenderer = ({ attachment, isSender }: AttachmentRendererProps) =
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [showFullscreen, setShowFullscreen] = useState(false);
 
   useEffect(() => {
     const getSignedUrl = async () => {
       try {
         let filePath = attachment.url;
         
-        // Check if it's already a full URL (legacy data)
         if (filePath.startsWith('http')) {
           const match = filePath.match(/message-attachments\/(.+)$/);
           if (match) {
             filePath = match[1];
           } else {
-            // If we can't parse it, just use the URL directly
             setSignedUrl(filePath);
             setLoading(false);
             return;
@@ -47,7 +46,7 @@ const AttachmentRenderer = ({ attachment, isSender }: AttachmentRendererProps) =
         
         const { data, error: signError } = await supabase.storage
           .from('message-attachments')
-          .createSignedUrl(filePath, 3600); // 1 hour expiry
+          .createSignedUrl(filePath, 3600);
         
         if (signError) {
           console.error('Error getting signed URL:', signError);
@@ -90,13 +89,39 @@ const AttachmentRenderer = ({ attachment, isSender }: AttachmentRendererProps) =
 
   if (isImageFile(attachment.type)) {
     return (
-      <a href={signedUrl} target="_blank" rel="noopener noreferrer">
-        <img 
-          src={signedUrl} 
-          alt={attachment.name}
-          className="max-w-full rounded-md max-h-48 object-cover hover:opacity-90 transition-opacity"
-        />
-      </a>
+      <>
+        <button
+          type="button"
+          onClick={() => setShowFullscreen(true)}
+          className="cursor-pointer border-0 bg-transparent p-0"
+        >
+          <img 
+            src={signedUrl} 
+            alt={attachment.name}
+            className="max-w-full rounded-md max-h-48 object-cover hover:opacity-90 transition-opacity"
+          />
+        </button>
+
+        {showFullscreen && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 backdrop-blur-sm"
+            onClick={() => setShowFullscreen(false)}
+          >
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowFullscreen(false); }}
+              className="absolute top-4 right-4 z-[101] rounded-full bg-secondary p-2 text-foreground hover:bg-muted transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <img
+              src={signedUrl}
+              alt={attachment.name}
+              className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
+      </>
     );
   }
 

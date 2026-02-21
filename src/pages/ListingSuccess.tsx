@@ -224,7 +224,7 @@ const ListingSuccess = () => {
       />
       <Header />
       
-      <main className="container mx-auto px-4 py-8 pt-24">
+      <main className="container mx-auto px-4 py-8 pt-32 sm:pt-24">
         <div className="max-w-lg mx-auto">
           <Card className="border-primary/20 bg-card/50 backdrop-blur">
             <CardContent className="pt-8 pb-8 text-center space-y-6">

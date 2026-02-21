@@ -487,7 +487,7 @@ const SupportTickets = () => {
       />
       <Header />
 
-      <main className="container mx-auto px-4 pt-24 pb-12">
+      <main className="container mx-auto px-4 pt-32 sm:pt-24 pb-12">
         <Button
           variant="ghost"
           onClick={() => navigate(-1)}

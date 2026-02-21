@@ -429,7 +429,7 @@ const ListingDetails = () => {
       />
       <Header />
 
-      <main className="container mx-auto px-4 pt-20 sm:pt-24 pb-8 sm:pb-12 max-w-full overflow-x-hidden">
+      <main className="container mx-auto px-4 pt-32 sm:pt-24 pb-8 sm:pb-12 max-w-full overflow-x-hidden">
         <button
           onClick={() => navigate(-1)}
           className="mb-4 sm:mb-6 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"

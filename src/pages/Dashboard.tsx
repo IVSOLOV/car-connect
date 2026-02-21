@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Search, SlidersHorizontal, X, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import Header from "@/components/Header";
@@ -64,23 +65,30 @@ const PRICE_RANGES = [
 ];
 
 const Dashboard = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [listings, setListings] = useState<Listing[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Filter states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedMake, setSelectedMake] = useState("");
-  const [selectedState, setSelectedState] = useState("");
-  const [selectedPriceRange, setSelectedPriceRange] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [selectedVehicleType, setSelectedVehicleType] = useState<VehicleType | "">("");
-  const [selectedFuelType, setSelectedFuelType] = useState<string>("");
-  const [deliveryOnly, setDeliveryOnly] = useState(false);
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+  // Initialize filter states from URL params
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [selectedMake, setSelectedMake] = useState(searchParams.get("make") || "");
+  const [selectedState, setSelectedState] = useState(searchParams.get("state") || "");
+  const [selectedPriceRange, setSelectedPriceRange] = useState(searchParams.get("price") || "");
+  const [selectedYear, setSelectedYear] = useState(searchParams.get("year") || "");
+  const [selectedVehicleType, setSelectedVehicleType] = useState<VehicleType | "">(
+    (searchParams.get("vtype") as VehicleType) || ""
+  );
+  const [selectedFuelType, setSelectedFuelType] = useState<string>(searchParams.get("fuel") || "");
+  const [deliveryOnly, setDeliveryOnly] = useState(searchParams.get("delivery") === "1");
+  const [startDate, setStartDate] = useState<Date>(
+    searchParams.get("from") ? new Date(searchParams.get("from")!) : undefined!
+  );
+  const [endDate, setEndDate] = useState<Date>(
+    searchParams.get("until") ? new Date(searchParams.get("until")!) : undefined!
+  );
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 15 }, (_, i) => (currentYear - i).toString());
@@ -93,6 +101,22 @@ const Dashboard = () => {
   useEffect(() => {
     applyFilters();
   }, [listings, bookings, searchQuery, selectedMake, selectedState, selectedPriceRange, selectedYear, selectedVehicleType, selectedFuelType, deliveryOnly, startDate, endDate]);
+
+  // Sync filters to URL search params
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("q", searchQuery);
+    if (selectedMake) params.set("make", selectedMake);
+    if (selectedState) params.set("state", selectedState);
+    if (selectedPriceRange) params.set("price", selectedPriceRange);
+    if (selectedYear) params.set("year", selectedYear);
+    if (selectedVehicleType) params.set("vtype", selectedVehicleType);
+    if (selectedFuelType) params.set("fuel", selectedFuelType);
+    if (deliveryOnly) params.set("delivery", "1");
+    if (startDate) params.set("from", startDate.toISOString().split("T")[0]);
+    if (endDate) params.set("until", endDate.toISOString().split("T")[0]);
+    setSearchParams(params, { replace: true });
+  }, [searchQuery, selectedMake, selectedState, selectedPriceRange, selectedYear, selectedVehicleType, selectedFuelType, deliveryOnly, startDate, endDate]);
 
   const fetchListings = async () => {
     try {

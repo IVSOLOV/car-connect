@@ -60,11 +60,11 @@ const EmailVerificationCard = ({ email }: { email: string }) => {
   const handleResendVerification = async () => {
     setSending(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
+      const { error } = await supabase.functions.invoke('send-auth-email', {
+        body: {
+          type: 'confirmation',
+          email: email,
+          redirect_to: `${window.location.origin}/auth?verified=true`,
         },
       });
 
@@ -146,10 +146,12 @@ const EmailVerifyButton = ({ email }: { email: string }) => {
   const handleVerify = async () => {
     setSending(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-        options: { emailRedirectTo: `${window.location.origin}/` },
+      const { error } = await supabase.functions.invoke('send-auth-email', {
+        body: {
+          type: 'confirmation',
+          email,
+          redirect_to: `${window.location.origin}/auth?verified=true`,
+        },
       });
       if (error) throw error;
       setSent(true);

@@ -204,6 +204,8 @@ const MyAccount = () => {
   const [editPhone, setEditPhone] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -435,6 +437,32 @@ const MyAccount = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    setDeletingAccount(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-own-account');
+      if (error) throw error;
+      
+      await supabase.auth.signOut();
+      navigate('/');
+      toast({
+        title: "Account Deleted",
+        description: "Your account and all associated data have been permanently deleted.",
+      });
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete your account. Please try again or contact support.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingAccount(false);
+      setDeleteAccountOpen(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -619,6 +647,27 @@ const MyAccount = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Delete Account Section */}
+          <div className="mt-10 pt-6 border-t border-destructive/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-destructive">Delete Account</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Permanently delete your account and all associated data.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                onClick={() => setDeleteAccountOpen(true)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Account
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Booking Calendar Modal */}
@@ -655,6 +704,42 @@ const MyAccount = () => {
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 Yes, delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Account Confirmation Dialog */}
+        <AlertDialog open={deleteAccountOpen} onOpenChange={setDeleteAccountOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-destructive">Delete Your Account?</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                <p>This action is <strong>permanent and cannot be undone</strong>. By deleting your account, you will lose:</p>
+                <ul className="list-disc list-inside text-sm space-y-1 mt-2">
+                  <li>All your personal information and profile data</li>
+                  <li>All your listings and booking history</li>
+                  <li>All your messages and conversations</li>
+                  <li>All your saved listings and reviews</li>
+                  <li>Access to your account permanently</li>
+                </ul>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deletingAccount}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteAccount}
+                disabled={deletingAccount}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deletingAccount ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Yes, Delete My Account"
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

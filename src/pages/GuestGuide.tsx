@@ -105,7 +105,7 @@ const GuestGuide = () => {
       <Header />
 
       {/* Hero */}
-      <section className="pt-24 pb-16">
+      <section className="pt-32 sm:pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-primary mb-6">

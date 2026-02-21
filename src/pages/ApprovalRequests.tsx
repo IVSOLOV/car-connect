@@ -258,7 +258,7 @@ const ApprovalRequests = () => {
       />
       <Header />
 
-      <main className="container mx-auto px-4 pt-24 pb-12">
+      <main className="container mx-auto px-4 pt-32 sm:pt-24 pb-12">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"

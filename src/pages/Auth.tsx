@@ -636,7 +636,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col px-4 pt-20 sm:py-12">
+    <div className="min-h-screen bg-background flex flex-col px-4 pt-32 sm:pt-12">
       <SEO 
         title="Sign In | DiRent - Direct Owner Car Rentals"
         description="Sign in or create an account to rent cars directly from owners or list your car for rent."

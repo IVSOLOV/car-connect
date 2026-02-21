@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import { Session } from "@supabase/supabase-js";
 import { useNavigate, Link } from "react-router-dom";
 import { z } from "zod";
-import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Building2, Camera, Loader2, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Building2, Camera, Loader2, Eye, EyeOff, Smartphone } from "lucide-react";
 import logo from "@/assets/logo.png";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
@@ -674,6 +674,31 @@ const Auth = () => {
         <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
           {mode === "reset-password" ? (
             <form onSubmit={(e) => { e.preventDefault(); handleResetPassword(); }} className="space-y-4">
+              {/* Mobile app banner - detect mobile devices */}
+              {/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && (
+                <div className="bg-muted/50 border border-border rounded-xl p-4 flex items-start gap-3">
+                  <Smartphone className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <div className="space-y-2">
+                    <p className="text-sm text-foreground font-medium">Have the DiRent app?</p>
+                    <p className="text-xs text-muted-foreground">You can reset your password directly in the app for a smoother experience.</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-1"
+                      onClick={() => {
+                        window.location.href = `com.solostar.dirent://auth?reset=true`;
+                        // Fallback: if app doesn't open within 1.5s, stay on web
+                        setTimeout(() => {
+                          // User is still here, app didn't open - that's fine, they can use web
+                        }, 1500);
+                      }}
+                    >
+                      Open in DiRent App
+                    </Button>
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
                 <div className="relative">

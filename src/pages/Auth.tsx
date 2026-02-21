@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import Footer from "@/components/Footer";
 import { Session } from "@supabase/supabase-js";
 import { useNavigate, Link } from "react-router-dom";
 import { z } from "zod";
@@ -1153,6 +1154,7 @@ const Auth = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

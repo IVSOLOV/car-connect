@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Search, SlidersHorizontal, X, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import ListingCard from "@/components/ListingCard";
 import ListingCardSkeleton from "@/components/ListingCardSkeleton";
@@ -557,6 +558,7 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, AlertCircle, CheckCircle, History, ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -347,6 +348,7 @@ const WriteToSupport = () => {
           </Card>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

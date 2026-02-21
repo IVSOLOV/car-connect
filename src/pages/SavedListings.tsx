@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import EmptyState from "@/components/EmptyState";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -244,6 +245,7 @@ const SavedListings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Footer />
     </div>
   );
 };

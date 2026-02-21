@@ -36,6 +36,7 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import SupportAttachmentImage from "@/components/SupportAttachmentImage";
 import { supabase } from "@/integrations/supabase/client";
@@ -822,6 +823,7 @@ const SupportTickets = () => {
           )}
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 };

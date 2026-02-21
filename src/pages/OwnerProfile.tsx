@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import type { Listing } from "@/types/listing";
@@ -305,6 +306,7 @@ const OwnerProfile = () => {
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

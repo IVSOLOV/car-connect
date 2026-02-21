@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import BookingCalendarModal from "@/components/BookingCalendarModal";
 
@@ -318,6 +319,7 @@ const MyListings = () => {
           </AlertDialogContent>
         </AlertDialog>
       </main>
+      <Footer />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Shield, UserCheck, Car, MapPin, Camera, FileSignature, CreditCard, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 
 const HostGuide = () => {
@@ -102,6 +103,7 @@ const HostGuide = () => {
           </Button>
         </div>
       </main>
+      <Footer />
     </>
   );
 };

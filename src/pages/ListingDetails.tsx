@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import ReviewDialog from "@/components/ReviewDialog";
 import { sendNotificationEmail } from "@/lib/notifications";
@@ -1045,6 +1046,7 @@ const ListingDetails = () => {
           />
         )}
       </main>
+      <Footer />
     </div>
   );
 };

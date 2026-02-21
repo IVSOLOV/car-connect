@@ -2,6 +2,7 @@ import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Home, ArrowLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Footer from "@/components/Footer";
 
 const NotFound = () => {
   const location = useLocation();
@@ -55,6 +56,7 @@ const NotFound = () => {
           Requested: <code className="bg-muted px-2 py-1 rounded text-xs">{location.pathname}</code>
         </p>
       </div>
+      <Footer />
     </div>
   );
 };

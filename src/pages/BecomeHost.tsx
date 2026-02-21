@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Car, DollarSign, Users, MessageCircle, Check, ArrowRight, FileText, Shield, Camera, MapPin, FileSignature, CreditCard } from "lucide-react";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -267,35 +268,7 @@ const BecomeHost = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <span className="text-lg text-muted-foreground line-through">$14.99</span>
-              <span className="text-3xl font-bold text-gradient">$4.99</span>
-              <span className="text-muted-foreground">/ car / month</span>
-            </div>
-            <p className="text-sm text-primary font-medium">NOW only $4.99 for early hosts!</p>
-          </div>
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <p className="text-sm text-muted-foreground">
-              © 2025 DiRent. All rights reserved.
-            </p>
-            <div className="flex gap-6">
-              <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                Privacy Policy
-              </Link>
-              <Link to="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                Terms of Service
-              </Link>
-              <Link to="/write-to-support" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                Contact
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

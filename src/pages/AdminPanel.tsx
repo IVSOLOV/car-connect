@@ -456,7 +456,7 @@ const AdminPanel = () => {
       <SEO title="Admin Panel | Car Rental" description="Manage listings and users" />
       <Header />
 
-      <main className="container mx-auto px-4 pt-32 sm:pt-24 pb-12">
+      <main className="container mx-auto px-4 pt-36 sm:pt-24 pb-12">
         <h1 className="text-3xl font-bold text-foreground mb-8">Admin Panel</h1>
 
         <Tabs defaultValue="listings" className="space-y-6">

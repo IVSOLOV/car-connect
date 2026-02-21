@@ -451,7 +451,7 @@ const MyAccount = () => {
       />
       <Header />
       
-      <main className="container mx-auto px-4 py-8 pt-32">
+      <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
         <div className="max-w-4xl mx-auto">
           {/* Email Verification Section - Show if email not confirmed */}
           {user && !user.email_confirmed_at && (

@@ -456,7 +456,7 @@ const Dashboard = () => {
       />
       <Header />
 
-      <main className="container mx-auto px-3 sm:px-4 pt-36 sm:pt-24 pb-8 sm:pb-12">
+      <main className="container mx-auto px-3 sm:px-4 pt-40 sm:pt-24 pb-8 sm:pb-12">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">Browse Cars</h1>

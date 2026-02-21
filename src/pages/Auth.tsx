@@ -328,29 +328,17 @@ const Auth = () => {
         return;
       }
 
-      // Use our custom DiRent-branded email via Resend instead of Supabase's default
-      let emailResult;
-      let emailError;
-      try {
-        const result = await supabase.functions.invoke(
-          'send-auth-email',
-          {
-            body: {
-              type: 'recovery',
-              email: email.toLowerCase(),
-              redirect_to: 'https://directrental.lovable.app/auth?reset=true',
-            },
-          }
-        );
-        emailResult = result.data;
-        emailError = result.error;
-      } catch (invokeErr) {
-        console.error("send-auth-email invoke failed:", invokeErr);
-        emailError = invokeErr;
-      }
+      // Use Supabase's native resetPasswordForEmail for maximum reliability
+      // This uses the branded recovery.html template configured in the project
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.toLowerCase(),
+        {
+          redirectTo: 'https://directrental.lovable.app/auth?reset=true',
+        }
+      );
 
-      if (emailError || emailResult?.error) {
-        console.error("Reset email error:", emailError, emailResult?.error);
+      if (resetError) {
+        console.error("Reset email error:", resetError);
         toast({
           title: "Error",
           description: "Failed to send reset email. Please try again.",
@@ -360,7 +348,7 @@ const Auth = () => {
         setResetSent(true);
         toast({
           title: "Check your email",
-          description: "We've sent you a password reset link.",
+          description: "We've sent you a password reset link. Please also check your spam folder.",
         });
       }
     } catch (error) {

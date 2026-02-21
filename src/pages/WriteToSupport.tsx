@@ -166,6 +166,10 @@ const WriteToSupport = () => {
     return (
       <div className="min-h-screen bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
+          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-6">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
           <Card className="max-w-md mx-auto">
             <CardContent className="pt-6 text-center">
               <p className="text-muted-foreground mb-4">Please login to contact support</p>

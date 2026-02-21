@@ -165,7 +165,7 @@ const WriteToSupport = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pt-32 sm:pt-20">
+      <div className="min-h-screen bg-background pt-20 sm:pt-32">
         <div className="container mx-auto px-4 py-8">
           <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -202,7 +202,7 @@ const WriteToSupport = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background pt-32 sm:pt-20">
+      <div className="min-h-screen bg-background pt-20 sm:pt-32">
         <SEO title="Request Submitted - DiRent Support" description="Your support request has been submitted" />
         <div className="container mx-auto px-4 py-8">
           <Card className="max-w-2xl mx-auto">
@@ -236,7 +236,7 @@ const WriteToSupport = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-32 sm:pt-20">
+    <div className="min-h-screen bg-background pt-20 sm:pt-32">
       <SEO title="Write to Support - DiRent" description="Contact our support team for help" />
       <div className="container mx-auto px-4 py-8">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">

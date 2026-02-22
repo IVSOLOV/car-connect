@@ -171,7 +171,7 @@ const Auth = () => {
       return;
     }
     
-    if (user && mode !== "reset-password" && mode !== "password-updated") {
+    if (user && mode !== "reset-password" && mode !== "password-updated" && !isRecoveryRef.current) {
       navigate("/");
     }
   }, [user, navigate, mode, toast]);
@@ -581,9 +581,12 @@ const Auth = () => {
       } else {
         // Sign out the user so they must log in with new password
         await supabase.auth.signOut();
-        isRecoveryRef.current = false;
         
-        // Clear the hash and show success screen
+        // Clear recovery state after sign-out completes
+        isRecoveryRef.current = false;
+        recoverySessionRef.current = null;
+        
+        // Clear the hash and redirect to login
         window.history.replaceState(null, '', '/auth');
         setNewPassword("");
         setConfirmPassword("");

@@ -128,6 +128,14 @@ const CreateListing = () => {
   // Include "Other" in available models if make is selected and not "Other"
   const availableModels = make && make !== "Other" ? [...(modelsByMake[make] || []), "Other"] : [];
 
+  // If there's a pending listing (user already submitted and went to Stripe), redirect to success page
+  useEffect(() => {
+    const pendingListing = localStorage.getItem("pendingListing");
+    if (pendingListing) {
+      navigate("/listing-success", { replace: true });
+    }
+  }, [navigate]);
+
   // Handle payment success/cancel from Stripe redirect
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
@@ -137,9 +145,10 @@ const CreateListing = () => {
         description: "Your 30-day free trial has started! Now let's get your vehicle listed and earning.",
       });
       checkSubscription();
-      // Clear the URL params
       navigate("/create-listing", { replace: true });
     } else if (paymentStatus === "canceled") {
+      // Payment was canceled - clear pending data so they can resubmit
+      localStorage.removeItem("pendingListing");
       toast({
         title: "Payment Canceled",
         description: "No worries! You can start your free trial whenever you're ready.",
@@ -441,13 +450,9 @@ const CreateListing = () => {
           const isInIframe = window !== window.top;
           
           if (isInIframe) {
-            // In iframe: open in new tab (only option that works)
             window.open(result.url, "_blank");
-            toast({
-              title: "Checkout Opened",
-              description: "Complete your payment in the new tab, then return here.",
-            });
-            setIsSubmitting(false);
+            // Navigate away from the form to prevent double submission
+            navigate("/listing-success");
             return;
           } else {
             // Not in iframe: navigate in same tab (prevents duplicate submissions)

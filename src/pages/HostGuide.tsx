@@ -55,7 +55,7 @@ const HostGuide = () => {
       <Header />
       <main className="container mx-auto px-4 pt-36 sm:pt-24 pb-8 max-w-2xl">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/dashboard")}
           className="mb-4 inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -97,7 +97,7 @@ const HostGuide = () => {
         </p>
 
         <div className="text-center mt-6">
-          <Button onClick={() => navigate(-1)}>
+          <Button onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to DiRent
           </Button>

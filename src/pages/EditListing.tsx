@@ -531,7 +531,7 @@ const EditListing = () => {
       <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
         <div className="max-w-2xl mx-auto">
           <button 
-            onClick={() => navigate(-1)} 
+            onClick={() => navigate("/dashboard")} 
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -907,7 +907,7 @@ const EditListing = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/dashboard")}
                 className="flex-1"
               >
                 Cancel

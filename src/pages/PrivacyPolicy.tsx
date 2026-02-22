@@ -18,7 +18,7 @@ const PrivacyPolicy = () => {
       <main className="container mx-auto px-4 pt-36 sm:pt-24 pb-8">
         <div className="mx-auto max-w-3xl">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/dashboard")}
             className="mb-4 inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />

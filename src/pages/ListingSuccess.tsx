@@ -13,18 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { sendNotificationEmail } from "@/lib/notifications";
 
-// Helper to convert base64 data URL to File
-const dataURLtoFile = (dataurl: string, filename: string): File => {
-  const arr = dataurl.split(",");
-  const mime = arr[0].match(/:(.*?);/)?.[1] || "image/jpeg";
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new File([u8arr], filename, { type: mime });
-};
 
 const ListingSuccess = () => {
   const navigate = useNavigate();
@@ -71,7 +59,6 @@ const ListingSuccess = () => {
       if (!user || isCreatingListing || listingCreated) return;
       
       const pendingListingData = localStorage.getItem("pendingListing");
-      const pendingImagesData = localStorage.getItem("pendingListingImages");
       
       if (!pendingListingData) {
         // No pending listing - user might have already created it or came here directly
@@ -82,37 +69,12 @@ const ListingSuccess = () => {
 
       try {
         const listing = JSON.parse(pendingListingData);
-        const imageDataUrls: string[] = pendingImagesData ? JSON.parse(pendingImagesData) : [];
 
-        // Convert base64 images back to files and upload
-        const uploadedImageUrls: string[] = [];
-        
-        for (let i = 0; i < imageDataUrls.length; i++) {
-          const dataUrl = imageDataUrls[i];
-          const imageInfo = listing.images[i];
-          const file = dataURLtoFile(dataUrl, imageInfo?.name || `image-${i}.jpg`);
-          
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-          
-          const { error: uploadError } = await supabase.storage
-            .from('car-photos')
-            .upload(fileName, file);
-          
-          if (uploadError) {
-            console.error("Upload error:", uploadError);
-            continue;
-          }
-          
-          const { data: { publicUrl } } = supabase.storage
-            .from('car-photos')
-            .getPublicUrl(fileName);
-          
-          uploadedImageUrls.push(publicUrl);
-        }
+        // Images were already uploaded to storage before Stripe redirect
+        const uploadedImageUrls: string[] = listing.imageUrls || [];
 
         // Create listing in database
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('listings' as any)
           .insert({
             user_id: user.id,
@@ -129,8 +91,11 @@ const ListingSuccess = () => {
             monthly_price: listing.monthlyPrice ? parseInt(listing.monthlyPrice) : null,
             description: listing.description || null,
             images: uploadedImageUrls,
+            delivery_available: listing.deliveryAvailable || false,
             approval_status: 'pending',
-          });
+          })
+          .select('id')
+          .single();
 
         if (error) {
           console.error("Error creating listing:", error);
@@ -140,9 +105,23 @@ const ListingSuccess = () => {
             variant: "destructive",
           });
         } else {
+          // Store license plate in sensitive data table
+          const listingData = data as any;
+          if (listingData?.id && listing.licensePlate?.trim()) {
+            const { error: sensitiveError } = await supabase
+              .from('listing_sensitive_data' as any)
+              .insert({
+                listing_id: listingData.id,
+                license_plate: listing.licensePlate.trim().toUpperCase(),
+                state: listing.state,
+              });
+            if (sensitiveError) {
+              console.error("Error saving sensitive data:", sensitiveError);
+            }
+          }
+
           // Clear pending data on success
           localStorage.removeItem("pendingListing");
-          localStorage.removeItem("pendingListingImages");
           setListingCreated(true);
           
           // Get user's name for admin notification

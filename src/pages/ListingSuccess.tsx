@@ -178,7 +178,7 @@ const ListingSuccess = () => {
   // Payment was canceled or failed
   if (wasCanceled || paymentFailed) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <SEO title="Payment Issue | DiRent" description="Payment was not completed" />
         <Header />
         <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
@@ -232,7 +232,7 @@ const ListingSuccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title="Success! | DiRent"
         description="Your subscription is active"

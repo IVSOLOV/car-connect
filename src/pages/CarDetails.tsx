@@ -58,7 +58,7 @@ const CarDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
 
       <main className="container mx-auto px-4 pt-36 sm:pt-24 pb-12">

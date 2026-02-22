@@ -451,7 +451,7 @@ const CreateListing = () => {
   // Show waiting state when user is completing Stripe payment in another tab
   if (awaitingPayment) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <SEO title="Complete Payment | DiRent" description="Complete your payment to list your vehicle" />
         <Header />
         <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
@@ -489,7 +489,7 @@ const CreateListing = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title="Create Listing | List Your Car"
         description="List your vehicle for rent"

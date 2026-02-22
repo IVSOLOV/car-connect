@@ -40,7 +40,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title="DiRent - Direct Owner Car Rentals | Zero Commission"
         description="Rent cars directly from owners with zero commission fees. Skip the middleman and save on your next car rental. List your car for just $4.99/month."

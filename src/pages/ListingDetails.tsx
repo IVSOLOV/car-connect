@@ -433,7 +433,7 @@ const ListingDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title={`${title} | Car Rental`}
         description={listing.description || `Rent this ${title} in ${location}`}

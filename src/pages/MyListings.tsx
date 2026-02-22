@@ -132,7 +132,7 @@ const MyListings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title="My Listings | Car Rental"
         description="Manage your car listings"

@@ -452,7 +452,7 @@ const AdminPanel = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO title="Admin Panel | Car Rental" description="Manage listings and users" />
       <Header />
 

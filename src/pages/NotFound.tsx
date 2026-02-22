@@ -12,7 +12,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/50 to-background p-4">
+    <div className="flex flex-col min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/50 to-background p-4">
       <div className="text-center max-w-md mx-auto">
         {/* Large 404 with gradient */}
         <div className="relative mb-8">

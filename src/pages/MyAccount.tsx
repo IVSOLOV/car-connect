@@ -472,7 +472,7 @@ const MyAccount = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title="My Account | Car Rental"
         description="Manage your account and car listings"

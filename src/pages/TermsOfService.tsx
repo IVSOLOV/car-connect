@@ -8,7 +8,7 @@ const TermsOfService = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO
         title="Terms of Service | DiRent"
         description="Read the terms and conditions for using DiRent's car rental marketplace."

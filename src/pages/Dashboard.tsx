@@ -449,7 +449,7 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO
         title="Browse Cars | DiRent"
         description="Browse all available cars for rent. Filter by make, model, location, and price."

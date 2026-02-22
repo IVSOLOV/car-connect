@@ -74,10 +74,14 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Prevent horizontal scroll on mobile */
-  html, body {
+  /* Prevent horizontal scroll on mobile — only on html to avoid blocking vertical scroll */
+  html {
     overflow-x: hidden;
     max-width: 100vw;
+  }
+
+  body {
+    overflow-x: clip;
   }
 
   /* Safe area padding for notched devices */

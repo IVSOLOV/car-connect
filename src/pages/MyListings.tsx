@@ -92,6 +92,7 @@ const MyListings = () => {
     if (!listingToDelete) return;
     
     try {
+      // Delete the listing from database
       const { error } = await supabase
         .from("listings" as any)
         .delete()
@@ -99,10 +100,15 @@ const MyListings = () => {
 
       if (error) throw error;
 
+      // Decrement Stripe subscription quantity (stop billing for this listing)
+      supabase.functions.invoke("remove-listing-billing", {
+        body: { quantity: 1 },
+      }).catch(err => console.error("Failed to update billing:", err));
+
       setListings((prev) => prev.filter((listing) => listing.id !== listingToDelete.id));
       toast({
         title: "Listing Deleted",
-        description: "Your listing has been removed.",
+        description: "Your listing has been removed and billing updated.",
       });
     } catch (error) {
       console.error("Error deleting listing:", error);

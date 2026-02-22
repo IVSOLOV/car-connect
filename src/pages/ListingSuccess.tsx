@@ -162,35 +162,26 @@ const ListingSuccess = () => {
     }
   }, [user, hasWaited, isCreatingListing, listingCreated, toast]);
 
-  // Only redirect to auth if we're absolutely sure there's no session
-  // Give multiple attempts to restore the session before giving up
+  // Keep trying to restore session instead of redirecting to auth
   useEffect(() => {
     if (!loading && hasWaited && !user) {
-      // Try to get session one more time
-      const attemptSessionRestore = async () => {
+      const retryInterval = setInterval(async () => {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          // Still no session after waiting - redirect to auth
-          console.log("[ListingSuccess] No session found after waiting, redirecting to auth");
-          navigate("/auth");
+        if (session) {
+          console.log("[ListingSuccess] Session restored on retry:", session.user.email);
+          clearInterval(retryInterval);
         }
-      };
-      
-      const finalCheck = setTimeout(() => {
-        attemptSessionRestore();
-      }, 2000);
-      return () => clearTimeout(finalCheck);
+      }, 3000);
+      return () => clearInterval(retryInterval);
     }
-  }, [user, loading, hasWaited, navigate]);
+  }, [user, loading, hasWaited]);
 
-  // Show loading while auth state is being restored or listing is being created
-  if (loading || !hasWaited || isCreatingListing) {
+  // Show loading only while creating listing
+  if (isCreatingListing) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <LoadingSpinner />
-        {isCreatingListing && (
-          <p className="text-muted-foreground animate-pulse">Creating your listing...</p>
-        )}
+        <p className="text-muted-foreground animate-pulse">Creating your listing...</p>
       </div>
     );
   }

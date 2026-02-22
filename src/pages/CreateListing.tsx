@@ -427,23 +427,9 @@ const CreateListing = () => {
         
         if (result?.url) {
           console.log("[CreateListing] Redirecting to Stripe:", result.url);
-          
-          // Check if we're in an iframe (Lovable preview) - if so, use new tab
-          // In production (not in iframe), navigate in same tab
-          const isInIframe = window !== window.top;
-          
-          if (isInIframe) {
-            window.open(result.url, "_blank");
-            // Show waiting state - don't navigate to success until payment completes
-            setAwaitingPayment(true);
-            setIsSubmitting(false);
-            return;
-          } else {
-            // Not in iframe: navigate in same tab (prevents duplicate submissions)
-            window.location.href = result.url;
-            // Return never-resolving promise to keep button disabled during navigation
-            return new Promise(() => {});
-          }
+          // Always redirect in same tab - works in both iframe and production
+          window.location.href = result.url;
+          return new Promise(() => {});
         } else {
           throw new Error("No checkout URL returned");
         }

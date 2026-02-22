@@ -380,11 +380,37 @@ const CreateListing = () => {
       return;
     }
 
-    // If no subscription, save listing data to localStorage and redirect to Stripe checkout
+    // If no subscription, upload images first, save listing data to localStorage, then redirect to Stripe checkout
     if (!canCreateListing) {
       setIsSubmitting(true);
       try {
-        // Save listing data to localStorage before redirect
+        // Upload images to storage BEFORE redirect (avoids localStorage quota issues with base64)
+        const uploadedImageUrls: string[] = [];
+        for (const image of images) {
+          const fileExt = image.name.split('.').pop();
+          const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('car-photos')
+            .upload(fileName, image);
+          
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
+            continue;
+          }
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from('car-photos')
+            .getPublicUrl(fileName);
+          
+          uploadedImageUrls.push(publicUrl);
+        }
+
+        if (uploadedImageUrls.length < 5) {
+          throw new Error("Failed to upload enough images. Please try again.");
+        }
+
+        // Save listing data with uploaded URLs (small payload, no quota issues)
         const pendingListing = {
           year,
           make: finalMake,
@@ -400,20 +426,9 @@ const CreateListing = () => {
           monthlyPrice,
           description,
           deliveryAvailable,
-          images: images.map(img => ({ name: img.name, type: img.type, size: img.size })),
+          imageUrls: uploadedImageUrls,
         };
         localStorage.setItem("pendingListing", JSON.stringify(pendingListing));
-        
-        // Store image files as base64 for retrieval after payment
-        const imagePromises = images.map(img => {
-          return new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(img);
-          });
-        });
-        const imageDataUrls = await Promise.all(imagePromises);
-        localStorage.setItem("pendingListingImages", JSON.stringify(imageDataUrls));
         
         // Get Stripe checkout URL
         const result = await startCheckout(1);
@@ -451,7 +466,6 @@ const CreateListing = () => {
           variant: "destructive",
         });
         localStorage.removeItem("pendingListing");
-        localStorage.removeItem("pendingListingImages");
         setIsSubmitting(false);
       }
       return;

@@ -241,7 +241,7 @@ const WriteToSupport = () => {
       <SEO title="Write to Support - DiRent" description="Contact our support team for help" />
       <Header />
       <div className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
+        <Button variant="ghost" onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/dashboard")} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>

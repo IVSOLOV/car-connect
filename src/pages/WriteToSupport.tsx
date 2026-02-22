@@ -166,8 +166,9 @@ const WriteToSupport = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pt-24 sm:pt-32">
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <div className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
           <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
@@ -197,15 +198,17 @@ const WriteToSupport = () => {
             </CardContent>
           </Card>
         </div>
+        <Footer />
       </div>
     );
   }
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background pt-24 sm:pt-32">
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
         <SEO title="Request Submitted - DiRent Support" description="Your support request has been submitted" />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-8 pb-8">
               <div className="text-center space-y-4">
@@ -232,6 +235,7 @@ const WriteToSupport = () => {
             </CardContent>
           </Card>
         </div>
+        <Footer />
       </div>
     );
   }

@@ -393,27 +393,29 @@ const CreateListing = () => {
     if (!canCreateListing) {
       setIsSubmitting(true);
       try {
-        // Upload images to storage BEFORE redirect (avoids localStorage quota issues with base64)
-        const uploadedImageUrls: string[] = [];
-        for (const image of images) {
-          const fileExt = image.name.split('.').pop();
-          const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-          
-          const { error: uploadError } = await supabase.storage
-            .from('car-photos')
-            .upload(fileName, image);
-          
-          if (uploadError) {
-            console.error("Upload error:", uploadError);
-            continue;
-          }
-          
-          const { data: { publicUrl } } = supabase.storage
-            .from('car-photos')
-            .getPublicUrl(fileName);
-          
-          uploadedImageUrls.push(publicUrl);
-        }
+        // Upload images to storage in parallel (much faster than sequential)
+        const uploadResults = await Promise.all(
+          images.map(async (image) => {
+            const fileExt = image.name.split('.').pop();
+            const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            
+            const { error: uploadError } = await supabase.storage
+              .from('car-photos')
+              .upload(fileName, image);
+            
+            if (uploadError) {
+              console.error("Upload error:", uploadError);
+              return null;
+            }
+            
+            const { data: { publicUrl } } = supabase.storage
+              .from('car-photos')
+              .getPublicUrl(fileName);
+            
+            return publicUrl;
+          })
+        );
+        const uploadedImageUrls = uploadResults.filter((url): url is string => url !== null);
 
         if (uploadedImageUrls.length < 5) {
           throw new Error("Failed to upload enough images. Please try again.");
@@ -479,28 +481,29 @@ const CreateListing = () => {
     setIsSubmitting(true);
 
     try {
-      // Upload images to storage
-      const uploadedImageUrls: string[] = [];
-      
-      for (const image of images) {
-        const fileExt = image.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('car-photos')
-          .upload(fileName, image);
-        
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          continue;
-        }
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('car-photos')
-          .getPublicUrl(fileName);
-        
-        uploadedImageUrls.push(publicUrl);
-      }
+      // Upload images to storage in parallel
+      const uploadResults = await Promise.all(
+        images.map(async (image) => {
+          const fileExt = image.name.split('.').pop();
+          const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('car-photos')
+            .upload(fileName, image);
+          
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
+            return null;
+          }
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from('car-photos')
+            .getPublicUrl(fileName);
+          
+          return publicUrl;
+        })
+      );
+      const uploadedImageUrls = uploadResults.filter((url): url is string => url !== null);
 
       // Create listing in database
       const { data: listingData, error } = await supabase

@@ -45,7 +45,8 @@ serve(async (req) => {
       console.log("[CREATE-LISTING-CHECKOUT] Found existing customer", { customerId });
     }
 
-    // Get existing quantity from active subscriptions
+    // Check for existing active subscription with the listing fee price
+    let existingSubscription = null;
     let currentQuantity = 0;
     if (customerId) {
       const subscriptions = await stripe.subscriptions.list({
@@ -57,17 +58,54 @@ serve(async (req) => {
       for (const sub of subscriptions.data) {
         for (const item of sub.items.data) {
           if (item.price.id === LISTING_FEE_PRICE_ID) {
+            existingSubscription = { subscriptionId: sub.id, itemId: item.id };
+            currentQuantity += item.quantity || 0;
+          }
+        }
+      }
+
+      // Also check trialing subscriptions
+      const trialingSubs = await stripe.subscriptions.list({
+        customer: customerId,
+        status: "trialing",
+        limit: 10,
+      });
+
+      for (const sub of trialingSubs.data) {
+        for (const item of sub.items.data) {
+          if (item.price.id === LISTING_FEE_PRICE_ID) {
+            existingSubscription = { subscriptionId: sub.id, itemId: item.id };
             currentQuantity += item.quantity || 0;
           }
         }
       }
     }
 
-    // Parse request body for quantity (number of new listings to add)
     const { quantity = 1 } = await req.json().catch(() => ({}));
-    const newQuantity = currentQuantity + quantity;
 
-    console.log("[CREATE-LISTING-CHECKOUT] Creating checkout session", { currentQuantity, newListings: quantity, newQuantity });
+    // If user already has an active subscription, just increment the quantity (no checkout needed)
+    if (existingSubscription) {
+      const newQuantity = currentQuantity + quantity;
+      console.log("[CREATE-LISTING-CHECKOUT] Updating existing subscription quantity", { 
+        subscriptionId: existingSubscription.subscriptionId, 
+        currentQuantity, 
+        newQuantity 
+      });
+
+      await stripe.subscriptionItems.update(existingSubscription.itemId, {
+        quantity: newQuantity,
+      });
+
+      // Return a flag indicating subscription was updated (no redirect needed)
+      return new Response(JSON.stringify({ updated: true, newQuantity }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // First-time listing: create a new checkout session (collects payment method)
+    const newQuantity = quantity;
+    console.log("[CREATE-LISTING-CHECKOUT] Creating checkout session for new subscriber", { newQuantity });
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -79,15 +117,11 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      subscription_data: {
-        trial_period_days: 30,
-        description: "30-day free trial. You will be charged $4.99/month per listing after the trial ends.",
-      },
       success_url: `${req.headers.get("origin") || "https://directrental.lovable.app"}/listing-success`,
       cancel_url: `${req.headers.get("origin") || "https://directrental.lovable.app"}/listing-success?payment=canceled`,
       custom_text: {
         submit: {
-          message: "Start your 30-day free trial. You will be charged $4.99/month per listing after the trial period.",
+          message: "You will be charged $4.99/month per active listing. Cancel anytime by deleting your listing.",
         },
       },
       metadata: {

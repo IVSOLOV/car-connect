@@ -50,11 +50,14 @@ export function useListingSubscription() {
 
     if (funcError) throw funcError;
 
-    if (data?.url) {
+    if (data?.updated) {
+      // Existing subscription was updated (quantity incremented)
+      console.log("[startCheckout] Subscription updated, new quantity:", data.newQuantity);
+      return { updated: true, newQuantity: data.newQuantity };
+    } else if (data?.url) {
+      // New checkout session for first-time subscriber
       const stripeUrl = data.url;
       console.log("[startCheckout] Got Stripe URL:", stripeUrl);
-      
-      // Return the URL - the calling component will handle the redirect
       return { url: stripeUrl };
     } else {
       throw new Error("No checkout URL returned");

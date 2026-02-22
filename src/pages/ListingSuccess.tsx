@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { CheckCircle, Car, Search, Loader2 } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { CheckCircle, Car, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
@@ -13,21 +13,26 @@ import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { sendNotificationEmail } from "@/lib/notifications";
 
-
 const ListingSuccess = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading } = useAuth();
   const { checkSubscription } = useListingSubscription();
   const { toast } = useToast();
   const [hasWaited, setHasWaited] = useState(false);
   const [isCreatingListing, setIsCreatingListing] = useState(false);
   const [listingCreated, setListingCreated] = useState(false);
+  const [paymentFailed, setPaymentFailed] = useState(false);
+
+  // Check if payment was canceled via URL params
+  const paymentStatus = searchParams.get("payment");
+  const wasCanceled = paymentStatus === "canceled";
 
   // Give auth time to restore from Stripe redirect
   useEffect(() => {
     const timer = setTimeout(() => {
       setHasWaited(true);
-    }, 1500); // Wait 1.5 seconds for session to restore
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -47,21 +52,19 @@ const ListingSuccess = () => {
   }, []);
 
   useEffect(() => {
-    // Refresh subscription status after successful payment
     if (user) {
       checkSubscription();
     }
   }, [checkSubscription, user]);
 
-  // Create the pending listing after successful payment
+  // Create the pending listing after successful payment (NOT if canceled)
   useEffect(() => {
     const createPendingListing = async () => {
-      if (!user || isCreatingListing || listingCreated) return;
+      if (!user || isCreatingListing || listingCreated || wasCanceled) return;
       
       const pendingListingData = localStorage.getItem("pendingListing");
       
       if (!pendingListingData) {
-        // No pending listing - user might have already created it or came here directly
         return;
       }
 
@@ -69,11 +72,8 @@ const ListingSuccess = () => {
 
       try {
         const listing = JSON.parse(pendingListingData);
-
-        // Images were already uploaded to storage before Stripe redirect
         const uploadedImageUrls: string[] = listing.imageUrls || [];
 
-        // Create listing in database
         const { data, error } = await supabase
           .from('listings' as any)
           .insert({
@@ -99,13 +99,8 @@ const ListingSuccess = () => {
 
         if (error) {
           console.error("Error creating listing:", error);
-          toast({
-            title: "Error",
-            description: "Failed to create listing. Please try again from the create listing page.",
-            variant: "destructive",
-          });
+          setPaymentFailed(true);
         } else {
-          // Store license plate in sensitive data table
           const listingData = data as any;
           if (listingData?.id && listing.licensePlate?.trim()) {
             const { error: sensitiveError } = await supabase
@@ -120,11 +115,9 @@ const ListingSuccess = () => {
             }
           }
 
-          // Clear pending data on success
           localStorage.removeItem("pendingListing");
           setListingCreated(true);
           
-          // Get user's name for admin notification
           const { data: profile } = await supabase
             .from("profiles")
             .select("first_name, full_name")
@@ -134,7 +127,6 @@ const ListingSuccess = () => {
           const submitterName = profile?.first_name || profile?.full_name || "A user";
           const listingTitle = `${listing.year} ${listing.make} ${listing.model}`;
           
-          // Notify admins about new pending listing
           sendNotificationEmail("admin_new_listing", null, {
             listingTitle,
             submitterName,
@@ -147,11 +139,7 @@ const ListingSuccess = () => {
         }
       } catch (error) {
         console.error("Error processing pending listing:", error);
-        toast({
-          title: "Error",
-          description: "Something went wrong. Please try creating your listing again.",
-          variant: "destructive",
-        });
+        setPaymentFailed(true);
       } finally {
         setIsCreatingListing(false);
       }
@@ -160,9 +148,9 @@ const ListingSuccess = () => {
     if (user && hasWaited) {
       createPendingListing();
     }
-  }, [user, hasWaited, isCreatingListing, listingCreated, toast]);
+  }, [user, hasWaited, isCreatingListing, listingCreated, wasCanceled, toast]);
 
-  // Keep trying to restore session instead of redirecting to auth
+  // Keep trying to restore session
   useEffect(() => {
     if (!loading && hasWaited && !user) {
       const retryInterval = setInterval(async () => {
@@ -176,12 +164,69 @@ const ListingSuccess = () => {
     }
   }, [user, loading, hasWaited]);
 
-  // Show loading only while creating listing
+  // Show loading while creating listing
   if (isCreatingListing) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <LoadingSpinner />
         <p className="text-muted-foreground animate-pulse">Creating your listing...</p>
+      </div>
+    );
+  }
+
+  // Payment was canceled or failed
+  if (wasCanceled || paymentFailed) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SEO title="Payment Issue | DiRent" description="Payment was not completed" />
+        <Header />
+        <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
+          <div className="max-w-lg mx-auto">
+            <Card className="border-destructive/20 bg-card/50 backdrop-blur">
+              <CardContent className="pt-8 pb-8 text-center space-y-6">
+                <div className="flex justify-center">
+                  <div className="rounded-full bg-destructive/10 p-4">
+                    <XCircle className="h-16 w-16 text-destructive" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-bold text-foreground">
+                    Vehicle Not Listed
+                  </h1>
+                  <p className="text-lg text-muted-foreground">
+                    Your payment was not completed. Your vehicle has not been listed yet.
+                  </p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
+                  <p>
+                    Please proceed with the payment to activate your listing. 
+                    Your vehicle details have been saved — just try again!
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <Button 
+                    onClick={() => {
+                      localStorage.removeItem("pendingListing");
+                      navigate("/create-listing");
+                    }}
+                    className="flex-1 gap-2"
+                  >
+                    <Car className="h-4 w-4" />
+                    Try Again
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate("/dashboard")}
+                    className="flex-1"
+                  >
+                    Browse Cars
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }

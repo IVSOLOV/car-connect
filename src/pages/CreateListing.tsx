@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Upload, X, Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -121,6 +122,7 @@ const CreateListing = () => {
   const [licensePlate, setLicensePlate] = useState("");
   const [deliveryAvailable, setDeliveryAvailable] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [awaitingPayment, setAwaitingPayment] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1929 }, (_, i) => currentYear - i);
@@ -128,35 +130,14 @@ const CreateListing = () => {
   // Include "Other" in available models if make is selected and not "Other"
   const availableModels = make && make !== "Other" ? [...(modelsByMake[make] || []), "Other"] : [];
 
-  // If there's a pending listing (user already submitted and went to Stripe), redirect to success page
-  useEffect(() => {
-    const pendingListing = localStorage.getItem("pendingListing");
-    if (pendingListing) {
-      navigate("/listing-success", { replace: true });
-    }
-  }, [navigate]);
-
-  // Handle payment success/cancel from Stripe redirect
+  // Handle payment success redirect (if user lands back on create-listing after Stripe)
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
     if (paymentStatus === "success") {
-      toast({
-        title: "🎉 Welcome Aboard!",
-        description: "Your 30-day free trial has started! Now let's get your vehicle listed and earning.",
-      });
       checkSubscription();
-      navigate("/create-listing", { replace: true });
-    } else if (paymentStatus === "canceled") {
-      // Payment was canceled - clear pending data so they can resubmit
-      localStorage.removeItem("pendingListing");
-      toast({
-        title: "Payment Canceled",
-        description: "No worries! You can start your free trial whenever you're ready.",
-        variant: "destructive",
-      });
-      navigate("/create-listing", { replace: true });
+      navigate("/listing-success", { replace: true });
     }
-  }, [searchParams, toast, navigate, checkSubscription]);
+  }, [searchParams, navigate, checkSubscription]);
 
   // Check if user is a host
   useEffect(() => {
@@ -453,8 +434,9 @@ const CreateListing = () => {
           
           if (isInIframe) {
             window.open(result.url, "_blank");
-            // Navigate away from the form to prevent double submission
-            navigate("/listing-success");
+            // Show waiting state - don't navigate to success until payment completes
+            setAwaitingPayment(true);
+            setIsSubmitting(false);
             return;
           } else {
             // Not in iframe: navigate in same tab (prevents duplicate submissions)
@@ -563,6 +545,46 @@ const CreateListing = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Show waiting state when user is completing Stripe payment in another tab
+  if (awaitingPayment) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SEO title="Complete Payment | DiRent" description="Complete your payment to list your vehicle" />
+        <Header />
+        <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
+          <div className="max-w-lg mx-auto">
+            <Card className="border-primary/20 bg-card/50 backdrop-blur">
+              <CardContent className="pt-8 pb-8 text-center space-y-6">
+                <div className="flex justify-center">
+                  <Loader2 className="h-16 w-16 text-primary animate-spin" />
+                </div>
+                <div className="space-y-2">
+                  <h1 className="text-2xl font-bold text-foreground">Complete Your Payment</h1>
+                  <p className="text-muted-foreground">
+                    A Stripe checkout page has opened in a new tab. Please complete your payment there.
+                  </p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
+                  <p>After successful payment, you'll be redirected back here automatically.</p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    localStorage.removeItem("pendingListing");
+                    setAwaitingPayment(false);
+                  }}
+                >
+                  Cancel & Go Back to Form
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

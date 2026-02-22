@@ -8,7 +8,7 @@ const PrivacyPolicy = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title="Privacy Policy | DiRent"
         description="DiRent's Privacy Policy - Learn how we collect, use, and protect your personal information."

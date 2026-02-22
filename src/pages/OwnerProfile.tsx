@@ -176,7 +176,7 @@ const OwnerProfile = () => {
   const memberSince = new Date(owner.created_at).getFullYear().toString();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title={`${ownerName} | Car Rental`}
         description={`View listings and reviews for ${ownerName}`}

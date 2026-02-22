@@ -480,9 +480,9 @@ const SupportTickets = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
-        title={isAdmin ? "Support Tickets | Admin" : "My Support Tickets"} 
+        title={isAdmin ? "Support Tickets | Admin" : "My Support Tickets"}
         description="View and manage support tickets" 
       />
       <Header />

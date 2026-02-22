@@ -47,7 +47,7 @@ const HostGuide = () => {
   ];
 
   return (
-    <>
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO
         title="Host Recommendation Guide | DiRent"
         description="Best practices for renting out your personal vehicle on DiRent."
@@ -104,7 +104,7 @@ const HostGuide = () => {
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 };
 

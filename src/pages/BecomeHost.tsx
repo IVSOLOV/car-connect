@@ -76,7 +76,7 @@ const BecomeHost = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title="List Your Car | DiRent - Earn Money Renting Your Car"
         description="List your car on DiRent for just $4.99/month. Keep 100% of your rental income with zero commission fees. Direct communication with renters."

@@ -521,7 +521,7 @@ const EditListing = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title="Edit Listing | Update Your Car"
         description="Update your vehicle listing"

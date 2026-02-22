@@ -96,7 +96,7 @@ const GuestGuide = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title="Renter's Guide | DiRent - Tips for Renting a Car"
         description="Learn how to rent a car safely on DiRent. Tips for renters, what to look for, and how to have a great rental experience."

@@ -254,7 +254,7 @@ const ListingSuccess = () => {
                   🎉 You're All Set!
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  Your listing fee of $4.99/month has been activated. You'll be billed monthly for each active listing.
+                  Your 30-day free trial has started! Your payment method is saved and you'll be charged $4.99/month per listing after the trial ends.
                 </p>
               </div>
 

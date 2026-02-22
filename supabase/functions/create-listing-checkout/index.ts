@@ -117,11 +117,14 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
+      subscription_data: {
+        trial_period_days: 30,
+      },
       success_url: `${req.headers.get("origin") || "https://directrental.lovable.app"}/listing-success`,
       cancel_url: `${req.headers.get("origin") || "https://directrental.lovable.app"}/listing-success?payment=canceled`,
       custom_text: {
         submit: {
-          message: "You will be charged $4.99/month per active listing. Cancel anytime by deleting your listing.",
+          message: "Start your 30-day free trial. Your payment method will be saved and you'll be charged $4.99/month per listing after the trial ends.",
         },
       },
       metadata: {

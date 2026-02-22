@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, AlertCircle, CheckCircle, History, ImagePlus, X, Copy, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -236,9 +237,10 @@ const WriteToSupport = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pt-24 sm:pt-32">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO title="Write to Support - DiRent" description="Contact our support team for help" />
-      <div className="container mx-auto px-4 py-8">
+      <Header />
+      <div className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back

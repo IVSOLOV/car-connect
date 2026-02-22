@@ -124,7 +124,7 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from("listings" as any)
         .select("*")
-        .neq("approval_status", "deactivated")
+        .eq("approval_status", "approved")
         .order("created_at", { ascending: false });
 
       if (error) throw error;

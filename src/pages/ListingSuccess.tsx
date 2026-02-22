@@ -24,9 +24,10 @@ const ListingSuccess = () => {
   const [listingCreated, setListingCreated] = useState(false);
   const [paymentFailed, setPaymentFailed] = useState(false);
 
-  // Check if payment was canceled via URL params
+  // Check payment status via URL params
   const paymentStatus = searchParams.get("payment");
   const wasCanceled = paymentStatus === "canceled";
+  const wasUpdated = paymentStatus === "updated";
 
   // Give auth time to restore from Stripe redirect
   useEffect(() => {
@@ -193,15 +194,14 @@ const ListingSuccess = () => {
                   <h1 className="text-3xl font-bold text-foreground">
                     Vehicle Not Listed
                   </h1>
-                  <p className="text-lg text-muted-foreground">
-                    Your payment was not completed. Your vehicle has not been listed yet.
-                  </p>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-                  <p>
-                    Please proceed with the payment to activate your listing. 
-                    Your vehicle details have been saved — just try again!
-                  </p>
+                   <p className="text-lg text-muted-foreground">
+                     Your payment was not completed. Your vehicle has not been listed.
+                   </p>
+                 </div>
+                 <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
+                   <p>
+                     Each listing requires a $4.99/month fee. Please try again to complete your payment and activate your listing.
+                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <Button 
@@ -254,7 +254,7 @@ const ListingSuccess = () => {
                   🎉 You're All Set!
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  Thanks for joining DiRent! Your payment info is saved and your 30-day free trial has started.
+                  Your listing fee of $4.99/month has been activated. You'll be billed monthly for each active listing.
                 </p>
               </div>
 

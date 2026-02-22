@@ -370,86 +370,10 @@ const CreateListing = () => {
       return;
     }
 
-    // If no subscription, upload images first, save listing data to localStorage, then redirect to Stripe checkout
-    if (!canCreateListing) {
-      setIsSubmitting(true);
-      try {
-        // Upload images to storage in parallel (much faster than sequential)
-        const uploadResults = await Promise.all(
-          images.map(async (image) => {
-            const fileExt = image.name.split('.').pop();
-            const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-            
-            const { error: uploadError } = await supabase.storage
-              .from('car-photos')
-              .upload(fileName, image);
-            
-            if (uploadError) {
-              console.error("Upload error:", uploadError);
-              return null;
-            }
-            
-            const { data: { publicUrl } } = supabase.storage
-              .from('car-photos')
-              .getPublicUrl(fileName);
-            
-            return publicUrl;
-          })
-        );
-        const uploadedImageUrls = uploadResults.filter((url): url is string => url !== null);
-
-        if (uploadedImageUrls.length < 5) {
-          throw new Error("Failed to upload enough images. Please try again.");
-        }
-
-        // Save listing data with uploaded URLs (small payload, no quota issues)
-        const pendingListing = {
-          year,
-          make: finalMake,
-          model: finalModel,
-          city,
-          state,
-          licensePlate,
-          titleStatus,
-          vehicleType,
-          fuelType,
-          dailyPrice,
-          weeklyPrice,
-          monthlyPrice,
-          description,
-          deliveryAvailable,
-          imageUrls: uploadedImageUrls,
-        };
-        localStorage.setItem("pendingListing", JSON.stringify(pendingListing));
-        
-        // Get Stripe checkout URL
-        const result = await startCheckout(1);
-        
-        if (result?.url) {
-          console.log("[CreateListing] Redirecting to Stripe:", result.url);
-          // Always redirect in same tab - works in both iframe and production
-          window.location.href = result.url;
-          return new Promise(() => {});
-        } else {
-          throw new Error("No checkout URL returned");
-        }
-      } catch (error) {
-        console.error("[CreateListing] Checkout error:", error);
-        toast({
-          title: "Error",
-          description: "Failed to start checkout. Please try again.",
-          variant: "destructive",
-        });
-        localStorage.removeItem("pendingListing");
-        setIsSubmitting(false);
-      }
-      return;
-    }
-
+    // Always redirect to Stripe for payment - every listing costs $4.99/month
     setIsSubmitting(true);
-
     try {
-      // Upload images to storage in parallel
+      // Upload images to storage in parallel (much faster than sequential)
       const uploadResults = await Promise.all(
         images.map(async (image) => {
           const fileExt = image.name.split('.').pop();
@@ -473,61 +397,48 @@ const CreateListing = () => {
       );
       const uploadedImageUrls = uploadResults.filter((url): url is string => url !== null);
 
-      // Create listing in database
-      const { data: listingData, error } = await supabase
-        .from('listings' as any)
-        .insert({
-          user_id: user.id,
-          year: parseInt(year),
-          make: finalMake,
-          model: finalModel,
-          city,
-          state,
-          title_status: titleStatus,
-          vehicle_type: vehicleType,
-          fuel_type: fuelType,
-          daily_price: parseInt(dailyPrice),
-          weekly_price: weeklyPrice ? parseInt(weeklyPrice) : null,
-          monthly_price: monthlyPrice ? parseInt(monthlyPrice) : null,
-          description: description || null,
-          images: uploadedImageUrls,
-          delivery_available: deliveryAvailable,
-        })
-        .select('id')
-        .single();
-
-      if (error) throw error;
-
-      // Store license plate in separate sensitive data table (only visible to owner/admin)
-      if (listingData && licensePlate.trim()) {
-        const { error: sensitiveError } = await supabase
-          .from('listing_sensitive_data' as any)
-          .insert({
-            listing_id: (listingData as any).id,
-            license_plate: licensePlate.trim().toUpperCase(),
-            state: state,
-          });
-
-        if (sensitiveError) {
-          console.error("Error saving sensitive data:", sensitiveError);
-          // Non-blocking - listing was created successfully
-        }
+      if (uploadedImageUrls.length < 5) {
+        throw new Error("Failed to upload enough images. Please try again.");
       }
 
-      toast({
-        title: "Listing Submitted!",
-        description: "Your listing will be posted after review.",
-      });
+      // Save listing data with uploaded URLs (small payload, no quota issues)
+      const pendingListing = {
+        year,
+        make: finalMake,
+        model: finalModel,
+        city,
+        state,
+        licensePlate,
+        titleStatus,
+        vehicleType,
+        fuelType,
+        dailyPrice,
+        weeklyPrice,
+        monthlyPrice,
+        description,
+        deliveryAvailable,
+        imageUrls: uploadedImageUrls,
+      };
+      localStorage.setItem("pendingListing", JSON.stringify(pendingListing));
       
-      navigate("/my-account");
+      // Get Stripe checkout URL
+      const result = await startCheckout(1);
+      
+      if (result?.url) {
+        console.log("[CreateListing] Redirecting to Stripe:", result.url);
+        window.location.href = result.url;
+        return new Promise(() => {});
+      } else {
+        throw new Error("No checkout URL returned");
+      }
     } catch (error) {
-      console.error("Error creating listing:", error);
+      console.error("[CreateListing] Checkout error:", error);
       toast({
         title: "Error",
-        description: "Failed to create listing. Please try again.",
+        description: "Failed to start checkout. Please try again.",
         variant: "destructive",
       });
-    } finally {
+      localStorage.removeItem("pendingListing");
       setIsSubmitting(false);
     }
   };

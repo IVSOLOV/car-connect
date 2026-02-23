@@ -332,6 +332,17 @@ const MyAccount = () => {
 
   const handleSaveProfile = async () => {
     if (!user) return;
+
+    // Validate company name if user wants to display it
+    if (editShowCompany && (!editCompanyName || !editCompanyName.trim())) {
+      toast({
+        title: "Company Name Required",
+        description: "Please enter a valid company name to display on your listings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const { error } = await supabase
@@ -340,7 +351,7 @@ const MyAccount = () => {
           first_name: editFirstName,
           last_name: editLastName,
           full_name: `${editFirstName} ${editLastName}`.trim(),
-          company_name: editCompanyName,
+          company_name: editCompanyName.trim(),
           show_company_as_owner: editShowCompany,
         })
         .eq("user_id", user.id);

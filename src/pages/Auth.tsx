@@ -219,8 +219,12 @@ const Auth = () => {
         newErrors.signupConfirmPassword = "Passwords do not match";
       }
 
-      if (showCompanyAsOwner && (!companyName || !companyName.trim())) {
-        newErrors.companyName = "Please enter a valid company name";
+      if (showCompanyAsOwner) {
+        const trimmed = (companyName || "").trim();
+        const letterCount = (trimmed.match(/[a-zA-Z]/g) || []).length;
+        if (!trimmed || letterCount < 2) {
+          newErrors.companyName = "Company name must contain at least 2 letters";
+        }
       }
     }
 

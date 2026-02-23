@@ -334,13 +334,17 @@ const MyAccount = () => {
     if (!user) return;
 
     // Validate company name if user wants to display it
-    if (editShowCompany && (!editCompanyName || !editCompanyName.trim())) {
-      toast({
-        title: "Company Name Required",
-        description: "Please enter a valid company name to display on your listings.",
-        variant: "destructive",
-      });
-      return;
+    if (editShowCompany) {
+      const trimmed = (editCompanyName || "").trim();
+      const letterCount = (trimmed.match(/[a-zA-Z]/g) || []).length;
+      if (!trimmed || letterCount < 2) {
+        toast({
+          title: "Invalid Company Name",
+          description: "Company name must contain at least 2 letters.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setSaving(true);

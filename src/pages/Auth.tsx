@@ -218,6 +218,10 @@ const Auth = () => {
       if (password !== signupConfirmPassword) {
         newErrors.signupConfirmPassword = "Passwords do not match";
       }
+
+      if (showCompanyAsOwner && (!companyName || !companyName.trim())) {
+        newErrors.companyName = "Please enter a valid company name";
+      }
     }
 
     setErrors(newErrors);
@@ -1018,6 +1022,9 @@ const Auth = () => {
                         Display company name instead of my name on listings
                       </Label>
                     </div>
+                    {errors.companyName && (
+                      <p className="text-sm text-destructive">{errors.companyName}</p>
+                    )}
                   </div>
                 </>
               )}

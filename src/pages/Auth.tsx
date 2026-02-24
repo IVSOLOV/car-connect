@@ -232,7 +232,7 @@ const Auth = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -247,35 +247,69 @@ const Auth = () => {
         return;
       }
 
-      // Compress large images for avatar use (max 800px wide)
-      const objectUrl = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => {
-        const maxWidth = 800;
-        if (img.width > maxWidth || file.size > 2 * 1024 * 1024) {
-          const canvas = document.createElement('canvas');
-          const ratio = Math.min(maxWidth / img.width, 1);
-          canvas.width = img.width * ratio;
-          canvas.height = img.height * ratio;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob((blob) => {
-            if (blob) {
-              setAvatarFile(new File([blob], file.name, { type: 'image/jpeg' }));
-            } else {
-              setAvatarFile(file);
+      // Compress image safely - camera photos can be very large and crash WebView
+      const compressImage = (sourceFile: File): Promise<{ file: File; previewUrl: string }> => {
+        return new Promise((resolve) => {
+          const objectUrl = URL.createObjectURL(sourceFile);
+          const img = new Image();
+          
+          const cleanup = () => {
+            // Don't revoke yet if used as preview - revoke old one instead
+          };
+
+          img.onload = () => {
+            try {
+              const maxWidth = 800;
+              const maxHeight = 800;
+              if (img.width > maxWidth || img.height > maxHeight || sourceFile.size > 2 * 1024 * 1024) {
+                const ratio = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(img.width * ratio);
+                canvas.height = Math.round(img.height * ratio);
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                  canvas.toBlob((blob) => {
+                    if (blob) {
+                      resolve({ 
+                        file: new File([blob], sourceFile.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }), 
+                        previewUrl: objectUrl 
+                      });
+                    } else {
+                      resolve({ file: sourceFile, previewUrl: objectUrl });
+                    }
+                    // Free canvas memory
+                    canvas.width = 0;
+                    canvas.height = 0;
+                  }, 'image/jpeg', 0.7);
+                } else {
+                  resolve({ file: sourceFile, previewUrl: objectUrl });
+                }
+              } else {
+                resolve({ file: sourceFile, previewUrl: objectUrl });
+              }
+            } catch {
+              resolve({ file: sourceFile, previewUrl: objectUrl });
             }
-          }, 'image/jpeg', 0.8);
-        } else {
-          setAvatarFile(file);
-        }
-        setAvatarPreview(objectUrl);
+          };
+          
+          img.onerror = () => {
+            resolve({ file: sourceFile, previewUrl: objectUrl });
+          };
+          
+          img.src = objectUrl;
+        });
       };
-      img.onerror = () => {
-        setAvatarFile(file);
-        setAvatarPreview(objectUrl);
-      };
-      img.src = objectUrl;
+
+      const result = await compressImage(file);
+      
+      // Revoke old preview URL to free memory
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+      
+      setAvatarFile(result.file);
+      setAvatarPreview(result.previewUrl);
     } catch (err) {
       console.error("Avatar upload error:", err);
       toast({

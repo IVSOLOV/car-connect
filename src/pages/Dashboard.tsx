@@ -177,8 +177,8 @@ const Dashboard = () => {
     }
 
     // Search query filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
       results = results.filter(
         (listing) =>
           listing.make.toLowerCase().includes(query) ||

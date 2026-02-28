@@ -106,7 +106,7 @@ const Dashboard = () => {
   // Sync filters to URL search params
   useEffect(() => {
     const params = new URLSearchParams();
-    if (searchQuery) params.set("q", searchQuery);
+    if (searchQuery.trim()) params.set("q", searchQuery.trim());
     if (selectedMake) params.set("make", selectedMake);
     if (selectedState) params.set("state", selectedState);
     if (selectedPriceRange) params.set("price", selectedPriceRange);

@@ -210,7 +210,7 @@ const ApprovalRequests = () => {
         rejectionReason: rejectionReason.trim(),
       }).catch(err => console.error("Failed to send email notification:", err));
 
-      toast.success("Listing rejected");
+      toast.success("Changes requested — host has been notified");
       setListings((prev) => prev.filter((l) => l.id !== rejectingListing.id));
       setRejectDialogOpen(false);
       setRejectingListing(null);
@@ -372,14 +372,14 @@ const ApprovalRequests = () => {
                               <Check className="h-4 w-4 mr-1" />
                               Approve
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => openRejectDialog(listing)}
-                            >
-                              <X className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => openRejectDialog(listing)}
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Request Changes
+                              </Button>
                           </div>
                         </div>
                       </div>
@@ -431,7 +431,7 @@ const ApprovalRequests = () => {
                             <Badge 
                               variant={listing.approval_status === "approved" ? "default" : "destructive"}
                             >
-                              {listing.approval_status === "approved" ? "Approved" : "Rejected"}
+                              {listing.approval_status === "approved" ? "Approved" : "Needs Fixes"}
                             </Badge>
                           </div>
 
@@ -449,7 +449,7 @@ const ApprovalRequests = () => {
                             <div className="space-y-1">
                               <div>
                                 <span className="text-muted-foreground">
-                                  {listing.approval_status === "approved" ? "Approved:" : "Rejected:"}
+                                  {listing.approval_status === "approved" ? "Approved:" : "Changes requested:"}
                                 </span>{" "}
                                 <span className="text-foreground">
                                   {format(new Date(listing.updated_at), "MMM d, yyyy 'at' h:mm a")}
@@ -465,7 +465,7 @@ const ApprovalRequests = () => {
                           {listing.rejection_reason && (
                             <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 mb-4">
                               <p className="text-sm text-destructive">
-                                <span className="font-medium">Rejection reason:</span> {listing.rejection_reason}
+                                <span className="font-medium">Requested fixes:</span> {listing.rejection_reason}
                               </p>
                             </div>
                           )}
@@ -495,23 +495,26 @@ const ApprovalRequests = () => {
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Listing</DialogTitle>
+            <DialogTitle>Request Changes</DialogTitle>
             <DialogDescription>
               {rejectingListing && (
-                <>Rejecting: {rejectingListing.year} {rejectingListing.make} {rejectingListing.model}</>
+                <>Requesting fixes for: {rejectingListing.year} {rejectingListing.make} {rejectingListing.model}</>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="rejection-reason">Reason for Rejection</Label>
+              <Label htmlFor="rejection-reason">What needs to be fixed?</Label>
               <Textarea
                 id="rejection-reason"
-                placeholder="Please explain why this listing is being rejected..."
+                placeholder="Describe what the host needs to fix (e.g., add more photos, update description)..."
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 rows={4}
               />
+              <p className="text-xs text-muted-foreground">
+                The host will be notified and can edit their listing to fix the issues, then resubmit for approval.
+              </p>
             </div>
           </div>
           <DialogFooter>
@@ -519,7 +522,7 @@ const ApprovalRequests = () => {
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleReject}>
-              Reject Listing
+              Request Changes
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -27,8 +27,8 @@ const notificationContent: Record<string, (data: NotificationData) => { title: s
     body: `Your listing "${data.listingTitle}" is now live on DiRent.`,
   }),
   listing_rejected: (data) => ({
-    title: "Listing update",
-    body: `Your listing "${data.listingTitle}" needs changes.${data.rejectionReason ? ` Reason: ${data.rejectionReason}` : ""}`,
+    title: "Your listing needs fixes",
+    body: `Your listing "${data.listingTitle}" requires changes before it can be approved.${data.rejectionReason ? ` Feedback: ${data.rejectionReason}` : ""} Please edit your listing and resubmit.`,
   }),
   admin_new_listing: (data) => ({
     title: "New listing pending approval",

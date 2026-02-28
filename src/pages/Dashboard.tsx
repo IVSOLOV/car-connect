@@ -183,7 +183,8 @@ const Dashboard = () => {
         (listing) =>
           listing.make.toLowerCase().includes(query) ||
           listing.model.toLowerCase().includes(query) ||
-          listing.city.toLowerCase().includes(query)
+          listing.city.toLowerCase().includes(query) ||
+          listing.year.toString().includes(query)
       );
     }
 

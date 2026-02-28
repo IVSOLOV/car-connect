@@ -92,7 +92,7 @@ const Dashboard = () => {
   );
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 15 }, (_, i) => (currentYear - i).toString());
+  const years = Array.from({ length: currentYear - 1900 + 1 }, (_, i) => (currentYear - i).toString());
 
   useEffect(() => {
     fetchListings();

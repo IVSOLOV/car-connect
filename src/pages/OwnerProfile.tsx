@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, MapPin, Calendar } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -32,6 +32,7 @@ interface Review {
 
 const OwnerProfile = () => {
   const { userId } = useParams();
+  const navigate = useNavigate();
   const [owner, setOwner] = useState<OwnerData | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -162,9 +163,9 @@ const OwnerProfile = () => {
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">Owner not found</h1>
-            <Link to="/" className="mt-4 inline-block text-primary hover:underline">
-              Back to listings
-            </Link>
+            <button onClick={() => navigate(-1)} className="mt-4 inline-block text-primary hover:underline">
+              Back
+            </button>
           </div>
         </div>
       </div>
@@ -184,13 +185,13 @@ const OwnerProfile = () => {
       <Header />
 
       <main className="container mx-auto px-4 pt-36 sm:pt-24 pb-12">
-        <Link
-          to="/"
+        <button
+          onClick={() => navigate(-1)}
           className="mb-6 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to listings
-        </Link>
+          Back
+        </button>
 
         {/* Owner Profile Header */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8 animate-fade-in">

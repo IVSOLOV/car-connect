@@ -264,7 +264,7 @@ const ListingDetails = () => {
   };
 
   const sendMessage = async () => {
-    if (!messageText || !user || !listing) {
+    if (!messageText.trim() || !user || !listing) {
       toast.error("Please enter a message");
       return;
     }

@@ -22,7 +22,7 @@ const MessageOwnerModal = ({ car, isOpen, onClose }: MessageOwnerModalProps) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !email || !message) {
+    if (!name.trim() || !email.trim() || !message.trim()) {
       toast.error("Please fill in all fields");
       return;
     }

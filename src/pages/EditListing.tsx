@@ -322,6 +322,16 @@ const EditListing = () => {
     const finalMake = make === "Other" ? customMake.trim() : make;
     const finalModel = make === "Other" ? customModel.trim() : (model === "Other" ? customModel.trim() : model);
     
+    const totalImages = existingImages.length + newImages.length;
+    if (totalImages < 5) {
+      toast({
+        title: "Not Enough Photos",
+        description: `At least 5 photos are required. You currently have ${totalImages}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!year || !finalMake || !finalModel || !city || !state || !licensePlate.trim() || !dailyPrice) {
       toast({
         title: "Missing Fields",

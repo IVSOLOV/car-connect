@@ -476,7 +476,7 @@ const Auth = () => {
           firstName,
           lastName,
           phone,
-          companyName: companyName || undefined,
+          companyName: companyName.trim() || undefined,
           showCompanyAsOwner,
           avatarFile: avatarFile || undefined,
         });
@@ -1051,11 +1051,11 @@ const Auth = () => {
                         id="showCompanyAsOwner"
                         checked={showCompanyAsOwner}
                         onCheckedChange={(checked) => setShowCompanyAsOwner(checked === true)}
-                        disabled={isLoading || !companyName}
+                        disabled={isLoading || !companyName.trim()}
                       />
                       <Label 
                         htmlFor="showCompanyAsOwner" 
-                        className={`text-sm font-normal cursor-pointer ${!companyName ? 'text-muted-foreground' : ''}`}
+                        className={`text-sm font-normal cursor-pointer ${!companyName.trim() ? 'text-muted-foreground' : ''}`}
                       >
                         Display company name instead of my name on listings
                       </Label>

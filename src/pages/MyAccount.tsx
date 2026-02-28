@@ -374,7 +374,7 @@ const MyAccount = () => {
         ...prev,
         first_name: editFirstName,
         last_name: editLastName,
-        company_name: editCompanyName,
+        company_name: editCompanyName.trim(),
         show_company_as_owner: editShowCompany,
         phone: editPhone,
       } : null);
@@ -632,7 +632,7 @@ const MyAccount = () => {
                         id="showCompany"
                         checked={isEditing ? editShowCompany : (profile?.show_company_as_owner || false)}
                         onCheckedChange={(checked) => isEditing && setEditShowCompany(checked === true)}
-                        disabled={!isEditing}
+                        disabled={!isEditing || !editCompanyName.trim()}
                       />
                       <Label htmlFor="showCompany" className="text-xs sm:text-sm font-normal cursor-pointer">
                         Display company name as owner on listings

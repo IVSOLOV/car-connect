@@ -208,7 +208,7 @@ const MyListings = () => {
                             )}
                             {listing.approval_status === "rejected" && (
                               <Badge variant="destructive" className="text-xs">
-                                Rejected
+                                Needs Fixes
                               </Badge>
                             )}
                             {listing.approval_status === "deactivated" && (
@@ -218,9 +218,14 @@ const MyListings = () => {
                             )}
                           </div>
                           {listing.approval_status === "rejected" && listing.rejection_reason && (
-                            <p className="text-xs sm:text-sm text-destructive mt-1">
-                              Reason: {listing.rejection_reason}
-                            </p>
+                            <div className="mt-1">
+                              <p className="text-xs sm:text-sm text-destructive">
+                                Admin feedback: {listing.rejection_reason}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Edit your listing to fix the issues, then it will be resubmitted for approval.
+                              </p>
+                            </div>
                           )}
                           {listing.approval_status === "deactivated" && listing.deactivation_reason && (
                             <p className="text-xs sm:text-sm text-orange-500 mt-1">

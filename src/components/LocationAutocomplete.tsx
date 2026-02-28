@@ -97,13 +97,13 @@ export function LocationAutocomplete({
     setInputValue(value);
     setShowDropdown(true);
 
-    // Debounce API calls
+    // Debounce API calls - use trimmed value for the API call
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
     debounceRef.current = setTimeout(() => {
-      fetchPredictions(value);
+      fetchPredictions(value.trim());
     }, 300);
   };
 
@@ -125,8 +125,8 @@ export function LocationAutocomplete({
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, { 
-          timeout: 10000,
-          enableHighAccuracy: false,
+          timeout: 15000,
+          enableHighAccuracy: true,
           maximumAge: 300000 // 5 minutes cache
         });
       });

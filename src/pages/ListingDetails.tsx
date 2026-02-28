@@ -54,6 +54,7 @@ import ReviewDialog from "@/components/ReviewDialog";
 import { sendNotificationEmail } from "@/lib/notifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import FullscreenImageViewer from "@/components/FullscreenImageViewer";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Listing } from "@/types/listing";
 
@@ -97,6 +98,7 @@ const ListingDetails = () => {
   const [deleting, setDeleting] = useState(false);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [hasExistingReview, setHasExistingReview] = useState(false);
+  const [showFullscreenViewer, setShowFullscreenViewer] = useState(false);
 
   // Get dates from URL params
   const startDateParam = searchParams.get("startDate");
@@ -454,7 +456,9 @@ const ListingDetails = () => {
           <div className="lg:col-span-2 min-w-0">
             {/* Image Gallery */}
             <div className="mb-6 sm:mb-8 animate-fade-in">
-              <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden rounded-xl sm:rounded-2xl w-full group">
+              <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden rounded-xl sm:rounded-2xl w-full group cursor-pointer"
+                onClick={() => setShowFullscreenViewer(true)}
+              >
                 <img
                   src={images[selectedImage]}
                   alt={title}
@@ -468,7 +472,7 @@ const ListingDetails = () => {
                       variant="secondary"
                       size="icon"
                       className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity h-10 w-10"
-                      onClick={() => setSelectedImage((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                      onClick={(e) => { e.stopPropagation(); setSelectedImage((prev) => (prev === 0 ? images.length - 1 : prev - 1)); }}
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
@@ -476,7 +480,7 @@ const ListingDetails = () => {
                       variant="secondary"
                       size="icon"
                       className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity h-10 w-10"
-                      onClick={() => setSelectedImage((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
+                      onClick={(e) => { e.stopPropagation(); setSelectedImage((prev) => (prev === images.length - 1 ? 0 : prev + 1)); }}
                     >
                       <ChevronRight className="h-5 w-5" />
                     </Button>
@@ -488,7 +492,7 @@ const ListingDetails = () => {
                   </>
                 )}
                 
-                <div className="absolute bottom-4 right-4 flex gap-2">
+                <div className="absolute bottom-4 right-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
                   <Button 
                     variant="secondary" 
                     size="icon" 
@@ -1058,6 +1062,13 @@ const ListingDetails = () => {
         )}
       </main>
       <Footer />
+      {showFullscreenViewer && listing?.images && (
+        <FullscreenImageViewer
+          images={listing.images.filter((img): img is string => typeof img === 'string' && img.length > 0)}
+          initialIndex={selectedImage}
+          onClose={() => setShowFullscreenViewer(false)}
+        />
+      )}
     </div>
   );
 };

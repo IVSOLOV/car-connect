@@ -251,14 +251,14 @@ const WriteToSupport = () => {
         </Button>
 
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold">Write to Support</h1>
               <p className="text-muted-foreground mt-2">
                 We're here to help! Describe your issue and we'll get back to you as soon as possible.
               </p>
             </div>
-            <Button variant="outline" onClick={() => navigate("/support-tickets")}>
+            <Button variant="outline" className="self-start shrink-0" onClick={() => navigate("/support-tickets")}>
               <History className="h-4 w-4 mr-2" />
               View My Issues
             </Button>

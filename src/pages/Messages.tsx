@@ -593,16 +593,16 @@ const Messages = () => {
   const convInfo = getSelectedConversationInfo();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className={`bg-background flex flex-col ${selectedConversation ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'}`}>
       <SEO 
         title="Messages | Car Rental"
         description="View and respond to messages about your car listings"
       />
       <Header />
       
-      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pt-36 sm:pt-24">
-        <div className="max-w-4xl mx-auto">
-          <Card className="h-[calc(100vh-10rem)] sm:h-[calc(100vh-8rem)] overflow-hidden">
+      <main className={`container mx-auto px-2 sm:px-4 py-4 sm:py-8 pt-36 sm:pt-24 ${selectedConversation ? 'flex-1 overflow-hidden' : ''}`}>
+        <div className={`max-w-4xl mx-auto ${selectedConversation ? 'h-full' : ''}`}>
+          <Card className={`${selectedConversation ? 'h-full' : 'h-[calc(100vh-10rem)]'} sm:h-[calc(100vh-8rem)] overflow-hidden`}>
             <CardHeader className="border-b py-3 sm:py-4 px-3 sm:px-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 {selectedConversation ? (
@@ -965,7 +965,7 @@ const Messages = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <Footer />
+      {!selectedConversation && <Footer />}
     </div>
   );
 };

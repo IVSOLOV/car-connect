@@ -95,7 +95,7 @@ const Index = () => {
             {/* Scroll Indicator */}
             <button
               onClick={() => document.getElementById('featured-listings')?.scrollIntoView({ behavior: 'smooth' })}
-              className="mt-12 flex flex-col items-center animate-bounce cursor-pointer bg-transparent border-none"
+              className="mt-12 mx-auto flex flex-col items-center animate-bounce cursor-pointer bg-transparent border-none"
             >
               <span className="text-sm text-foreground/70 mb-2">Scroll to explore</span>
               <div className="p-2 rounded-full bg-primary/20 border border-primary/30">

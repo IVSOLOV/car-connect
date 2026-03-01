@@ -93,18 +93,21 @@ const Index = () => {
             </div>
 
             {/* Scroll Indicator */}
-            <div className="mt-12 flex flex-col items-center animate-bounce">
+            <button
+              onClick={() => document.getElementById('featured-listings')?.scrollIntoView({ behavior: 'smooth' })}
+              className="mt-12 flex flex-col items-center animate-bounce cursor-pointer bg-transparent border-none"
+            >
               <span className="text-sm text-foreground/70 mb-2">Scroll to explore</span>
               <div className="p-2 rounded-full bg-primary/20 border border-primary/30">
                 <ChevronDown className="h-6 w-6 text-primary" />
               </div>
-            </div>
+            </button>
           </div>
         </div>
       </section>
 
       {/* Featured Listings */}
-      <section className="py-6">
+      <section id="featured-listings" className="py-6">
         <div className="container mx-auto px-4">
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">

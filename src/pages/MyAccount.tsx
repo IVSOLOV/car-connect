@@ -333,6 +333,20 @@ const MyAccount = () => {
   const handleSaveProfile = async () => {
     if (!user) return;
 
+    // Validate required fields
+    if (!(editFirstName || "").trim()) {
+      toast({ title: "First Name Required", description: "First name cannot be empty.", variant: "destructive" });
+      return;
+    }
+    if (!(editLastName || "").trim()) {
+      toast({ title: "Last Name Required", description: "Last name cannot be empty.", variant: "destructive" });
+      return;
+    }
+    if (!(editPhone || "").trim()) {
+      toast({ title: "Phone Number Required", description: "Phone number cannot be empty.", variant: "destructive" });
+      return;
+    }
+
     // Validate company name if user wants to display it
     if (editShowCompany) {
       const trimmed = (editCompanyName || "").trim();

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle, Car, User, ChevronRight, ArrowLeft, Paperclip, Image, FileText, X, Star, Pencil, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,9 @@ const Messages = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -106,8 +109,138 @@ const Messages = () => {
   useEffect(() => {
     if (user) {
       fetchConversations();
-      // Sync the header unread count when viewing messages
       refetchUnreadCount();
+    }
+  }, [user]);
+
+  // Realtime subscription for new messages
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('messages-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const newMsg = payload.new as any;
+          // Only process messages relevant to this user
+          if (newMsg.sender_id !== user.id && newMsg.recipient_id !== user.id) return;
+
+          // If we're in an active conversation, add the message
+          setSelectedConversation(prev => {
+            if (!prev) return prev;
+            const isRelevant = 
+              (newMsg.sender_id === prev.other_user_id || newMsg.recipient_id === prev.other_user_id) &&
+              newMsg.listing_id === prev.listing_id;
+            
+            if (!isRelevant) return prev;
+            
+            // Avoid duplicates
+            if (prev.messages.some(m => m.id === newMsg.id)) return prev;
+            
+            // If incoming message is for us, mark it as read
+            if (newMsg.recipient_id === user.id) {
+              supabase
+                .from("messages")
+                .update({ read_at: new Date().toISOString() })
+                .eq("id", newMsg.id)
+                .then(() => refetchUnreadCount());
+            }
+
+            return {
+              ...prev,
+              messages: [...prev.messages, {
+                ...newMsg,
+                attachments: (newMsg.attachments as unknown as Attachment[]) || [],
+              }],
+            };
+          });
+
+          // Clear typing indicator when a message arrives
+          setOtherUserTyping(false);
+
+          // Refresh conversation list
+          fetchConversations();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          if (updated.sender_id !== user.id && updated.recipient_id !== user.id) return;
+
+          setSelectedConversation(prev => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              messages: prev.messages.map(m => 
+                m.id === updated.id 
+                  ? { ...m, ...updated, attachments: (updated.attachments as unknown as Attachment[]) || m.attachments }
+                  : m
+              ),
+            };
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  // Typing indicator channel
+  useEffect(() => {
+    if (!selectedConversation || !user) {
+      if (typingChannelRef.current) {
+        supabase.removeChannel(typingChannelRef.current);
+        typingChannelRef.current = null;
+      }
+      return;
+    }
+
+    const channelName = `typing-${[user.id, selectedConversation.other_user_id].sort().join('-')}-${selectedConversation.listing_id}`;
+    
+    const channel = supabase.channel(channelName, {
+      config: { presence: { key: user.id } },
+    });
+
+    channel
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        if (payload.payload?.user_id === selectedConversation.other_user_id) {
+          setOtherUserTyping(true);
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => setOtherUserTyping(false), 3000);
+        }
+      })
+      .subscribe();
+
+    typingChannelRef.current = channel;
+
+    return () => {
+      supabase.removeChannel(channel);
+      typingChannelRef.current = null;
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, [selectedConversation?.listing_id, selectedConversation?.other_user_id, user]);
+
+  const broadcastTyping = useCallback(() => {
+    if (typingChannelRef.current && user) {
+      typingChannelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { user_id: user.id },
+      });
     }
   }, [user]);
 
@@ -770,6 +903,10 @@ const Messages = () => {
                                       <span className="ml-1">(edited)</span>
                                     )}
                                   </p>
+                                  {/* Read receipt for sent messages */}
+                                  {msg.sender_id === user?.id && msg.read_at && (
+                                    <p className="text-[10px] text-primary-foreground/50 mt-0.5">Read</p>
+                                  )}
                                 </>
                               )}
                             </div>
@@ -798,6 +935,15 @@ const Messages = () => {
                     </div>
                   )}
                   
+                  {/* Typing indicator */}
+                  {otherUserTyping && convInfo && (
+                    <div className="px-3 py-1">
+                      <p className="text-xs text-muted-foreground italic animate-pulse">
+                        {convInfo.other_user_name} is typing...
+                      </p>
+                    </div>
+                  )}
+
                   <div className="border-t p-2 sm:p-4 pb-8 sm:pb-4 safe-bottom">
                     {/* Pending files preview */}
                     {pendingFiles.length > 0 && (
@@ -845,7 +991,10 @@ const Messages = () => {
                       <input
                         type="text"
                         value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
+                        onChange={(e) => {
+                          setNewMessage(e.target.value);
+                          broadcastTyping();
+                        }}
                         onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
                         placeholder="Type a message..."
                         className="flex-1 min-w-0 px-3 sm:px-4 py-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm"

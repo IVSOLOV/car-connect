@@ -270,13 +270,12 @@ const Messages = () => {
         })),
       });
 
-      // Check if user already reviewed this person for this listing
+      // Check if user already reviewed this person
       const { data: existingReview } = await supabase
         .from("user_reviews")
         .select("id")
         .eq("reviewer_id", user.id)
         .eq("reviewed_id", conv.other_user_id)
-        .eq("listing_id", conv.listing_id)
         .maybeSingle();
       
       setHasExistingReview(!!existingReview);

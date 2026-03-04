@@ -56,11 +56,12 @@ const ReviewDialog = ({
 
       if (error) {
         if (error.code === "23505") {
-          toast.error("You have already reviewed this user");
-        } else {
-          throw error;
+          toast.success("You already reviewed this user.");
+          onReviewSubmitted?.();
+          onOpenChange(false);
+          return;
         }
-        return;
+        throw error;
       }
 
       toast.success("Review submitted successfully!");

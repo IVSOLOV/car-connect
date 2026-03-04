@@ -552,22 +552,6 @@ const Messages = () => {
         messagePreview: newMessage.trim().substring(0, 100),
       }).catch(err => console.error("Failed to send email notification:", err));
 
-      // Add message to local state
-      const newMsg: Message = {
-        id: crypto.randomUUID(),
-        listing_id: selectedConversation.listing_id,
-        sender_id: user.id,
-        recipient_id: selectedConversation.other_user_id,
-        message: newMessage.trim() || (attachments.length > 0 ? "Sent attachment(s)" : ""),
-        created_at: new Date().toISOString(),
-        attachments: attachments,
-      };
-
-      setSelectedConversation(prev => prev ? {
-        ...prev,
-        messages: [...prev.messages, newMsg],
-      } : null);
-
       setNewMessage("");
       setPendingFiles([]);
       

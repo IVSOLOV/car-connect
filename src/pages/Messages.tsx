@@ -578,13 +578,13 @@ const Messages = () => {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  // Check if message can be edited (within 5 minutes and own message)
+  // Check if message can be edited (within 1 minute and own message)
   const canEditMessage = (msg: Message): boolean => {
     if (msg.sender_id !== user?.id) return false;
     const createdAt = new Date(msg.created_at);
     const now = new Date();
     const diffMinutes = (now.getTime() - createdAt.getTime()) / (1000 * 60);
-    return diffMinutes <= 5;
+    return diffMinutes <= 1;
   };
 
   const startEditingMessage = (msg: Message) => {

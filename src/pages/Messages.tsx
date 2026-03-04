@@ -223,14 +223,17 @@ const Messages = () => {
           typingTimeoutRef.current = setTimeout(() => setOtherUserTyping(false), 3000);
         }
       })
-      .subscribe();
-
-    typingChannelRef.current = channel;
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          typingChannelRef.current = channel;
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
       typingChannelRef.current = null;
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      setOtherUserTyping(false);
     };
   }, [selectedConversation?.listing_id, selectedConversation?.other_user_id, user]);
 

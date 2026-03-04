@@ -523,7 +523,7 @@ const CreateListing = () => {
               }`}>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.pvt"
                   multiple
                   onChange={handleImageUpload}
                   className="hidden"

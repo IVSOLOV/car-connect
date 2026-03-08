@@ -21,6 +21,9 @@ verify_jwt = false
 [functions.check-email-exists]
 verify_jwt = false
 
+[functions.send-push-notification]
+verify_jwt = false
+
 [auth.email]
 enable_signup = true
 double_confirm_changes = true

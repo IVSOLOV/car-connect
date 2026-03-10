@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,28 +7,35 @@ export const usePushNotifications = (userId?: string) => {
   const [token, setToken] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<PushNotificationSchema[]>([]);
   const [isSupported, setIsSupported] = useState(false);
+  const listenersRegistered = useRef(false);
 
-  const saveTokenToDatabase = useCallback(async (fcmToken: string) => {
-    if (!userId) return;
-    
-    try {
-      const { error } = await supabase
-        .from('push_tokens')
-        .upsert(
-          { user_id: userId, token: fcmToken, platform: Capacitor.getPlatform() },
-          { onConflict: 'user_id,token' }
-        );
+  // Save token to database whenever we have both token AND userId
+  useEffect(() => {
+    if (!token || !userId) return;
 
-      if (error) {
-        console.error('Error saving push token:', error);
-      } else {
-        console.log('Push token saved to database');
+    const saveToken = async () => {
+      try {
+        const { error } = await supabase
+          .from('push_tokens')
+          .upsert(
+            { user_id: userId, token, platform: Capacitor.getPlatform() },
+            { onConflict: 'user_id,token' }
+          );
+
+        if (error) {
+          console.error('Error saving push token:', error);
+        } else {
+          console.log('Push token saved to database for user:', userId);
+        }
+      } catch (err) {
+        console.error('Error saving push token:', err);
       }
-    } catch (err) {
-      console.error('Error saving push token:', err);
-    }
-  }, [userId]);
+    };
 
+    saveToken();
+  }, [token, userId]);
+
+  // Register listeners and request permissions once
   useEffect(() => {
     const isPushSupported = Capacitor.isNativePlatform();
     setIsSupported(isPushSupported);
@@ -38,29 +45,12 @@ export const usePushNotifications = (userId?: string) => {
       return;
     }
 
-    const registerNotifications = async () => {
-      try {
-        let permStatus = await PushNotifications.checkPermissions();
-        
-        if (permStatus.receive === 'prompt') {
-          permStatus = await PushNotifications.requestPermissions();
-        }
+    if (listenersRegistered.current) return;
+    listenersRegistered.current = true;
 
-        if (permStatus.receive !== 'granted') {
-          console.log('Push notification permission not granted');
-          return;
-        }
-
-        await PushNotifications.register();
-      } catch (error) {
-        console.error('Error registering for push notifications:', error);
-      }
-    };
-
-    PushNotifications.addListener('registration', (token: Token) => {
-      console.log('Push registration success, token:', token.value);
-      setToken(token.value);
-      saveTokenToDatabase(token.value);
+    PushNotifications.addListener('registration', (t: Token) => {
+      console.log('Push registration success, token:', t.value);
+      setToken(t.value);
     });
 
     PushNotifications.addListener('registrationError', (error: any) => {
@@ -76,12 +66,33 @@ export const usePushNotifications = (userId?: string) => {
       console.log('Push notification action performed:', notification);
     });
 
+    const registerNotifications = async () => {
+      try {
+        let permStatus = await PushNotifications.checkPermissions();
+
+        if (permStatus.receive === 'prompt') {
+          permStatus = await PushNotifications.requestPermissions();
+        }
+
+        if (permStatus.receive !== 'granted') {
+          console.log('Push notification permission not granted');
+          return;
+        }
+
+        await PushNotifications.register();
+        console.log('PushNotifications.register() called');
+      } catch (error) {
+        console.error('Error registering for push notifications:', error);
+      }
+    };
+
     registerNotifications();
 
     return () => {
       PushNotifications.removeAllListeners();
+      listenersRegistered.current = false;
     };
-  }, [saveTokenToDatabase]);
+  }, []);
 
   const removeToken = useCallback(async () => {
     if (!userId || !token) return;

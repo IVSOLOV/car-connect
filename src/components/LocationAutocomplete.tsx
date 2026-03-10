@@ -44,7 +44,7 @@ export function LocationAutocomplete({
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Update input when initial values change
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -32,11 +32,25 @@ const clearCachedPushToken = () => {
   }
 };
 
+const describeError = (error: unknown) => {
+  if (error instanceof Error) {
+    return { message: error.message, stack: error.stack };
+  }
+  return error;
+};
+
 export const usePushNotifications = (userId?: string) => {
   const [token, setToken] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<PushNotificationSchema[]>([]);
   const [isSupported, setIsSupported] = useState(false);
   const listenersRegistered = useRef(false);
+  const startupSequence = useRef(0);
+  const listenerHandles = useRef<PluginListenerHandle[]>([]);
+
+  const logStartup = useCallback((step: string, context?: Record<string, unknown>) => {
+    startupSequence.current += 1;
+    console.log(`[Push][Startup ${startupSequence.current}] ${step}`, context ?? {});
+  }, []);
 
   const saveTokenToDatabase = useCallback(
     async (tokenToSave: string, reason: 'registration' | 'token-state' | 'auth-change') => {
@@ -82,12 +96,14 @@ export const usePushNotifications = (userId?: string) => {
   );
 
   useEffect(() => {
+    console.log('[Push] Capacitor.isNativePlatform():', Capacitor.isNativePlatform());
     console.log('[Push] Current authenticated user id:', userId ?? null);
   }, [userId]);
 
   // Persist state token when user id is available
   useEffect(() => {
     if (!token) return;
+
     if (!userId) {
       setCachedPushToken(token);
       return;
@@ -114,7 +130,14 @@ export const usePushNotifications = (userId?: string) => {
   // Register listeners and request permissions once
   useEffect(() => {
     const nativePlatform = Capacitor.isNativePlatform();
-    console.log('[Push] Capacitor.isNativePlatform():', nativePlatform);
+    const platform = Capacitor.getPlatform();
+
+    logStartup('Push hook mounted', {
+      nativePlatform,
+      platform,
+      userId: userId ?? null,
+      listenersRegistered: listenersRegistered.current,
+    });
 
     setIsSupported(nativePlatform);
 
@@ -123,36 +146,58 @@ export const usePushNotifications = (userId?: string) => {
       return;
     }
 
-    if (listenersRegistered.current) return;
+    if (listenersRegistered.current) {
+      logStartup('Skipping setup because listeners are already registered');
+      return;
+    }
+
     listenersRegistered.current = true;
-
-    PushNotifications.addListener('registration', (registrationToken: Token) => {
-      console.log('[Push] registration token received:', registrationToken.value);
-      setCachedPushToken(registrationToken.value);
-      setToken(registrationToken.value);
-
-      if (userId) {
-        void saveTokenToDatabase(registrationToken.value, 'registration');
-      } else {
-        console.log('[Push] Token received before login; cached and waiting for auth state change');
-      }
-    });
-
-    PushNotifications.addListener('registrationError', (error: unknown) => {
-      console.error('[Push] registrationError:', error);
-    });
-
-    PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
-      console.log('[Push] pushNotificationReceived:', notification);
-      setNotifications((previous) => [...previous, notification]);
-    });
-
-    PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
-      console.log('[Push] pushNotificationActionPerformed:', notification);
-    });
 
     const registerNotifications = async () => {
       try {
+        logStartup('Attaching registration listeners before register()');
+
+        const registrationHandle = await PushNotifications.addListener('registration', (registrationToken: Token) => {
+          console.log('[Push] registration token received:', registrationToken.value);
+          logStartup('registration listener fired', {
+            tokenPreview: `${registrationToken.value.slice(0, 12)}...`,
+          });
+
+          setCachedPushToken(registrationToken.value);
+          setToken(registrationToken.value);
+
+          if (userId) {
+            void saveTokenToDatabase(registrationToken.value, 'registration');
+          } else {
+            console.log('[Push] Token received before login; cached and waiting for auth state change');
+          }
+        });
+
+        const registrationErrorHandle = await PushNotifications.addListener('registrationError', (error: unknown) => {
+          console.error('[Push] registrationError:', error);
+          logStartup('registrationError listener fired', {
+            error: describeError(error),
+          });
+        });
+
+        const receivedHandle = await PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
+          console.log('[Push] pushNotificationReceived:', notification);
+          setNotifications((previous) => [...previous, notification]);
+        });
+
+        const actionPerformedHandle = await PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
+          console.log('[Push] pushNotificationActionPerformed:', notification);
+        });
+
+        listenerHandles.current = [
+          registrationHandle,
+          registrationErrorHandle,
+          receivedHandle,
+          actionPerformedHandle,
+        ];
+
+        logStartup('Listeners attached successfully', { listenerCount: listenerHandles.current.length });
+
         let permissionStatus = await PushNotifications.checkPermissions();
         console.log('[Push] PushNotifications.checkPermissions() result:', permissionStatus);
 
@@ -162,24 +207,45 @@ export const usePushNotifications = (userId?: string) => {
         }
 
         if (permissionStatus.receive !== 'granted') {
-          console.log('[Push] Push notification permission not granted');
+          logStartup('Permission not granted, skipping register() call', {
+            permissionStatus,
+          });
           return;
         }
 
+        logStartup('Calling PushNotifications.register()');
         console.log('[Push] PushNotifications.register() called');
         await PushNotifications.register();
+        logStartup('PushNotifications.register() promise resolved');
       } catch (error) {
         console.error('[Push] Error registering for push notifications:', error);
+        logStartup('Error during native registration setup', {
+          error: describeError(error),
+        });
       }
     };
 
     void registerNotifications();
 
     return () => {
-      PushNotifications.removeAllListeners();
+      logStartup('Cleaning up push listeners');
+      const handles = listenerHandles.current;
+      listenerHandles.current = [];
       listenersRegistered.current = false;
+
+      if (handles.length > 0) {
+        void Promise.all(handles.map((handle) => handle.remove())).catch((error) => {
+          console.error('[Push] Failed to remove one or more listener handles:', error);
+        });
+        return;
+      }
+
+      // Fallback safety cleanup
+      void PushNotifications.removeAllListeners().catch((error) => {
+        console.error('[Push] Failed to remove push listeners:', error);
+      });
     };
-  }, [userId, saveTokenToDatabase]);
+  }, [userId, saveTokenToDatabase, logStartup]);
 
   const removeToken = useCallback(async () => {
     const nativePlatform = Capacitor.isNativePlatform();

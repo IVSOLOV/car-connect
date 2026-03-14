@@ -10,11 +10,7 @@ import FirebaseMessaging
 #endif
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate
-#if canImport(FirebaseMessaging)
-, MessagingDelegate
-#endif
-{
+class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate {
 
     var window: UIWindow?
 

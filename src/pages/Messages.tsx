@@ -89,14 +89,19 @@ const Messages = () => {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollToBottom = useCallback((instant = false) => {
+    // Use double rAF to ensure ScrollArea has rendered content
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: instant ? "instant" as ScrollBehavior : "smooth" });
+      });
+    });
+  }, []);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages change - instant on open, smooth for new messages
   useEffect(() => {
     if (selectedConversation?.messages) {
-      scrollToBottom();
+      scrollToBottom(true);
     }
   }, [selectedConversation?.messages]);
 

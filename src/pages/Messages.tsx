@@ -85,17 +85,27 @@ const Messages = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollRetryTimeoutsRef = useRef<number[]>([]);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
+  const clearPendingScrollRetries = useCallback(() => {
+    scrollRetryTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    scrollRetryTimeoutsRef.current = [];
+  }, []);
+
   const scrollToBottom = useCallback((instant = false) => {
+    clearPendingScrollRetries();
+
     const doScroll = () => {
-      // Primary: scrollIntoView
       if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: instant ? "instant" as ScrollBehavior : "smooth" });
+        messagesEndRef.current.scrollIntoView({
+          block: "end",
+          behavior: instant ? ("instant" as ScrollBehavior) : "smooth",
+        });
       }
-      // iOS fallback: also set scrollTop on the closest scrollable parent (Radix ScrollArea viewport)
+
       const viewport = messagesEndRef.current?.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null;
       if (viewport) {
         if (instant) {
@@ -105,24 +115,30 @@ const Messages = () => {
         }
       }
     };
-    // Triple rAF for iOS WebKit rendering pipeline
+
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          doScroll();
-        });
+        requestAnimationFrame(doScroll);
       });
     });
-    // Additional delayed fallback for iOS Capacitor where rAF alone may not suffice
-    setTimeout(doScroll, 150);
-  }, []);
 
-  // Scroll to bottom when messages change - instant on open, smooth for new messages
+    [80, 180, 320].forEach((delay) => {
+      const timeoutId = window.setTimeout(doScroll, delay);
+      scrollRetryTimeoutsRef.current.push(timeoutId);
+    });
+  }, [clearPendingScrollRetries]);
+
   useEffect(() => {
-    if (selectedConversation?.messages) {
+    if (selectedConversation?.messages && !loadingMessages) {
       scrollToBottom(true);
     }
-  }, [selectedConversation?.messages]);
+  }, [loadingMessages, scrollToBottom, selectedConversation?.listing_id, selectedConversation?.other_user_id, selectedConversation?.messages]);
+
+  useEffect(() => {
+    return () => {
+      clearPendingScrollRetries();
+    };
+  }, [clearPendingScrollRetries]);
 
   useEffect(() => {
     if (!loading && !user) {

@@ -759,9 +759,15 @@ const Messages = () => {
       />
       <Header />
       
-      <main className={`container mx-auto px-2 sm:px-4 py-4 sm:py-8 pt-36 sm:pt-24 ${selectedConversation ? 'flex-1 overflow-hidden !p-0 sm:!px-4 sm:!py-8 sm:!pt-24' : ''}`}>
+      <main
+        className={`container mx-auto px-2 sm:px-4 py-4 sm:py-8 pt-36 sm:pt-24 ${
+          selectedConversation
+            ? 'flex-1 overflow-hidden !px-0 !pb-0 !pt-[calc(env(safe-area-inset-top,0px)+4rem)] sm:!px-4 sm:!py-8 sm:!pt-24'
+            : ''
+        }`}
+      >
         <div className={`max-w-4xl mx-auto ${selectedConversation ? 'h-full' : ''}`}>
-          <Card className={`${selectedConversation ? 'h-full border-0 rounded-none sm:border sm:rounded-lg' : 'h-[calc(100vh-10rem)]'} sm:h-[calc(100vh-8rem)] overflow-hidden`}>
+          <Card className={`${selectedConversation ? 'h-[calc(100dvh-(env(safe-area-inset-top,0px)+4rem))] border-0 rounded-none sm:border sm:rounded-lg' : 'h-[calc(100vh-10rem)]'} sm:h-[calc(100vh-8rem)] overflow-hidden`}>
             <CardHeader className="border-b py-3 sm:py-4 px-3 sm:px-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 {selectedConversation ? (

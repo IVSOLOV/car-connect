@@ -90,12 +90,31 @@ const Messages = () => {
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const scrollToBottom = useCallback((instant = false) => {
-    // Use double rAF to ensure ScrollArea has rendered content
+    const doScroll = () => {
+      // Primary: scrollIntoView
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: instant ? "instant" as ScrollBehavior : "smooth" });
+      }
+      // iOS fallback: also set scrollTop on the closest scrollable parent (Radix ScrollArea viewport)
+      const viewport = messagesEndRef.current?.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+      if (viewport) {
+        if (instant) {
+          viewport.scrollTop = viewport.scrollHeight;
+        } else {
+          viewport.scrollTo({ top: viewport.scrollHeight, behavior: "smooth" });
+        }
+      }
+    };
+    // Triple rAF for iOS WebKit rendering pipeline
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: instant ? "instant" as ScrollBehavior : "smooth" });
+        requestAnimationFrame(() => {
+          doScroll();
+        });
       });
     });
+    // Additional delayed fallback for iOS Capacitor where rAF alone may not suffice
+    setTimeout(doScroll, 150);
   }, []);
 
   // Scroll to bottom when messages change - instant on open, smooth for new messages

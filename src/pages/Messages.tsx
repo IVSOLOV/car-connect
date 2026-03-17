@@ -955,7 +955,7 @@ const Messages = () => {
                     </div>
                   )}
 
-                  <div className="border-t p-2 sm:p-4 pb-8 sm:pb-4 safe-bottom">
+                  <div className="border-t p-2 sm:p-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] sm:pb-4">
                     {/* Pending files preview */}
                     {pendingFiles.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-2 sm:mb-3">

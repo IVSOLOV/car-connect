@@ -1083,11 +1083,11 @@ const Messages = () => {
                               <p className={`text-foreground truncate text-sm sm:text-base ${conv.unread_count > 0 ? "font-bold" : "font-semibold"}`}>
                                 {conv.other_user_name}
                               </p>
-                              <span className={`text-[10px] sm:text-xs shrink-0 ${conv.unread_count > 0 ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+                              <span className={`text-[10px] sm:text-xs shrink-0 ${conv.unread_count > 0 ? "text-primary font-bold" : "text-muted-foreground"}`}>
                                 {format(new Date(conv.last_message_time), "MMM d")}
                               </span>
                             </div>
-                            <p className={`text-xs sm:text-sm flex items-center gap-1.5 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                            <p className={`text-xs sm:text-sm flex items-center gap-1.5 ${conv.unread_count > 0 ? "text-foreground font-bold" : "text-muted-foreground"}`}>
                               {conv.listing_image ? (
                                 <img 
                                   src={conv.listing_image} 
@@ -1097,9 +1097,9 @@ const Messages = () => {
                               ) : (
                                 <Car className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                               )}
-                              <span className="truncate">{conv.listing_title}</span>
+                              <span className={`truncate ${conv.unread_count > 0 ? "font-bold" : "font-normal"}`}>{conv.listing_title}</span>
                             </p>
-                            <p className={`text-xs sm:text-sm truncate mt-0.5 sm:mt-1 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                            <p className={`text-xs sm:text-sm truncate mt-0.5 sm:mt-1 ${conv.unread_count > 0 ? "text-foreground font-bold" : "text-muted-foreground"}`}>
                               {conv.last_message}
                             </p>
                           </div>

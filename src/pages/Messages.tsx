@@ -743,9 +743,9 @@ const Messages = () => {
       />
       <Header />
       
-      <main className={`container mx-auto px-2 sm:px-4 py-4 sm:py-8 pt-36 sm:pt-24 ${selectedConversation ? 'flex-1 overflow-hidden' : ''}`}>
+      <main className={`container mx-auto px-2 sm:px-4 py-4 sm:py-8 pt-36 sm:pt-24 ${selectedConversation ? 'flex-1 overflow-hidden !p-0 sm:!px-4 sm:!py-8 sm:!pt-24' : ''}`}>
         <div className={`max-w-4xl mx-auto ${selectedConversation ? 'h-full' : ''}`}>
-          <Card className={`${selectedConversation ? 'h-full' : 'h-[calc(100vh-10rem)]'} sm:h-[calc(100vh-8rem)] overflow-hidden`}>
+          <Card className={`${selectedConversation ? 'h-full border-0 rounded-none sm:border sm:rounded-lg' : 'h-[calc(100vh-10rem)]'} sm:h-[calc(100vh-8rem)] overflow-hidden`}>
             <CardHeader className="border-b py-3 sm:py-4 px-3 sm:px-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 {selectedConversation ? (
@@ -955,7 +955,7 @@ const Messages = () => {
                     </div>
                   )}
 
-                  <div className="border-t p-2 sm:p-4 pb-8 sm:pb-4 safe-bottom">
+                  <div className="border-t p-2 sm:p-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] sm:pb-4">
                     {/* Pending files preview */}
                     {pendingFiles.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-2 sm:mb-3">

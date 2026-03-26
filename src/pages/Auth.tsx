@@ -732,7 +732,11 @@ const Auth = () => {
                 <Button
                   className="w-full"
                   onClick={() => {
-                    window.location.href = 'com.solostar.dirent://auth';
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = 'com.solostar.dirent://auth';
+                    document.body.appendChild(iframe);
+                    setTimeout(() => document.body.removeChild(iframe), 500);
                   }}
                 >
                   <Smartphone className="mr-2 h-4 w-4" />
@@ -768,11 +772,11 @@ const Auth = () => {
                       size="sm"
                       className="mt-1"
                       onClick={() => {
-                        window.location.href = `com.solostar.dirent://auth?reset=true`;
-                        // Fallback: if app doesn't open within 1.5s, stay on web
-                        setTimeout(() => {
-                          // User is still here, app didn't open - that's fine, they can use web
-                        }, 1500);
+                        const iframe = document.createElement('iframe');
+                        iframe.style.display = 'none';
+                        iframe.src = 'com.solostar.dirent://auth?reset=true';
+                        document.body.appendChild(iframe);
+                        setTimeout(() => document.body.removeChild(iframe), 500);
                       }}
                     >
                       Open in DiRent App

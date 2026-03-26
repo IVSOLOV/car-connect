@@ -128,6 +128,35 @@ export const usePushNotifications = (userId?: string, onNotificationTap?: (data:
     void saveTokenToDatabase(cachedToken, 'auth-change');
   }, [userId, saveTokenToDatabase]);
 
+  // Clear badge count when app is opened/resumed
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const clearBadge = async () => {
+      try {
+        await PushNotifications.removeAllDeliveredNotifications();
+        console.log('[Push] Cleared delivered notifications and badge');
+      } catch (e) {
+        console.error('[Push] Failed to clear badge:', e);
+      }
+    };
+
+    // Clear on mount (app open)
+    clearBadge();
+
+    // Clear when app resumes from background
+    let appListener: PluginListenerHandle | undefined;
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        clearBadge();
+      }
+    }).then(handle => { appListener = handle; });
+
+    return () => {
+      appListener?.remove();
+    };
+  }, []);
+
   // Register listeners and request permissions once
   useEffect(() => {
     const nativePlatform = Capacitor.isNativePlatform();

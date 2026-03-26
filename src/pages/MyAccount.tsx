@@ -692,7 +692,6 @@ const MyAccount = () => {
                 className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                 onClick={() => setDeleteAccountOpen(true)}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
                 Delete Account
               </Button>
             </div>

@@ -155,6 +155,33 @@ const Messages = () => {
     }
   }, [user]);
 
+  // Auto-open conversation from push notification deep link
+  useEffect(() => {
+    if (deepLinkHandledRef.current || loadingConversations || conversations.length === 0) return;
+
+    const listingId = searchParams.get('listing_id');
+    const senderId = searchParams.get('sender_id');
+
+    if (!listingId && !senderId) return;
+
+    // Find the matching conversation
+    const targetConv = conversations.find(c => {
+      if (listingId && senderId) {
+        return c.listing_id === listingId && c.other_user_id === senderId;
+      }
+      if (listingId) return c.listing_id === listingId;
+      if (senderId) return c.other_user_id === senderId;
+      return false;
+    });
+
+    if (targetConv) {
+      deepLinkHandledRef.current = true;
+      // Clear search params so back navigation doesn't re-trigger
+      setSearchParams({}, { replace: true });
+      openConversation(targetConv);
+    }
+  }, [conversations, loadingConversations, searchParams]);
+
   // Realtime subscription for new messages
   useEffect(() => {
     if (!user) return;

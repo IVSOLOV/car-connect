@@ -1079,6 +1079,8 @@ const Auth = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
                     disabled={isLoading}
+                    autoComplete={mode === "signup" ? "username" : "username"}
+                    name="email"
                   />
                 </div>
                 {errors.email && (
@@ -1099,6 +1101,8 @@ const Auth = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10 pr-10"
                       disabled={isLoading}
+                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                      name="password"
                     />
                     <button
                       type="button"

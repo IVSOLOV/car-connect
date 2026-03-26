@@ -655,10 +655,21 @@ const Messages = () => {
   // Check if message can be edited (within 1 minute and own message)
   const canEditMessage = (msg: Message): boolean => {
     if (msg.sender_id !== user?.id) return false;
+    if (msg.message === 'This message was deleted') return false;
     const createdAt = new Date(msg.created_at);
     const now = new Date();
     const diffMinutes = (now.getTime() - createdAt.getTime()) / (1000 * 60);
     return diffMinutes <= 1;
+  };
+
+  // Check if message can be deleted (within 3 minutes and own message)
+  const canDeleteMessage = (msg: Message): boolean => {
+    if (msg.sender_id !== user?.id) return false;
+    if (msg.message === 'This message was deleted') return false;
+    const createdAt = new Date(msg.created_at);
+    const now = new Date();
+    const diffMinutes = (now.getTime() - createdAt.getTime()) / (1000 * 60);
+    return diffMinutes <= 3;
   };
 
   const startEditingMessage = (msg: Message) => {
@@ -729,7 +740,7 @@ const Messages = () => {
     try {
       const { error } = await supabase
         .from("messages")
-        .delete()
+        .update({ message: 'This message was deleted', attachments: [] })
         .eq("id", deletingMessageId)
         .eq("sender_id", user.id);
 
@@ -740,7 +751,11 @@ const Messages = () => {
         if (!prev) return null;
         return {
           ...prev,
-          messages: prev.messages.filter(m => m.id !== deletingMessageId)
+          messages: prev.messages.map(m => 
+            m.id === deletingMessageId 
+              ? { ...m, message: 'This message was deleted', attachments: [] }
+              : m
+          )
         };
       });
 
@@ -878,24 +893,26 @@ const Messages = () => {
                             className={`flex ${msg.sender_id === user?.id ? "justify-end" : "justify-start"} group`}
                           >
                             {/* Edit and Delete buttons for own messages */}
-                            {msg.sender_id === user?.id && editingMessageId !== msg.id && (
+                            {msg.sender_id === user?.id && editingMessageId !== msg.id && msg.message !== 'This message was deleted' && (
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 self-center flex gap-1">
                                 {canEditMessage(msg) && (
                                   <button
                                     onClick={() => startEditingMessage(msg)}
                                     className="p-1 hover:bg-muted rounded"
-                                    title="Edit message (within 5 min)"
+                                    title="Edit message (within 1 min)"
                                   >
                                     <Pencil className="h-3 w-3 text-muted-foreground" />
                                   </button>
                                 )}
-                                <button
-                                  onClick={() => confirmDeleteMessage(msg.id)}
-                                  className="p-1 rounded"
-                                  title="Delete message"
-                                >
-                                  <Trash2 className="h-3 w-3 text-destructive" />
-                                </button>
+                                {canDeleteMessage(msg) && (
+                                  <button
+                                    onClick={() => confirmDeleteMessage(msg.id)}
+                                    className="p-1 rounded"
+                                    title="Delete message (within 3 min)"
+                                  >
+                                    <Trash2 className="h-3 w-3 text-destructive" />
+                                  </button>
+                                )}
                               </div>
                             )}
                             <div
@@ -940,6 +957,8 @@ const Messages = () => {
                                     </button>
                                   </div>
                                 </div>
+                              ) : msg.message === 'This message was deleted' ? (
+                                <p className="text-sm italic opacity-60">This message was deleted</p>
                               ) : (
                                 <>
                                   {msg.message && msg.message !== "Sent attachment(s)" && (

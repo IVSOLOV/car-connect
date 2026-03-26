@@ -593,6 +593,8 @@ const Messages = () => {
         senderName,
         listingTitle: currentConv?.listing_title,
         messagePreview: newMessage.trim().substring(0, 100),
+        listingId: selectedConversation.listing_id,
+        senderId: user.id,
       }).catch(err => console.error("Failed to send email notification:", err));
 
       setNewMessage("");

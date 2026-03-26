@@ -957,6 +957,8 @@ const Messages = () => {
                                     </button>
                                   </div>
                                 </div>
+                              ) : msg.message === 'This message was deleted' ? (
+                                <p className="text-sm italic opacity-60">This message was deleted</p>
                               ) : (
                                 <>
                                   {msg.message && msg.message !== "Sent attachment(s)" && (

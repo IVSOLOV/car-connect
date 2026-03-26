@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
+import { App } from '@capacitor/app';
 import { supabase } from '@/integrations/supabase/client';
 
 const PENDING_PUSH_TOKEN_KEY = 'push_token_pending_registration';

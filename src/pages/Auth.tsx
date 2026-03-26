@@ -937,6 +937,8 @@ const Auth = () => {
                           onChange={(e) => setFirstName(e.target.value)}
                           className="pl-10"
                           disabled={isLoading}
+                          autoComplete="given-name"
+                          name="firstName"
                         />
                       </div>
                       {errors.firstName && (
@@ -956,6 +958,8 @@ const Auth = () => {
                           onChange={(e) => setLastName(e.target.value)}
                           className="pl-10"
                           disabled={isLoading}
+                          autoComplete="family-name"
+                          name="lastName"
                         />
                       </div>
                       {errors.lastName && (
@@ -976,6 +980,8 @@ const Auth = () => {
                         onChange={handlePhoneChange}
                         className="pl-10"
                         disabled={isLoading}
+                        autoComplete="tel"
+                        name="phone"
                       />
                     </div>
                     {errors.phone && (
@@ -1079,6 +1085,8 @@ const Auth = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
                     disabled={isLoading}
+                    autoComplete={mode === "signup" ? "username" : "username"}
+                    name="email"
                   />
                 </div>
                 {errors.email && (
@@ -1099,6 +1107,8 @@ const Auth = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10 pr-10"
                       disabled={isLoading}
+                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                      name="password"
                     />
                     <button
                       type="button"
@@ -1132,6 +1142,8 @@ const Auth = () => {
                       onChange={(e) => setSignupConfirmPassword(e.target.value)}
                       className={`pl-10 pr-10 ${errors.signupConfirmPassword ? 'border-destructive' : ''}`}
                       disabled={isLoading}
+                      autoComplete="new-password"
+                      name="confirmPassword"
                     />
                     <button
                       type="button"

@@ -39,7 +39,7 @@ const describeError = (error: unknown) => {
   return error;
 };
 
-export const usePushNotifications = (userId?: string) => {
+export const usePushNotifications = (userId?: string, onNotificationTap?: (data: Record<string, string>) => void) => {
   const [token, setToken] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<PushNotificationSchema[]>([]);
   const [isSupported, setIsSupported] = useState(false);
@@ -187,6 +187,10 @@ export const usePushNotifications = (userId?: string) => {
 
         const actionPerformedHandle = await PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
           console.log('[Push] pushNotificationActionPerformed:', notification);
+          const tapData = notification.notification?.data as Record<string, string> | undefined;
+          if (tapData && onNotificationTap) {
+            onNotificationTap(tapData);
+          }
         });
 
         listenerHandles.current = [

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { MessageCircle, Car, User, ChevronRight, ArrowLeft, Paperclip, Image, FileText, X, Star, Pencil, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,6 +65,7 @@ interface ConversationDetail {
 
 const Messages = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const { refetch: refetchUnreadCount } = useUnreadMessages();
@@ -89,6 +90,7 @@ const Messages = () => {
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const deepLinkHandledRef = useRef(false);
 
   const clearPendingScrollRetries = useCallback(() => {
     scrollRetryTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
@@ -152,6 +154,33 @@ const Messages = () => {
       refetchUnreadCount();
     }
   }, [user]);
+
+  // Auto-open conversation from push notification deep link
+  useEffect(() => {
+    if (deepLinkHandledRef.current || loadingConversations || conversations.length === 0) return;
+
+    const listingId = searchParams.get('listing_id');
+    const senderId = searchParams.get('sender_id');
+
+    if (!listingId && !senderId) return;
+
+    // Find the matching conversation
+    const targetConv = conversations.find(c => {
+      if (listingId && senderId) {
+        return c.listing_id === listingId && c.other_user_id === senderId;
+      }
+      if (listingId) return c.listing_id === listingId;
+      if (senderId) return c.other_user_id === senderId;
+      return false;
+    });
+
+    if (targetConv) {
+      deepLinkHandledRef.current = true;
+      // Clear search params so back navigation doesn't re-trigger
+      setSearchParams({}, { replace: true });
+      openConversation(targetConv);
+    }
+  }, [conversations, loadingConversations, searchParams]);
 
   // Realtime subscription for new messages
   useEffect(() => {
@@ -593,6 +622,8 @@ const Messages = () => {
         senderName,
         listingTitle: currentConv?.listing_title,
         messagePreview: newMessage.trim().substring(0, 100),
+        listingId: selectedConversation.listing_id,
+        senderId: user.id,
       }).catch(err => console.error("Failed to send email notification:", err));
 
       setNewMessage("");

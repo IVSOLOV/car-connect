@@ -11,6 +11,8 @@ interface NotificationData {
   rejectionReason?: string;
   submitterName?: string;
   ticketDescription?: string;
+  listingId?: string;
+  senderId?: string;
 }
 
 const notificationContent: Record<string, (data: NotificationData) => { title: string; body: string }> = {
@@ -82,7 +84,11 @@ export const sendNotificationEmail = async (
     const content = notificationContent[type];
     if (content && recipientUserId) {
       const { title, body } = content(data);
-      sendPushNotification(recipientUserId, title, body, { type }).catch(console.error);
+      const pushData: Record<string, string> = { type };
+      // Include deep-link data for message notifications
+      if (data.listingId) pushData.listing_id = data.listingId;
+      if (data.senderId) pushData.sender_id = data.senderId;
+      sendPushNotification(recipientUserId, title, body, pushData).catch(console.error);
     }
 
     // For admin notifications, send push to all admins

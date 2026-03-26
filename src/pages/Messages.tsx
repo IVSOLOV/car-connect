@@ -90,6 +90,7 @@ const Messages = () => {
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const deepLinkHandledRef = useRef(false);
 
   const clearPendingScrollRetries = useCallback(() => {
     scrollRetryTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));

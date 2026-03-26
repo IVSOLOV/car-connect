@@ -65,6 +65,7 @@ interface ConversationDetail {
 
 const Messages = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const { refetch: refetchUnreadCount } = useUnreadMessages();

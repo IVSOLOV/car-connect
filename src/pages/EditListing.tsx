@@ -586,10 +586,10 @@ const EditListing = () => {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); rotateNewImage(index); }}
-                        className="absolute -top-0.5 -left-0.5 bg-primary/80 hover:bg-primary text-primary-foreground rounded-full p-px transition-colors"
+                        className="absolute inset-0 flex items-center justify-center z-10 rounded-lg"
                         title="Rotate image"
                       >
-                        <RotateCw className="h-2.5 w-2.5" />
+                        <RotateCw className="h-8 w-8 text-white/30 hover:text-white/70 transition-colors drop-shadow-md" />
                       </button>
                       <button
                         type="button"

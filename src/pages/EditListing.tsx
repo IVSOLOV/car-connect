@@ -215,34 +215,30 @@ const EditListing = () => {
     setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const setMainExistingImage = (index: number) => {
-    if (index === 0) return; // Already main
+  const reorderExistingImages = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
     setExistingImages((prev) => {
       const newArr = [...prev];
-      const [selected] = newArr.splice(index, 1);
-      newArr.unshift(selected);
+      const [moved] = newArr.splice(fromIndex, 1);
+      newArr.splice(toIndex, 0, moved);
       return newArr;
     });
   };
 
-  const setMainNewImage = (index: number) => {
-    // Move existing images to the end, make this new image first
+  const reorderNewImages = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
     setNewImages((prev) => {
       const newArr = [...prev];
-      const [selected] = newArr.splice(index, 1);
-      newArr.unshift(selected);
+      const [moved] = newArr.splice(fromIndex, 1);
+      newArr.splice(toIndex, 0, moved);
       return newArr;
     });
     setNewImagePreviews((prev) => {
       const newArr = [...prev];
-      const [selected] = newArr.splice(index, 1);
-      newArr.unshift(selected);
+      const [moved] = newArr.splice(fromIndex, 1);
+      newArr.splice(toIndex, 0, moved);
       return newArr;
     });
-    // Clear existing images so new image becomes first
-    if (existingImages.length > 0) {
-      setExistingImages([]);
-    }
   };
 
   const rotateNewImage = async (index: number) => {

@@ -54,6 +54,7 @@ const CreateListing = () => {
   const [fuelType, setFuelType] = useState<FuelType>("gas");
   const [licensePlate, setLicensePlate] = useState("");
   const [deliveryAvailable, setDeliveryAvailable] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
 
@@ -178,18 +179,18 @@ const CreateListing = () => {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const setMainImage = (index: number) => {
-    if (index === 0) return; // Already main
+  const reorderImages = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
     setImages((prev) => {
       const newArr = [...prev];
-      const [selected] = newArr.splice(index, 1);
-      newArr.unshift(selected);
+      const [moved] = newArr.splice(fromIndex, 1);
+      newArr.splice(toIndex, 0, moved);
       return newArr;
     });
     setImagePreviews((prev) => {
       const newArr = [...prev];
-      const [selected] = newArr.splice(index, 1);
-      newArr.unshift(selected);
+      const [moved] = newArr.splice(fromIndex, 1);
+      newArr.splice(toIndex, 0, moved);
       return newArr;
     });
   };

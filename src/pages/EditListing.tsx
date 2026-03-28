@@ -241,6 +241,33 @@ const EditListing = () => {
     });
   };
 
+  const rotateExistingImage = async (index: number) => {
+    const url = existingImages[index];
+    if (!url) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = url;
+    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.height;
+    canvas.height = img.width;
+    const ctx = canvas.getContext("2d")!;
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(img, -img.width / 2, -img.height / 2);
+    const rotatedDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+    // Convert existing image to a new image and move it to newImages
+    const res = await fetch(rotatedDataUrl);
+    const blob = await res.blob();
+    const rotatedFile = new File([blob], `rotated-existing-${index}.jpg`, { type: "image/jpeg" });
+    // Remove from existing, add to new
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+    setNewImages((prev) => [...prev, rotatedFile]);
+    setNewImagePreviews((prev) => [...prev, rotatedDataUrl]);
+    canvas.width = 0;
+    canvas.height = 0;
+  };
+
   const rotateNewImage = async (index: number) => {
     const preview = newImagePreviews[index];
     if (!preview) return;
@@ -542,6 +569,14 @@ const EditListing = () => {
                           <Star className="h-3 w-3 fill-current" />
                         </div>
                       )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); rotateExistingImage(index); }}
+                        className="absolute inset-0 flex items-center justify-center z-10 rounded-lg"
+                        title="Rotate image"
+                      >
+                        <RotateCw className="h-8 w-8 text-white/30 hover:text-white/70 transition-colors drop-shadow-md" />
+                      </button>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeExistingImage(index); }}

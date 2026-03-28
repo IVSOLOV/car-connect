@@ -194,6 +194,30 @@ const CreateListing = () => {
     });
   };
 
+  const rotateImage = async (index: number) => {
+    const preview = imagePreviews[index];
+    if (!preview) return;
+    const img = new Image();
+    img.src = preview;
+    await new Promise((resolve) => { img.onload = resolve; });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.height;
+    canvas.height = img.width;
+    const ctx = canvas.getContext("2d")!;
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(img, -img.width / 2, -img.height / 2);
+    const rotatedDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+    const res = await fetch(rotatedDataUrl);
+    const blob = await res.blob();
+    const originalFile = images[index];
+    const rotatedFile = new File([blob], originalFile.name, { type: "image/jpeg" });
+    setImages((prev) => prev.map((f, i) => (i === index ? rotatedFile : f)));
+    setImagePreviews((prev) => prev.map((p, i) => (i === index ? rotatedDataUrl : p)));
+    canvas.width = 0;
+    canvas.height = 0;
+  };
+
   const handlePriceChange = (value: string, setter: (val: string) => void) => {
     const numericValue = value.replace(/[^0-9]/g, "");
     setter(numericValue);

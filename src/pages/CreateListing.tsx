@@ -358,14 +358,9 @@ const CreateListing = () => {
       const result = await startCheckout(1);
       
       if (result?.url) {
-        // First-time: redirect to Stripe checkout
         console.log("[CreateListing] Redirecting to Stripe:", result.url);
         window.location.href = result.url;
         return new Promise(() => {});
-      } else if (result?.updated) {
-        // Returning host: subscription quantity updated, create listing directly
-        console.log("[CreateListing] Subscription updated, creating listing directly");
-        navigate("/listing-success?payment=updated");
       } else {
         throw new Error("No checkout URL returned");
       }

@@ -45,67 +45,11 @@ serve(async (req) => {
       console.log("[CREATE-LISTING-CHECKOUT] Found existing customer", { customerId });
     }
 
-    // Check for existing active subscription with the listing fee price
-    let existingSubscription = null;
-    let currentQuantity = 0;
-    if (customerId) {
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: "active",
-        limit: 10,
-      });
-
-      for (const sub of subscriptions.data) {
-        for (const item of sub.items.data) {
-          if (item.price.id === LISTING_FEE_PRICE_ID) {
-            existingSubscription = { subscriptionId: sub.id, itemId: item.id };
-            currentQuantity += item.quantity || 0;
-          }
-        }
-      }
-
-      // Also check trialing subscriptions
-      const trialingSubs = await stripe.subscriptions.list({
-        customer: customerId,
-        status: "trialing",
-        limit: 10,
-      });
-
-      for (const sub of trialingSubs.data) {
-        for (const item of sub.items.data) {
-          if (item.price.id === LISTING_FEE_PRICE_ID) {
-            existingSubscription = { subscriptionId: sub.id, itemId: item.id };
-            currentQuantity += item.quantity || 0;
-          }
-        }
-      }
-    }
-
     const { quantity = 1 } = await req.json().catch(() => ({}));
 
-    // If user already has an active subscription, just increment the quantity (no checkout needed)
-    if (existingSubscription) {
-      const newQuantity = currentQuantity + quantity;
-      console.log("[CREATE-LISTING-CHECKOUT] Updating existing subscription quantity", { 
-        subscriptionId: existingSubscription.subscriptionId, 
-        currentQuantity, 
-        newQuantity 
-      });
-
-      await stripe.subscriptionItems.update(existingSubscription.itemId, {
-        quantity: newQuantity,
-      });
-
-      // Return a flag indicating subscription was updated (no redirect needed)
-      return new Response(JSON.stringify({ updated: true, newQuantity }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    // First-time listing: create a new checkout session (collects payment method)
-    const newQuantity = quantity;
-    console.log("[CREATE-LISTING-CHECKOUT] Creating checkout session for new subscriber", { newQuantity });
+    // Always create a checkout session so the user goes through Stripe
+    // Each listing gets its own subscription with a 30-day free trial
+    console.log("[CREATE-LISTING-CHECKOUT] Creating checkout session", { quantity });
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -113,7 +57,7 @@ serve(async (req) => {
       line_items: [
         {
           price: LISTING_FEE_PRICE_ID,
-          quantity: newQuantity,
+          quantity,
         },
       ],
       mode: "subscription",

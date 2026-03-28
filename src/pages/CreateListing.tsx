@@ -496,30 +496,29 @@ const CreateListing = () => {
               {imagePreviews.length > 0 && (
                 <>
                   <p className="text-sm text-muted-foreground mt-4">
-                    Click on an image to set it as the main photo
+                    Drag and drop images to reorder. First image (⭐) is the main photo.
                   </p>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-2">
                     {imagePreviews.map((preview, index) => (
                       <div 
                         key={index} 
-                        className={`relative aspect-square cursor-pointer group ${
+                        draggable
+                        onDragStart={() => setDragIndex(index)}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => { if (dragIndex !== null) { reorderImages(dragIndex, index); setDragIndex(null); } }}
+                        onDragEnd={() => setDragIndex(null)}
+                        className={`relative aspect-square cursor-grab active:cursor-grabbing group ${
                           index === 0 ? "ring-2 ring-primary ring-offset-2" : ""
-                        }`}
-                        onClick={() => setMainImage(index)}
+                        } ${dragIndex === index ? "opacity-50" : ""}`}
                       >
                         <img 
                           src={preview} 
                           alt={`Preview ${index + 1}`} 
-                          className="w-full h-full object-cover rounded-lg"
+                          className="w-full h-full object-cover rounded-lg pointer-events-none"
                         />
                         {index === 0 && (
                           <div className="absolute top-1 left-1 bg-primary text-primary-foreground rounded-full p-1">
                             <Star className="h-3 w-3 fill-current" />
-                          </div>
-                        )}
-                        {index !== 0 && (
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                            <span className="text-white text-xs font-medium">Set as main</span>
                           </div>
                         )}
                         <button
@@ -533,7 +532,7 @@ const CreateListing = () => {
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); removeImage(index); }}
-                          className="img-delete-btn absolute -top-0.5 -right-0.5 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-px transition-colors"
+                          className="img-delete-btn absolute -top-0.5 -right-0.5 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-px transition-colors z-20"
                         >
                           <X className="h-2.5 w-2.5" />
                         </button>

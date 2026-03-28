@@ -121,6 +121,44 @@ export function LocationAutocomplete({
     }
 
     setIsGettingLocation(true);
+
+    const applyDetectedLocation = (city: string, state: string, message: string) => {
+      if (city && state && usStates.includes(state)) {
+        setInputValue(`${city}, ${state}`);
+        onLocationSelect(city, state);
+        toast.success(message);
+        return true;
+      }
+
+      if (city) {
+        setInputValue(city);
+        toast.info("City detected. Please type to select your full location.");
+        return true;
+      }
+
+      return false;
+    };
+
+    const detectLocationFromIp = async (message: string) => {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+
+        if (!response.ok) {
+          throw new Error('IP geolocation unavailable');
+        }
+
+        const data = await response.json();
+        const city = data.city || '';
+        const state = data.region || '';
+
+        if (!applyDetectedLocation(city, state, message)) {
+          toast.error("Could not determine your city. Please type your location.");
+        }
+      } catch (ipError) {
+        console.error('IP geolocation error:', ipError);
+        toast.error("Could not detect your location. Please type your city manually.");
+      }
+    };
     
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -130,7 +168,7 @@ export function LocationAutocomplete({
           maximumAge: 300000 // 5 minutes cache
         });
       });
-
+ 
       const controller = new AbortController();
       const fetchTimeout = setTimeout(() => controller.abort(), 10000);
       
@@ -147,22 +185,10 @@ export function LocationAutocomplete({
       }
       
       const data = await response.json();
-      
-      if (data.address) {
-        const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
-        const state = data.address.state || "";
-        
-        if (city && state && usStates.includes(state)) {
-          setInputValue(`${city}, ${state}`);
-          onLocationSelect(city, state);
-          toast.success("Location detected!");
-        } else if (city) {
-          setInputValue(city);
-          toast.info("City detected. Please type to select your full location.");
-        } else {
-          toast.error("Could not determine your city. Please type your location.");
-        }
-      } else {
+      const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || "";
+      const state = data.address?.state || "";
+
+      if (!applyDetectedLocation(city, state, "Location detected!")) {
         toast.error("Could not determine location. Please type your city.");
       }
     } catch (error: any) {
@@ -170,16 +196,16 @@ export function LocationAutocomplete({
       
       if (error && typeof error.code === 'number' && error.code >= 1 && error.code <= 3) {
         if (error.code === 1) {
-          toast.error("Location access denied. Please type your city manually.");
+          await detectLocationFromIp("Approximate location detected from your network.");
         } else if (error.code === 3) {
-          toast.error("Location request timed out. Please type your city.");
+          await detectLocationFromIp("Using approximate location from your network.");
         } else {
           toast.error("Could not get location. Please type your city.");
         }
       } else if (error instanceof DOMException && error.name === 'AbortError') {
-        toast.error("Location request timed out. Please type your city.");
+        await detectLocationFromIp("Using approximate location from your network.");
       } else {
-        toast.error("Location service unavailable. Please type your city.");
+        await detectLocationFromIp("Using approximate location from your network.");
       }
     } finally {
       setIsGettingLocation(false);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Plus, Trash2, Pencil, Eye, CalendarDays } from "lucide-react";
+import { Car, Plus, Trash2, Pencil, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -177,7 +177,11 @@ const MyListings = () => {
                       className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
                     >
                       <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                        <div 
+                          className="w-16 h-16 sm:w-20 sm:h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => navigate(`/listing/${listing.id}`)}
+                          title="View listing"
+                        >
                           {listing.images && listing.images.length > 0 ? (
                             <img 
                               src={listing.images[0]} 
@@ -243,15 +247,6 @@ const MyListings = () => {
                       </div>
                       
                       <div className="flex items-center gap-1 sm:flex-shrink-0 justify-end">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => navigate(`/listing/${listing.id}`)}
-                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                          title="View listing"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon"

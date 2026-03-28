@@ -36,6 +36,8 @@ const EditListing = () => {
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  const [dragExistingIndex, setDragExistingIndex] = useState<number | null>(null);
+  const [dragNewIndex, setDragNewIndex] = useState<number | null>(null);
   const [year, setYear] = useState("");
   const [make, setMake] = useState("");
   const [customMake, setCustomMake] = useState("");

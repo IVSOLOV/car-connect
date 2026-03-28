@@ -164,17 +164,19 @@ export function LocationAutocomplete({
       } else {
         toast.error("Could not determine location. Please type your city.");
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Geolocation error:', error);
       
-      if (error instanceof GeolocationPositionError) {
-        if (error.code === error.PERMISSION_DENIED) {
+      if (error && typeof error.code === 'number' && error.code >= 1 && error.code <= 3) {
+        if (error.code === 1) {
           toast.error("Location access denied. Please type your city manually.");
-        } else if (error.code === error.TIMEOUT) {
+        } else if (error.code === 3) {
           toast.error("Location request timed out. Please type your city.");
         } else {
           toast.error("Could not get location. Please type your city.");
         }
+      } else if (error instanceof DOMException && error.name === 'AbortError') {
+        toast.error("Location request timed out. Please type your city.");
       } else {
         toast.error("Location service unavailable. Please type your city.");
       }

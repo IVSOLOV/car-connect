@@ -140,11 +140,11 @@ const MyListings = () => {
       <Header />
       
       <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Car className="h-5 w-5" />
+               <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Car className="h-6 w-6" />
                 My Listings
               </CardTitle>
               <Button onClick={() => navigate("/create-listing")} size="sm">
@@ -174,11 +174,11 @@ const MyListings = () => {
                   {listings.map((listing) => (
                     <div 
                       key={listing.id} 
-                      className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                      className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5 p-4 sm:p-5 border border-border rounded-lg hover:bg-accent/50 transition-colors"
                     >
-                      <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="flex items-center gap-4 sm:gap-5 flex-1 min-w-0">
                         <div 
-                          className="w-16 h-16 sm:w-20 sm:h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-20 h-20 sm:w-28 sm:h-28 bg-muted rounded-lg overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => navigate(`/listing/${listing.id}`)}
                           title="View listing"
                         >
@@ -190,14 +190,14 @@ const MyListings = () => {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <Car className="h-8 w-8 text-muted-foreground" />
+                              <Car className="h-10 w-10 text-muted-foreground" />
                             </div>
                           )}
                         </div>
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
+                            <h3 className="font-semibold text-foreground text-base sm:text-lg truncate">
                               {listing.year} {listing.make} {listing.model}
                             </h3>
                             {listing.approval_status === "approved" && (
@@ -236,17 +236,17 @@ const MyListings = () => {
                               Reason: {listing.deactivation_reason}
                             </p>
                           )}
-                          <p className="text-xs sm:text-sm text-muted-foreground">
+                          <p className="text-sm sm:text-base text-muted-foreground mt-1">
                             {listing.city}, {listing.state}
                           </p>
-                          <p className="text-xs sm:text-sm font-medium text-primary">
+                          <p className="text-sm sm:text-base font-medium text-primary mt-0.5">
                             ${listing.daily_price}/day
                             {listing.monthly_price && ` · $${listing.monthly_price}/month`}
                           </p>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-1 sm:flex-shrink-0 justify-end">
+                      <div className="flex items-center gap-2 sm:flex-shrink-0 justify-end">
                         <Button 
                           variant="ghost" 
                           size="icon"
@@ -254,28 +254,28 @@ const MyListings = () => {
                             setSelectedListing(listing);
                             setShowBookingModal(true);
                           }}
-                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          className="h-10 w-10 text-muted-foreground hover:text-primary"
                           title="Manage bookings"
                         >
-                          <CalendarDays className="h-4 w-4" />
+                          <CalendarDays className="h-5 w-5" />
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="icon"
                           onClick={() => navigate(`/edit-listing/${listing.id}`)}
-                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          className="h-10 w-10 text-muted-foreground hover:text-primary"
                           title="Edit listing"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-5 w-5" />
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="icon"
                           onClick={() => handleDeleteClick(listing)}
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          className="h-10 w-10 text-destructive hover:text-destructive hover:bg-destructive/10"
                           title="Delete listing"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-5 w-5" />
                         </Button>
                       </div>
                     </div>

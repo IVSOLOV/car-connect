@@ -275,7 +275,7 @@ const ListingSuccess = () => {
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate("/my-account")} 
+                  onClick={() => navigate("/my-listings")} 
                   className="flex-1 gap-2"
                 >
                   <Car className="h-4 w-4" />

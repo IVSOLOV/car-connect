@@ -34,6 +34,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { carMakes } from "@/data/vehicleData";
 import type { Listing } from "@/types/listing";
 import { VehicleTypeFilter, type VehicleType } from "@/components/VehicleTypeSelector";
 
@@ -43,12 +44,7 @@ interface Booking {
   end_date: string;
 }
 
-const CAR_MAKES = [
-  "Acura", "Audi", "BMW", "Buick", "Cadillac", "Chevrolet", "Chrysler",
-  "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Infiniti", "Jaguar",
-  "Jeep", "Kia", "Lexus", "Lincoln", "Mazda", "Mercedes-Benz",
-  "Nissan", "Porsche", "Ram", "Subaru", "Tesla", "Toyota", "Volkswagen", "Volvo"
-];
+const CAR_MAKES = carMakes;
 
 const US_STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",

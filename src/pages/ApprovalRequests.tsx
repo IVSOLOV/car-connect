@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, X, Eye, ArrowLeft, History } from "lucide-react";
+import { Check, X, Eye, ArrowLeft, History, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -294,61 +294,63 @@ const ApprovalRequests = () => {
                 {listings.map((listing) => (
                   <Card key={listing.id} className="overflow-hidden">
                     <CardContent className="p-0">
-                      <div className="flex flex-col md:flex-row">
+                      <div className="flex flex-col sm:flex-row">
                         {/* Image */}
-                        <div className="w-full md:w-44 h-44 md:h-auto flex-shrink-0">
+                        <div className="relative w-full sm:w-48 h-48 sm:h-auto flex-shrink-0">
                           <img
                             src={listing.images?.[0] || "/placeholder.svg"}
                             alt={`${listing.year} ${listing.make} ${listing.model}`}
                             className="w-full h-full object-cover"
                           />
+                          <Badge variant="secondary" className="absolute top-3 right-3 sm:hidden">
+                            Pending
+                          </Badge>
                         </div>
 
                         {/* Details */}
-                        <div className="flex-1 p-4">
-                          <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                        <div className="flex-1 p-4 sm:p-5 flex flex-col">
+                          <div className="flex items-start justify-between gap-2 mb-3">
                             <div>
-                              <h3 className="text-lg font-semibold text-foreground">
+                              <h3 className="text-lg font-bold text-foreground">
                                 {listing.year} {listing.make} {listing.model}
                               </h3>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                                <MapPin className="h-3.5 w-3.5" />
                                 {listing.city}, {listing.state}
                               </p>
                             </div>
-                            <Badge variant="secondary">Pending</Badge>
+                            <Badge variant="secondary" className="hidden sm:inline-flex flex-shrink-0">
+                              Pending
+                            </Badge>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-4 text-sm mb-4">
-                            <div className="space-y-1">
-                              <div>
-                                <span className="text-muted-foreground">Owner:</span>{" "}
-                                <span className="text-foreground">{getOwnerName(listing)}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Title Status:</span>{" "}
-                                <span className="text-foreground capitalize">{listing.title_status}</span>
-                              </div>
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm mb-3">
+                            <div className="text-muted-foreground">
+                              Owner: <span className="text-foreground font-medium">{getOwnerName(listing)}</span>
                             </div>
-                            <div className="space-y-1">
-                              <div>
-                                <span className="text-muted-foreground">Daily:</span>{" "}
-                                <span className="text-foreground">{formatPrice(listing.daily_price)}</span>
-                              </div>
-                              {listing.weekly_price && (
-                                <div>
-                                  <span className="text-muted-foreground">Weekly:</span>{" "}
-                                  <span className="text-foreground">{formatPrice(listing.weekly_price)}</span>
-                                </div>
-                              )}
-                              {listing.monthly_price && (
-                                <div>
-                                  <span className="text-muted-foreground">Monthly:</span>{" "}
-                                  <span className="text-foreground">{formatPrice(listing.monthly_price)}</span>
-                                </div>
-                              )}
+                            <div className="text-muted-foreground">
+                              Daily: <span className="text-foreground font-medium">{formatPrice(listing.daily_price)}</span>
                             </div>
-                            <div></div>
+                            <div className="text-muted-foreground">
+                              Title: <span className="text-foreground font-medium capitalize">{listing.title_status}</span>
+                            </div>
+                            {listing.weekly_price && (
+                              <div className="text-muted-foreground">
+                                Weekly: <span className="text-foreground font-medium">{formatPrice(listing.weekly_price)}</span>
+                              </div>
+                            )}
+                            {!listing.weekly_price && listing.monthly_price && (
+                              <div className="text-muted-foreground">
+                                Monthly: <span className="text-foreground font-medium">{formatPrice(listing.monthly_price)}</span>
+                              </div>
+                            )}
                           </div>
+
+                          {listing.monthly_price && listing.weekly_price && (
+                            <div className="text-sm text-muted-foreground mb-3">
+                              Monthly: <span className="text-foreground font-medium">{formatPrice(listing.monthly_price)}</span>
+                            </div>
+                          )}
 
                           {listing.description && (
                             <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
@@ -356,30 +358,33 @@ const ApprovalRequests = () => {
                             </p>
                           )}
 
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex items-center gap-2 mt-auto pt-3 border-t border-border">
                             <Button
                               size="sm"
                               variant="outline"
+                              className="flex-1 sm:flex-none"
                               onClick={() => navigate(`/listing/${listing.id}`)}
                             >
-                              <Eye className="h-4 w-4 mr-1" />
+                              <Eye className="h-4 w-4 mr-1.5" />
                               View
                             </Button>
                             <Button
                               size="sm"
+                              className="flex-1 sm:flex-none"
                               onClick={() => handleApprove(listing)}
                             >
-                              <Check className="h-4 w-4 mr-1" />
+                              <Check className="h-4 w-4 mr-1.5" />
                               Approve
                             </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => openRejectDialog(listing)}
-                              >
-                                <X className="h-4 w-4 mr-1" />
-                                Request Changes
-                              </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="flex-1 sm:flex-none"
+                              onClick={() => openRejectDialog(listing)}
+                            >
+                              <X className="h-4 w-4 mr-1.5" />
+                              Request Changes
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -407,76 +412,75 @@ const ApprovalRequests = () => {
                 {historyListings.map((listing) => (
                   <Card key={listing.id} className="overflow-hidden">
                     <CardContent className="p-0">
-                      <div className="flex flex-col md:flex-row">
+                      <div className="flex flex-col sm:flex-row">
                         {/* Image */}
-                        <div className="w-full md:w-44 h-44 md:h-auto flex-shrink-0">
+                        <div className="relative w-full sm:w-48 h-48 sm:h-auto flex-shrink-0">
                           <img
                             src={listing.images?.[0] || "/placeholder.svg"}
                             alt={`${listing.year} ${listing.make} ${listing.model}`}
                             className="w-full h-full object-cover"
                           />
+                          <Badge 
+                            variant={listing.approval_status === "approved" ? "default" : "destructive"}
+                            className="absolute top-3 right-3 sm:hidden"
+                          >
+                            {listing.approval_status === "approved" ? "Approved" : "Needs Fixes"}
+                          </Badge>
                         </div>
 
                         {/* Details */}
-                        <div className="flex-1 p-4">
-                          <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                        <div className="flex-1 p-4 sm:p-5 flex flex-col">
+                          <div className="flex items-start justify-between gap-2 mb-3">
                             <div>
-                              <h3 className="text-lg font-semibold text-foreground">
+                              <h3 className="text-lg font-bold text-foreground">
                                 {listing.year} {listing.make} {listing.model}
                               </h3>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                                <MapPin className="h-3.5 w-3.5" />
                                 {listing.city}, {listing.state}
                               </p>
                             </div>
                             <Badge 
                               variant={listing.approval_status === "approved" ? "default" : "destructive"}
+                              className="hidden sm:inline-flex flex-shrink-0"
                             >
                               {listing.approval_status === "approved" ? "Approved" : "Needs Fixes"}
                             </Badge>
                           </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
-                            <div className="space-y-1">
-                              <div>
-                                <span className="text-muted-foreground">Owner:</span>{" "}
-                                <span className="text-foreground">{getOwnerName(listing)}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Daily:</span>{" "}
-                                <span className="text-foreground">{formatPrice(listing.daily_price)}</span>
-                              </div>
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm mb-3">
+                            <div className="text-muted-foreground">
+                              Owner: <span className="text-foreground font-medium">{getOwnerName(listing)}</span>
                             </div>
-                            <div className="space-y-1">
-                              <div>
-                                <span className="text-muted-foreground">
-                                  {listing.approval_status === "approved" ? "Approved:" : "Changes requested:"}
-                                </span>{" "}
-                                <span className="text-foreground">
-                                  {format(new Date(listing.updated_at), "MMM d, yyyy 'at' h:mm a")}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Created:</span>{" "}
-                                <span className="text-foreground">{format(new Date(listing.created_at), "MMM d, yyyy")}</span>
-                              </div>
+                            <div className="text-muted-foreground">
+                              Daily: <span className="text-foreground font-medium">{formatPrice(listing.daily_price)}</span>
+                            </div>
+                            <div className="text-muted-foreground">
+                              {listing.approval_status === "approved" ? "Approved:" : "Changed:"}{" "}
+                              <span className="text-foreground font-medium">
+                                {format(new Date(listing.updated_at), "MMM d, yyyy")}
+                              </span>
+                            </div>
+                            <div className="text-muted-foreground">
+                              Created: <span className="text-foreground font-medium">{format(new Date(listing.created_at), "MMM d, yyyy")}</span>
                             </div>
                           </div>
 
                           {listing.rejection_reason && (
-                            <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 mb-4">
+                            <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 mb-3">
                               <p className="text-sm text-destructive">
                                 <span className="font-medium">Requested fixes:</span> {listing.rejection_reason}
                               </p>
                             </div>
                           )}
 
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex items-center gap-2 mt-auto pt-3 border-t border-border">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => navigate(`/listing/${listing.id}`)}
                             >
-                              <Eye className="h-4 w-4 mr-1" />
+                              <Eye className="h-4 w-4 mr-1.5" />
                               View
                             </Button>
                           </div>

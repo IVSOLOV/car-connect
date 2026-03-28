@@ -135,13 +135,14 @@ export function LocationAutocomplete({
       const fetchTimeout = setTimeout(() => controller.abort(), 10000);
       
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`,
-        { headers: { 'User-Agent': 'DiRent/1.0' }, signal: controller.signal }
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&addressdetails=1`,
+        { signal: controller.signal }
       );
       
       clearTimeout(fetchTimeout);
       
       if (!response.ok) {
+        console.error('Nominatim response not ok:', response.status, response.statusText);
         throw new Error('Geocoding service unavailable');
       }
       

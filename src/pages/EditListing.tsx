@@ -36,6 +36,8 @@ const EditListing = () => {
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  const [dragExistingIndex, setDragExistingIndex] = useState<number | null>(null);
+  const [dragNewIndex, setDragNewIndex] = useState<number | null>(null);
   const [year, setYear] = useState("");
   const [make, setMake] = useState("");
   const [customMake, setCustomMake] = useState("");
@@ -213,34 +215,30 @@ const EditListing = () => {
     setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const setMainExistingImage = (index: number) => {
-    if (index === 0) return; // Already main
+  const reorderExistingImages = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
     setExistingImages((prev) => {
       const newArr = [...prev];
-      const [selected] = newArr.splice(index, 1);
-      newArr.unshift(selected);
+      const [moved] = newArr.splice(fromIndex, 1);
+      newArr.splice(toIndex, 0, moved);
       return newArr;
     });
   };
 
-  const setMainNewImage = (index: number) => {
-    // Move existing images to the end, make this new image first
+  const reorderNewImages = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
     setNewImages((prev) => {
       const newArr = [...prev];
-      const [selected] = newArr.splice(index, 1);
-      newArr.unshift(selected);
+      const [moved] = newArr.splice(fromIndex, 1);
+      newArr.splice(toIndex, 0, moved);
       return newArr;
     });
     setNewImagePreviews((prev) => {
       const newArr = [...prev];
-      const [selected] = newArr.splice(index, 1);
-      newArr.unshift(selected);
+      const [moved] = newArr.splice(fromIndex, 1);
+      newArr.splice(toIndex, 0, moved);
       return newArr;
     });
-    // Clear existing images so new image becomes first
-    if (existingImages.length > 0) {
-      setExistingImages([]);
-    }
   };
 
   const rotateNewImage = async (index: number) => {
@@ -513,7 +511,7 @@ const EditListing = () => {
               <Label>Images</Label>
               
               <p className="text-sm text-muted-foreground">
-                Click on an image to set it as the main photo
+                Drag and drop images to reorder. First image (⭐) is the main photo.
               </p>
               <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
                 ⚠ To keep listings clear and trustworthy, please upload photos of only one vehicle per listing.
@@ -525,30 +523,29 @@ const EditListing = () => {
                   {existingImages.map((url, index) => (
                     <div 
                       key={`existing-${index}`} 
-                      className={`relative aspect-square cursor-pointer group ${
+                      draggable
+                      onDragStart={() => setDragExistingIndex(index)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => { if (dragExistingIndex !== null) { reorderExistingImages(dragExistingIndex, index); setDragExistingIndex(null); } }}
+                      onDragEnd={() => setDragExistingIndex(null)}
+                      className={`relative aspect-square cursor-grab active:cursor-grabbing group ${
                         index === 0 && newImagePreviews.length === 0 ? "ring-2 ring-primary ring-offset-2" : ""
-                      }`}
-                      onClick={() => setMainExistingImage(index)}
+                      } ${dragExistingIndex === index ? "opacity-50" : ""}`}
                     >
                       <img 
                         src={url} 
                         alt={`Existing ${index + 1}`} 
-                        className="w-full h-full object-cover rounded-lg"
+                        className="w-full h-full object-cover rounded-lg pointer-events-none"
                       />
                       {index === 0 && newImagePreviews.length === 0 && (
                         <div className="absolute top-1 left-1 bg-primary text-primary-foreground rounded-full p-1">
                           <Star className="h-3 w-3 fill-current" />
                         </div>
                       )}
-                      {(index !== 0 || newImagePreviews.length > 0) && (
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                          <span className="text-white text-xs font-medium">Set as main</span>
-                        </div>
-                      )}
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeExistingImage(index); }}
-                        className="img-delete-btn absolute -top-0.5 -right-0.5 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-px transition-colors"
+                        className="img-delete-btn absolute -top-0.5 -right-0.5 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-px transition-colors z-20"
                       >
                         <X className="h-2.5 w-2.5" />
                       </button>
@@ -563,24 +560,23 @@ const EditListing = () => {
                   {newImagePreviews.map((preview, index) => (
                     <div 
                       key={`new-${index}`} 
-                      className={`relative aspect-square cursor-pointer group ${
+                      draggable
+                      onDragStart={() => setDragNewIndex(index)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => { if (dragNewIndex !== null) { reorderNewImages(dragNewIndex, index); setDragNewIndex(null); } }}
+                      onDragEnd={() => setDragNewIndex(null)}
+                      className={`relative aspect-square cursor-grab active:cursor-grabbing group ${
                         index === 0 && existingImages.length === 0 ? "ring-2 ring-primary ring-offset-2" : ""
-                      }`}
-                      onClick={() => setMainNewImage(index)}
+                      } ${dragNewIndex === index ? "opacity-50" : ""}`}
                     >
                       <img 
                         src={preview} 
                         alt={`New ${index + 1}`} 
-                        className="w-full h-full object-cover rounded-lg border-2 border-primary"
+                        className="w-full h-full object-cover rounded-lg border-2 border-primary pointer-events-none"
                       />
                       {index === 0 && existingImages.length === 0 && (
                         <div className="absolute top-1 left-1 bg-primary text-primary-foreground rounded-full p-1">
                           <Star className="h-3 w-3 fill-current" />
-                        </div>
-                      )}
-                      {(index !== 0 || existingImages.length > 0) && (
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                          <span className="text-white text-xs font-medium">Set as main</span>
                         </div>
                       )}
                       <button
@@ -594,7 +590,7 @@ const EditListing = () => {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeNewImage(index); }}
-                        className="img-delete-btn absolute -top-0.5 -right-0.5 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-px transition-colors"
+                        className="img-delete-btn absolute -top-0.5 -right-0.5 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-px transition-colors z-20"
                       >
                         <X className="h-2.5 w-2.5" />
                       </button>

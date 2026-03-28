@@ -488,7 +488,7 @@ const EditListing = () => {
         description: successMessage,
       });
       
-      navigate("/my-account");
+      navigate("/my-listings");
     } catch (error) {
       console.error("Error updating listing:", error);
       toast({

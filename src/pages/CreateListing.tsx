@@ -523,6 +523,14 @@ const CreateListing = () => {
                         )}
                         <button
                           type="button"
+                          onClick={(e) => { e.stopPropagation(); rotateImage(index); }}
+                          className="absolute -top-0.5 -left-0.5 bg-primary/80 hover:bg-primary text-primary-foreground rounded-full p-px transition-colors"
+                          title="Rotate image"
+                        >
+                          <RotateCw className="h-2.5 w-2.5" />
+                        </button>
+                        <button
+                          type="button"
                           onClick={(e) => { e.stopPropagation(); removeImage(index); }}
                           className="img-delete-btn absolute -top-0.5 -right-0.5 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-px transition-colors"
                         >

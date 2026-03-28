@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Upload, X, Loader2, Star } from "lucide-react";
+import { ArrowLeft, Upload, X, Loader2, Star, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -241,6 +241,30 @@ const EditListing = () => {
     if (existingImages.length > 0) {
       setExistingImages([]);
     }
+  };
+
+  const rotateNewImage = async (index: number) => {
+    const preview = newImagePreviews[index];
+    if (!preview) return;
+    const img = new Image();
+    img.src = preview;
+    await new Promise((resolve) => { img.onload = resolve; });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.height;
+    canvas.height = img.width;
+    const ctx = canvas.getContext("2d")!;
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(img, -img.width / 2, -img.height / 2);
+    const rotatedDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+    const res = await fetch(rotatedDataUrl);
+    const blob = await res.blob();
+    const originalFile = newImages[index];
+    const rotatedFile = new File([blob], originalFile.name, { type: "image/jpeg" });
+    setNewImages((prev) => prev.map((f, i) => (i === index ? rotatedFile : f)));
+    setNewImagePreviews((prev) => prev.map((p, i) => (i === index ? rotatedDataUrl : p)));
+    canvas.width = 0;
+    canvas.height = 0;
   };
 
   const handlePriceChange = (value: string, setter: (val: string) => void) => {
@@ -559,6 +583,14 @@ const EditListing = () => {
                           <span className="text-white text-xs font-medium">Set as main</span>
                         </div>
                       )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); rotateNewImage(index); }}
+                        className="absolute -top-0.5 -left-0.5 bg-primary/80 hover:bg-primary text-primary-foreground rounded-full p-px transition-colors"
+                        title="Rotate image"
+                      >
+                        <RotateCw className="h-2.5 w-2.5" />
+                      </button>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeNewImage(index); }}

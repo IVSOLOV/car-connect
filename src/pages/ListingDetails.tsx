@@ -425,7 +425,7 @@ const ListingDetails = () => {
       if (error) throw error;
 
       toast.success("Listing deleted successfully");
-      navigate("/my-account");
+      navigate("/my-listings");
     } catch (error) {
       console.error("Error deleting listing:", error);
       toast.error("Failed to delete listing");

@@ -163,9 +163,9 @@ export function LocationAutocomplete({
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, { 
-          timeout: 15000,
-          enableHighAccuracy: true,
-          maximumAge: 300000 // 5 minutes cache
+          timeout: 8000,
+          enableHighAccuracy: false,
+          maximumAge: 600000 // 10 minutes cache
         });
       });
  

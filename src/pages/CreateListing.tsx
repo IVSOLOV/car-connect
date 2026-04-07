@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Upload, X, Loader2, Star, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -90,6 +92,8 @@ const CreateListing = () => {
   useEffect(() => {
     if (!isSubmitting) return;
 
+    let appStateListener: PluginListenerHandle | undefined;
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         const pendingListing = localStorage.getItem("pendingListing");
@@ -101,7 +105,25 @@ const CreateListing = () => {
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+        if (!isActive) return;
+
+        const pendingListing = localStorage.getItem("pendingListing");
+        if (pendingListing) {
+          setIsSubmitting(false);
+          navigate("/listing-success", { replace: true });
+        }
+      }).then((handle) => {
+        appStateListener = handle;
+      });
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      appStateListener?.remove();
+    };
   }, [isSubmitting, navigate]);
 
   // Check if user is a host

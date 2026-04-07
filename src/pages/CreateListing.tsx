@@ -476,7 +476,7 @@ const CreateListing = () => {
               }`}>
                 <input
                   type="file"
-                  accept="image/*,.pvt"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                   multiple
                   onChange={handleImageUpload}
                   className="hidden"

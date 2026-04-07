@@ -5,6 +5,10 @@ import { MapPin, Loader2, Navigation } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+const GEOLOCATION_TIMEOUT_MS = 9000;
+const REVERSE_GEOCODE_TIMEOUT_MS = 10000;
+const IP_GEOLOCATION_TIMEOUT_MS = 7000;
+
 interface LocationPrediction {
   placeId: string;
   description: string;
@@ -45,6 +49,55 @@ export function LocationAutocomplete({
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const fetchJsonWithTimeout = async (url: string, timeoutMs: number) => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      return response.json();
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  };
+
+  const getCurrentPositionWithTimeout = () => {
+    return new Promise<GeolocationPosition>((resolve, reject) => {
+      let settled = false;
+
+      const timeoutId = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(new Error('Geolocation request timed out'));
+      }, GEOLOCATION_TIMEOUT_MS);
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeoutId);
+          resolve(position);
+        },
+        (error) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeoutId);
+          reject(error);
+        },
+        {
+          timeout: 8000,
+          enableHighAccuracy: false,
+          maximumAge: 600000,
+        }
+      );
+    });
+  };
 
   // Update input when initial values change
   useEffect(() => {
@@ -141,13 +194,7 @@ export function LocationAutocomplete({
 
     const detectLocationFromIp = async (message: string) => {
       try {
-        const response = await fetch('https://ipapi.co/json/');
-
-        if (!response.ok) {
-          throw new Error('IP geolocation unavailable');
-        }
-
-        const data = await response.json();
+        const data = await fetchJsonWithTimeout('https://ipapi.co/json/', IP_GEOLOCATION_TIMEOUT_MS);
         const city = data.city || '';
         const state = data.region || '';
 
@@ -161,30 +208,12 @@ export function LocationAutocomplete({
     };
     
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { 
-          timeout: 8000,
-          enableHighAccuracy: false,
-          maximumAge: 600000 // 10 minutes cache
-        });
-      });
- 
-      const controller = new AbortController();
-      const fetchTimeout = setTimeout(() => controller.abort(), 10000);
-      
-      const response = await fetch(
+      const position = await getCurrentPositionWithTimeout();
+
+      const data = await fetchJsonWithTimeout(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&addressdetails=1`,
-        { signal: controller.signal }
+        REVERSE_GEOCODE_TIMEOUT_MS
       );
-      
-      clearTimeout(fetchTimeout);
-      
-      if (!response.ok) {
-        console.error('Nominatim response not ok:', response.status, response.statusText);
-        throw new Error('Geocoding service unavailable');
-      }
-      
-      const data = await response.json();
       const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || "";
       const state = data.address?.state || "";
 
@@ -203,6 +232,8 @@ export function LocationAutocomplete({
           toast.error("Could not get location. Please type your city.");
         }
       } else if (error instanceof DOMException && error.name === 'AbortError') {
+        await detectLocationFromIp("Using approximate location from your network.");
+      } else if (error instanceof Error && /timed out/i.test(error.message)) {
         await detectLocationFromIp("Using approximate location from your network.");
       } else {
         await detectLocationFromIp("Using approximate location from your network.");

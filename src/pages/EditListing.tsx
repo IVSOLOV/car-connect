@@ -637,7 +637,7 @@ const EditListing = () => {
               <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                 <input
                   type="file"
-                  accept="image/*,.pvt"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                   multiple
                   onChange={handleImageUpload}
                   className="hidden"

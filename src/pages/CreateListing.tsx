@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Upload, X, Loader2, Star, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,8 @@ import { useListingSubscription } from "@/hooks/useListingSubscription";
 import type { FuelType } from "@/types/listing";
 
 import { carMakes, modelsByMake, usStates } from "@/data/vehicleData";
+
+const MAX_IMAGES = 10;
 
 const CreateListing = () => {
   const navigate = useNavigate();
@@ -160,27 +163,24 @@ const CreateListing = () => {
     }
   }, [make]);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
+  const addImageFiles = (incomingFiles: File[]) => {
+    if (incomingFiles.length === 0) return;
 
-    // Calculate how many more images we can accept
-    const remainingSlots = 10 - images.length;
+    const remainingSlots = MAX_IMAGES - images.length;
     
     if (remainingSlots <= 0) {
       toast({
         title: "Maximum images reached",
-        description: "You already have 10 images. Remove some to add new ones.",
+        description: `You already have ${MAX_IMAGES} images. Remove some to add new ones.`,
         variant: "destructive",
       });
       return;
     }
 
-    // Check for duplicates by comparing file size and name
     const duplicates: string[] = [];
     const newFiles: File[] = [];
 
-    for (const file of files) {
+    for (const file of incomingFiles) {
       const isDuplicate = images.some(
         (existingFile) =>
           existingFile.name === file.name &&
@@ -205,14 +205,13 @@ const CreateListing = () => {
 
     if (newFiles.length === 0) return;
 
-    // Only take as many files as we have slots for
     const filesToAdd = newFiles.slice(0, remainingSlots);
     const skippedCount = newFiles.length - filesToAdd.length;
 
     if (skippedCount > 0) {
       toast({
         title: "Some images not added",
-        description: `Only ${filesToAdd.length} of ${newFiles.length} images were added. Maximum is 10 images.`,
+        description: `Only ${filesToAdd.length} of ${newFiles.length} images were added. Maximum is ${MAX_IMAGES} images.`,
       });
     }
 
@@ -220,6 +219,52 @@ const CreateListing = () => {
 
     const newPreviews = filesToAdd.map((file) => URL.createObjectURL(file));
     setImagePreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const handleNativeImagePick = async () => {
+    try {
+      const photo = await Camera.getPhoto({
+        source: CameraSource.Prompt,
+        resultType: CameraResultType.Uri,
+        quality: 80,
+        width: 1600,
+        correctOrientation: true,
+        promptLabelHeader: "Add Photo",
+        promptLabelPhoto: "Photo Library",
+        promptLabelPicture: "Take Photo",
+        promptLabelCancel: "Cancel",
+      });
+
+      if (!photo.webPath) {
+        throw new Error("No image path returned from camera");
+      }
+
+      const response = await fetch(photo.webPath);
+      const blob = await response.blob();
+      const format = (photo.format || blob.type.split("/")[1] || "jpeg").replace("jpeg", "jpg");
+      const mimeType = blob.type || `image/${format === "jpg" ? "jpeg" : format}`;
+      const file = new File([blob], `listing-${Date.now()}.${format}`, { type: mimeType });
+
+      addImageFiles([file]);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (/cancel/i.test(errorMessage)) return;
+
+      console.error("[CreateListing] Native image pick failed:", error);
+      toast({
+        title: "Photo upload failed",
+        description: "Could not open the camera. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    addImageFiles(files);
+    e.target.value = "";
   };
 
   const removeImage = (index: number) => {
@@ -527,23 +572,38 @@ const CreateListing = () => {
               <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                 images.length < 5 ? "border-destructive/50" : "border-border"
               }`}>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label 
-                  htmlFor="image-upload" 
-                  className="cursor-pointer flex flex-col items-center gap-2"
-                >
-                  <Upload className="h-8 w-8 text-muted-foreground" />
-                  <span className="text-muted-foreground">
-                    Click to upload images (min 5, max 10)
-                  </span>
-                </label>
+                {Capacitor.isNativePlatform() ? (
+                  <button
+                    type="button"
+                    onClick={handleNativeImagePick}
+                    className="w-full flex flex-col items-center gap-2"
+                  >
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                    <span className="text-muted-foreground">
+                      Tap to add images (min 5, max 10)
+                    </span>
+                  </button>
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <label 
+                      htmlFor="image-upload" 
+                      className="cursor-pointer flex flex-col items-center gap-2"
+                    >
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        Click to upload images (min 5, max 10)
+                      </span>
+                    </label>
+                  </>
+                )}
               </div>
               
               {imagePreviews.length > 0 && (

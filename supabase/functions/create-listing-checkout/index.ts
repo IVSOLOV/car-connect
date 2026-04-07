@@ -64,7 +64,7 @@ serve(async (req) => {
       subscription_data: {
         trial_period_days: 30,
       },
-      success_url: `${req.headers.get("origin") || "https://directrental.lovable.app"}/listing-success`,
+      success_url: `${req.headers.get("origin") || "https://directrental.lovable.app"}/listing-success?payment=success`,
       cancel_url: `${req.headers.get("origin") || "https://directrental.lovable.app"}/listing-success?payment=canceled`,
       custom_text: {
         submit: {

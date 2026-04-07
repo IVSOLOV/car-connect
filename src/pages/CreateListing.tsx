@@ -66,6 +66,33 @@ const CreateListing = () => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1929 }, (_, i) => currentYear - i);
 
+  const recoverPendingCheckout = useCallback(async () => {
+    const pendingListing = localStorage.getItem("pendingListing");
+    const checkoutPending = localStorage.getItem("listingCheckoutPending");
+
+    if (!pendingListing || !checkoutPending) return false;
+
+    try {
+      const { data, error } = await supabase.functions.invoke("check-listing-subscription");
+
+      if (error) throw error;
+
+      if (data?.hasSubscription) {
+        localStorage.removeItem("listingCheckoutPending");
+        setIsSubmitting(false);
+        navigate("/listing-success?payment=success", { replace: true });
+        return true;
+      }
+
+      setIsSubmitting(false);
+    } catch (error) {
+      console.error("[CreateListing] Failed to recover checkout:", error);
+      setIsSubmitting(false);
+    }
+
+    return false;
+  }, [navigate]);
+
   // Include "Other" in available models if make is selected and not "Other"
   const availableModels = make && make !== "Other" ? [...(modelsByMake[make] || []).sort((a, b) => a.localeCompare(b)), "Other"] : [];
 
@@ -73,51 +100,44 @@ const CreateListing = () => {
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
     if (paymentStatus === "success") {
+      localStorage.removeItem("listingCheckoutPending");
       checkSubscription();
       navigate("/listing-success", { replace: true });
       return;
     }
 
-    // On iOS/Capacitor, Stripe opens in external Safari. When the user returns
-    // to the app, they land back on CreateListing with pendingListing still in
-    // localStorage. Detect this and redirect to the success page.
     if (!isSubmitting) {
-      const pendingListing = localStorage.getItem("pendingListing");
-      if (pendingListing) {
-        navigate("/listing-success", { replace: true });
-      }
+      void recoverPendingCheckout();
     }
-  }, [searchParams, navigate, checkSubscription, isSubmitting]);
+  }, [searchParams, navigate, checkSubscription, isSubmitting, recoverPendingCheckout]);
 
   // On iOS/Capacitor, detect app returning from background after Stripe payment.
   // When isSubmitting is true and the app resumes, check if pendingListing exists
   // and redirect to listing-success since Stripe completed in external Safari.
   useEffect(() => {
-    if (!isSubmitting) return;
+    const checkoutPending = localStorage.getItem("listingCheckoutPending");
+    if (!isSubmitting && !checkoutPending) return;
 
     let appStateListener: PluginListenerHandle | undefined;
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        const pendingListing = localStorage.getItem("pendingListing");
-        if (pendingListing) {
-          setIsSubmitting(false);
-          navigate("/listing-success", { replace: true });
-        }
+        void recoverPendingCheckout();
       }
     };
 
+    const handleWindowFocus = () => {
+      void recoverPendingCheckout();
+    };
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleWindowFocus);
 
     if (Capacitor.isNativePlatform()) {
       CapacitorApp.addListener("appStateChange", ({ isActive }) => {
         if (!isActive) return;
 
-        const pendingListing = localStorage.getItem("pendingListing");
-        if (pendingListing) {
-          setIsSubmitting(false);
-          navigate("/listing-success", { replace: true });
-        }
+        void recoverPendingCheckout();
       }).then((handle) => {
         appStateListener = handle;
       });
@@ -125,9 +145,10 @@ const CreateListing = () => {
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleWindowFocus);
       appStateListener?.remove();
     };
-  }, [isSubmitting, navigate]);
+  }, [isSubmitting, recoverPendingCheckout]);
 
   // Check if user is a host
   useEffect(() => {
@@ -476,6 +497,7 @@ const CreateListing = () => {
         imageUrls: uploadedImageUrls,
       };
       localStorage.setItem("pendingListing", JSON.stringify(pendingListing));
+      localStorage.setItem("listingCheckoutPending", "true");
       
       // Start checkout - may redirect to Stripe or update existing subscription
       const result = await startCheckout(1);
@@ -494,6 +516,7 @@ const CreateListing = () => {
         description: "Failed to process payment. Please try again.",
         variant: "destructive",
       });
+      localStorage.removeItem("listingCheckoutPending");
       localStorage.removeItem("pendingListing");
       setIsSubmitting(false);
     }

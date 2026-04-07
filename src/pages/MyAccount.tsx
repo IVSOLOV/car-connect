@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Car, Plus, Trash2, Pencil, Eye, CalendarDays, User, Camera, Building2, Loader2, HelpCircle, Mail, AlertTriangle, CheckCircle2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -410,12 +412,16 @@ const MyAccount = () => {
   };
 
   const handleAvatarClick = () => {
+    if (Capacitor.isNativePlatform()) {
+      void handleNativeAvatarPick();
+      return;
+    }
+
     fileInputRef.current?.click();
   };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
+  const uploadAvatarFile = async (file: File) => {
+    if (!user) return;
 
     if (!file.type.startsWith("image/")) {
       toast({
@@ -464,6 +470,52 @@ const MyAccount = () => {
     } finally {
       setUploadingAvatar(false);
     }
+  };
+
+  const handleNativeAvatarPick = async () => {
+    try {
+      const photo = await CapacitorCamera.getPhoto({
+        source: CameraSource.Prompt,
+        resultType: CameraResultType.Uri,
+        quality: 80,
+        width: 1200,
+        correctOrientation: true,
+        promptLabelHeader: "Add Profile Photo",
+        promptLabelPhoto: "Photo Library",
+        promptLabelPicture: "Take Photo",
+        promptLabelCancel: "Cancel",
+      });
+
+      if (!photo.webPath) {
+        throw new Error("No image path returned from camera");
+      }
+
+      const response = await fetch(photo.webPath);
+      const blob = await response.blob();
+      const format = (photo.format || blob.type.split("/")[1] || "jpeg").replace("jpeg", "jpg");
+      const mimeType = blob.type || `image/${format === "jpg" ? "jpeg" : format}`;
+      const file = new File([blob], `avatar-${Date.now()}.${format}`, { type: mimeType });
+
+      await uploadAvatarFile(file);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (/cancel/i.test(errorMessage)) return;
+
+      console.error("Error picking native avatar:", error);
+      toast({
+        title: "Error",
+        description: "Failed to open camera or photo library.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    await uploadAvatarFile(file);
+    e.target.value = "";
   };
 
   const handleDeleteAccount = async () => {

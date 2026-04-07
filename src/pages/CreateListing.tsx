@@ -217,17 +217,17 @@ const CreateListing = () => {
     }
 
     setImages((prev) => [...prev, ...filesToAdd]);
-    
-    filesToAdd.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews((prev) => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+
+    const newPreviews = filesToAdd.map((file) => URL.createObjectURL(file));
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
   };
 
   const removeImage = (index: number) => {
+    // Revoke blob URL to free memory
+    const preview = imagePreviews[index];
+    if (preview && preview.startsWith("blob:")) {
+      URL.revokeObjectURL(preview);
+    }
     setImages((prev) => prev.filter((_, i) => i !== index));
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };

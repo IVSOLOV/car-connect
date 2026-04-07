@@ -29,6 +29,12 @@ const ListingSuccess = () => {
   const wasCanceled = paymentStatus === "canceled";
   const wasUpdated = paymentStatus === "updated";
 
+  useEffect(() => {
+    if (paymentStatus === "success" || wasCanceled || listingCreated) {
+      localStorage.removeItem("listingCheckoutPending");
+    }
+  }, [paymentStatus, wasCanceled, listingCreated]);
+
   // Give auth time to restore from Stripe redirect
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -116,6 +122,7 @@ const ListingSuccess = () => {
             }
           }
 
+          localStorage.removeItem("listingCheckoutPending");
           localStorage.removeItem("pendingListing");
           setListingCreated(true);
           

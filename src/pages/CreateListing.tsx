@@ -62,7 +62,7 @@ const CreateListing = () => {
   const years = Array.from({ length: currentYear - 1929 }, (_, i) => currentYear - i);
 
   // Include "Other" in available models if make is selected and not "Other"
-  const availableModels = make && make !== "Other" ? [...(modelsByMake[make] || []), "Other"] : [];
+  const availableModels = make && make !== "Other" ? [...(modelsByMake[make] || []).sort((a, b) => a.localeCompare(b)), "Other"] : [];
 
   // Handle payment success redirect (if user lands back on create-listing after Stripe)
   useEffect(() => {

@@ -84,6 +84,26 @@ const CreateListing = () => {
     }
   }, [searchParams, navigate, checkSubscription, isSubmitting]);
 
+  // On iOS/Capacitor, detect app returning from background after Stripe payment.
+  // When isSubmitting is true and the app resumes, check if pendingListing exists
+  // and redirect to listing-success since Stripe completed in external Safari.
+  useEffect(() => {
+    if (!isSubmitting) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        const pendingListing = localStorage.getItem("pendingListing");
+        if (pendingListing) {
+          setIsSubmitting(false);
+          navigate("/listing-success", { replace: true });
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [isSubmitting, navigate]);
+
   // Check if user is a host
   useEffect(() => {
     const checkHostRole = async () => {

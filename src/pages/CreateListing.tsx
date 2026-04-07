@@ -70,8 +70,19 @@ const CreateListing = () => {
     if (paymentStatus === "success") {
       checkSubscription();
       navigate("/listing-success", { replace: true });
+      return;
     }
-  }, [searchParams, navigate, checkSubscription]);
+
+    // On iOS/Capacitor, Stripe opens in external Safari. When the user returns
+    // to the app, they land back on CreateListing with pendingListing still in
+    // localStorage. Detect this and redirect to the success page.
+    if (!isSubmitting) {
+      const pendingListing = localStorage.getItem("pendingListing");
+      if (pendingListing) {
+        navigate("/listing-success", { replace: true });
+      }
+    }
+  }, [searchParams, navigate, checkSubscription, isSubmitting]);
 
   // Check if user is a host
   useEffect(() => {

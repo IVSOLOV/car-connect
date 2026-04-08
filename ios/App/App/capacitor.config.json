@@ -1,0 +1,19 @@
+{
+	"appId": "com.solostar.dirent",
+	"appName": "directrental",
+	"webDir": "dist",
+	"plugins": {
+		"PushNotifications": {
+			"presentationOptions": [
+				"badge",
+				"sound",
+				"alert"
+			]
+		}
+	},
+	"packageClassList": [
+		"AppPlugin",
+		"CAPCameraPlugin",
+		"PushNotificationsPlugin"
+	]
+}

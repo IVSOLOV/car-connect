@@ -86,6 +86,11 @@ serve(async (req) => {
     if (!ipData) {
       throw new Error("All IP geolocation services failed");
     }
+
+    return new Response(
+      JSON.stringify({ city: ipData.city, state: ipData.state, source: "ip" }),
+      { headers: JSON_HEADERS },
+    );
   } catch (error) {
     console.error("resolve-location error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";

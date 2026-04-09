@@ -309,8 +309,9 @@ const CreateListing = () => {
         presentationStyle: "fullscreen",
       });
 
+      const photos = result.photos.slice(0, remaining);
       const files: File[] = [];
-      for (const photo of result.photos) {
+      for (const photo of photos) {
         const source = getNativePhotoSource(photo);
         const response = await fetch(source);
         const blob = await response.blob();

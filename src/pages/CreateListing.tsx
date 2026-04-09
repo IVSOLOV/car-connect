@@ -201,15 +201,12 @@ const CreateListing = () => {
     const duplicates: string[] = [];
     const newFiles: File[] = [];
 
+    // Track sizes we've already seen in this batch to deduplicate within the batch too
+    const seenSizes = new Set(images.map(f => f.size));
+
     for (const file of incomingFiles) {
-      // Check by name+size+type (web) OR by size alone (native picks have random names)
-      const isDuplicate = images.some(
-        (existingFile) =>
-          existingFile.size === file.size && (
-            (existingFile.name === file.name && existingFile.type === file.type) ||
-            Math.abs(existingFile.lastModified - file.lastModified) < 1000
-          )
-      );
+      // Duplicate = same file size (reliable for photos from the same source)
+      const isDuplicate = seenSizes.has(file.size);
 
       if (isDuplicate) {
         duplicates.push(file.name);

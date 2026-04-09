@@ -305,12 +305,13 @@ const CreateListing = () => {
         quality: 80,
         width: 1600,
         correctOrientation: true,
-        limit: remaining,
+        limit: 0,
         presentationStyle: "fullscreen",
       });
 
+      const photos = result.photos.slice(0, remaining);
       const files: File[] = [];
-      for (const photo of result.photos) {
+      for (const photo of photos) {
         const source = getNativePhotoSource(photo);
         const response = await fetch(source);
         const blob = await response.blob();

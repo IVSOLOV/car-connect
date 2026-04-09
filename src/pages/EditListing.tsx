@@ -203,6 +203,26 @@ const EditListing = () => {
     });
   };
 
+  const ensureNativePhotoPermission = async () => {
+    const permissions = await Camera.checkPermissions();
+
+    if (permissions.photos === "prompt" || permissions.photos === "prompt-with-rationale") {
+      await Camera.requestPermissions({ permissions: ["photos"] });
+    }
+
+    const updatedPermissions = await Camera.checkPermissions();
+
+    if (updatedPermissions.photos !== "granted" && updatedPermissions.photos !== "limited") {
+      throw new Error("Photo library permission not granted");
+    }
+  };
+
+  const getNativePhotoSource = (photo: { webPath?: string; path?: string | null }) => {
+    if (photo.webPath) return photo.webPath;
+    if (photo.path) return Capacitor.convertFileSrc(photo.path);
+    throw new Error("No image path returned from photo library");
+  };
+
   const removeExistingImage = (index: number) => {
     setExistingImages((prev) => prev.filter((_, i) => i !== index));
   };
@@ -659,13 +679,13 @@ const EditListing = () => {
                         try {
                           const remaining = 10 - existingImages.length - newImages.length;
                           if (remaining <= 0) { toast({ title: "Maximum images reached", variant: "destructive" }); return; }
-                          const result = await Camera.pickImages({ quality: 80, width: 1600, correctOrientation: true, limit: remaining });
+                          await ensureNativePhotoPermission();
+                          const result = await Camera.pickImages({ quality: 80, width: 1600, correctOrientation: true, limit: remaining, presentationStyle: "fullscreen" });
                           const existingSizes = new Set(newImages.map(f => f.size));
                           const files: File[] = [];
                           const dupes: string[] = [];
                           for (const p of result.photos) {
-                            if (!p.webPath) continue;
-                            const resp = await fetch(p.webPath);
+                            const resp = await fetch(getNativePhotoSource(p));
                             const blob = await resp.blob();
                             const fmt = (p.format || blob.type.split("/")[1] || "jpeg").replace("jpeg", "jpg");
                             const f = new File([blob], `edit-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${fmt}`, { type: blob.type || `image/${fmt === "jpg" ? "jpeg" : fmt}` });

@@ -26,6 +26,15 @@ const parseLocation = (data: any) => {
   };
 };
 
+const getClientIp = (req: Request) => {
+  const forwardedFor = req.headers.get("x-forwarded-for")
+    || req.headers.get("x-real-ip")
+    || req.headers.get("cf-connecting-ip")
+    || "";
+
+  return forwardedFor.split(",")[0]?.trim() || "";
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -35,6 +44,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const latitude = Number(body?.latitude);
     const longitude = Number(body?.longitude);
+    const clientIp = getClientIp(req);
 
     if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
       const reverseUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`;
@@ -57,28 +67,31 @@ serve(async (req) => {
       return new Response(JSON.stringify({ ...parseLocation(data), source: "gps" }), { headers: JSON_HEADERS });
     }
 
-    // Try multiple IP geolocation services for reliability
+    // Try multiple HTTPS IP geolocation services for reliability
     let ipData: any = null;
 
-    // Attempt 1: ip-api.com (no key needed, generous limits)
+    // Attempt 1: ipapi.co
     try {
-      const resp1 = await timeoutFetch("http://ip-api.com/json/?fields=city,regionName,status", {}, 7000);
+      const ipUrl = clientIp ? `https://ipapi.co/${clientIp}/json/` : "https://ipapi.co/json/";
+      const resp1 = await timeoutFetch(ipUrl, { headers: { "Accept": "application/json" } }, 7000);
       if (resp1.ok) {
         const d = await resp1.json();
-        if (d.status === "success") {
-          ipData = { city: d.city || "", state: d.regionName || "" };
+        if (d && !d.error) {
+          ipData = { city: d.city || "", state: d.region || "" };
         }
       }
     } catch (_) { /* try next */ }
 
-    // Attempt 2: ipapi.co
+    // Attempt 2: ipwho.is
     if (!ipData) {
       try {
-        const ipUrl = clientIp ? `https://ipapi.co/${clientIp}/json/` : "https://ipapi.co/json/";
+        const ipUrl = clientIp ? `https://ipwho.is/${clientIp}` : "https://ipwho.is/";
         const resp2 = await timeoutFetch(ipUrl, { headers: { "Accept": "application/json" } }, 7000);
         if (resp2.ok) {
           const d = await resp2.json();
-          ipData = { city: d.city || "", state: d.region || "" };
+          if (d?.success !== false) {
+            ipData = { city: d.city || "", state: d.region || "" };
+          }
         }
       } catch (_) { /* fallback failed */ }
     }

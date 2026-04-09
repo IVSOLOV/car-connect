@@ -14,6 +14,7 @@
 	"packageClassList": [
 		"AppPlugin",
 		"CAPCameraPlugin",
+		"GeolocationPlugin",
 		"PushNotificationsPlugin"
 	]
 }

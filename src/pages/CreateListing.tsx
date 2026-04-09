@@ -242,6 +242,26 @@ const CreateListing = () => {
     setImagePreviews((prev) => [...prev, ...newPreviews]);
   };
 
+  const ensureNativePhotoPermission = async () => {
+    const permissions = await Camera.checkPermissions();
+
+    if (permissions.photos === "prompt" || permissions.photos === "prompt-with-rationale") {
+      await Camera.requestPermissions({ permissions: ["photos"] });
+    }
+
+    const updatedPermissions = await Camera.checkPermissions();
+
+    if (updatedPermissions.photos !== "granted" && updatedPermissions.photos !== "limited") {
+      throw new Error("Photo library permission not granted");
+    }
+  };
+
+  const getNativePhotoSource = (photo: { webPath?: string; path?: string | null }) => {
+    if (photo.webPath) return photo.webPath;
+    if (photo.path) return Capacitor.convertFileSrc(photo.path);
+    throw new Error("No image path returned from photo library");
+  };
+
   const handleNativeTakePhoto = async () => {
     try {
       const photo = await Camera.getPhoto({
@@ -279,17 +299,20 @@ const CreateListing = () => {
         return;
       }
 
+      await ensureNativePhotoPermission();
+
       const result = await Camera.pickImages({
         quality: 80,
         width: 1600,
         correctOrientation: true,
         limit: remaining,
+        presentationStyle: "fullscreen",
       });
 
       const files: File[] = [];
       for (const photo of result.photos) {
-        if (!photo.webPath) continue;
-        const response = await fetch(photo.webPath);
+        const source = getNativePhotoSource(photo);
+        const response = await fetch(source);
         const blob = await response.blob();
         const format = (photo.format || blob.type.split("/")[1] || "jpeg").replace("jpeg", "jpg");
         const mimeType = blob.type || `image/${format === "jpg" ? "jpeg" : format}`;

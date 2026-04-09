@@ -168,22 +168,17 @@ const EditListing = () => {
       return;
     }
 
-    // Check for duplicates by comparing file size and name with already added new images
+    // Check for duplicates by file size
     const duplicates: string[] = [];
     const uniqueFiles: File[] = [];
+    const seenSizes = new Set(newImages.map(f => f.size));
 
     for (const file of files) {
-      const isDuplicateNew = newImages.some(
-        (existingFile) =>
-          existingFile.name === file.name &&
-          existingFile.size === file.size &&
-          existingFile.type === file.type
-      );
-
-      if (isDuplicateNew) {
+      if (seenSizes.has(file.size)) {
         duplicates.push(file.name);
       } else {
         uniqueFiles.push(file);
+        seenSizes.add(file.size);
       }
     }
 

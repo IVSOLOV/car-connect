@@ -212,6 +212,7 @@ const CreateListing = () => {
         duplicates.push(file.name);
       } else {
         newFiles.push(file);
+        seenSizes.add(file.size);
       }
     }
 

@@ -2,30 +2,50 @@ import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 
 const GEOLOCATION_TIMEOUT_MS = 9000;
+const GEOLOCATION_MAX_AGE_MS = 600000;
 
 export interface GeoPosition {
   latitude: number;
   longitude: number;
 }
 
-export async function getCurrentPosition(): Promise<GeoPosition> {
-  if (Capacitor.isNativePlatform()) {
-    const permissions = await Geolocation.checkPermissions();
+const hasNativeLocationPermission = (
+  permissions: Awaited<ReturnType<typeof Geolocation.checkPermissions>>,
+) => permissions.location === 'granted' || permissions.coarseLocation === 'granted';
 
-    if (permissions.location === 'prompt' || permissions.coarseLocation === 'prompt') {
-      await Geolocation.requestPermissions();
-    }
+const getNativeCurrentPosition = async (): Promise<GeoPosition> => {
+  let permissions = await Geolocation.checkPermissions();
 
-    const position = await Geolocation.getCurrentPosition({
+  if (!hasNativeLocationPermission(permissions)) {
+    permissions = await Geolocation.requestPermissions();
+  }
+
+  if (!hasNativeLocationPermission(permissions)) {
+    throw new Error('Location permission not granted');
+  }
+
+  const position = await Promise.race([
+    Geolocation.getCurrentPosition({
       timeout: GEOLOCATION_TIMEOUT_MS,
       enableHighAccuracy: false,
-      maximumAge: 600000,
-    });
+      maximumAge: GEOLOCATION_MAX_AGE_MS,
+    }),
+    new Promise<never>((_, reject) => {
+      globalThis.setTimeout(() => {
+        reject(new Error('Native geolocation request timed out'));
+      }, GEOLOCATION_TIMEOUT_MS);
+    }),
+  ]);
 
-    return {
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-    };
+  return {
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude,
+  };
+};
+
+export async function getCurrentPosition(): Promise<GeoPosition> {
+  if (Capacitor.isNativePlatform()) {
+    return getNativeCurrentPosition();
   }
 
   return new Promise<GeoPosition>((resolve, reject) => {
@@ -61,7 +81,7 @@ export async function getCurrentPosition(): Promise<GeoPosition> {
       {
         timeout: 8000,
         enableHighAccuracy: false,
-        maximumAge: 600000,
+        maximumAge: GEOLOCATION_MAX_AGE_MS,
       }
     );
   });

@@ -660,14 +660,19 @@ const EditListing = () => {
                           const remaining = 10 - existingImages.length - newImages.length;
                           if (remaining <= 0) { toast({ title: "Maximum images reached", variant: "destructive" }); return; }
                           const result = await Camera.pickImages({ quality: 80, width: 1600, correctOrientation: true, limit: remaining });
+                          const existingSizes = new Set(newImages.map(f => f.size));
                           const files: File[] = [];
+                          const dupes: string[] = [];
                           for (const p of result.photos) {
                             if (!p.webPath) continue;
                             const resp = await fetch(p.webPath);
                             const blob = await resp.blob();
                             const fmt = (p.format || blob.type.split("/")[1] || "jpeg").replace("jpeg", "jpg");
-                            files.push(new File([blob], `edit-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${fmt}`, { type: blob.type || `image/${fmt === "jpg" ? "jpeg" : fmt}` }));
+                            const f = new File([blob], `edit-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${fmt}`, { type: blob.type || `image/${fmt === "jpg" ? "jpeg" : fmt}` });
+                            if (existingSizes.has(f.size)) { dupes.push(f.name); } else { files.push(f); existingSizes.add(f.size); }
                           }
+                          if (dupes.length > 0) { toast({ title: "Duplicate images skipped", description: `${dupes.length} duplicate photo(s) were not added.`, variant: "destructive" }); }
+                          if (files.length === 0) return;
                           const totalImages = existingImages.length + newImages.length + files.length;
                           if (totalImages > 10) {
                             toast({ title: "Too many images", description: "Maximum 10 images total.", variant: "destructive" });

@@ -137,11 +137,6 @@ export function LocationAutocomplete({
   };
 
   const handleGetLocation = async () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported. Please enter your city manually.");
-      return;
-    }
-
     setIsGettingLocation(true);
 
     const applyDetectedLocation = (city: string, state: string, message: string) => {
@@ -177,10 +172,10 @@ export function LocationAutocomplete({
     };
     
     try {
-      const position = await getCurrentPositionWithTimeout();
+      const position = await getCurrentPosition();
 
       const data = await fetchJsonWithTimeout(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&addressdetails=1`,
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&addressdetails=1`,
         REVERSE_GEOCODE_TIMEOUT_MS
       );
       const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || "";

@@ -24,6 +24,9 @@ verify_jwt = false
 [functions.send-push-notification]
 verify_jwt = false
 
+[functions.resolve-location]
+verify_jwt = false
+
 [auth.email]
 enable_signup = true
 double_confirm_changes = true

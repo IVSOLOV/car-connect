@@ -242,18 +242,14 @@ const CreateListing = () => {
     setImagePreviews((prev) => [...prev, ...newPreviews]);
   };
 
-  const handleNativeImagePick = async () => {
+  const handleNativeTakePhoto = async () => {
     try {
       const photo = await Camera.getPhoto({
-        source: CameraSource.Prompt,
+        source: CameraSource.Camera,
         resultType: CameraResultType.Uri,
         quality: 80,
         width: 1600,
         correctOrientation: true,
-        promptLabelHeader: "Add Photo",
-        promptLabelPhoto: "Photo Library",
-        promptLabelPicture: "Take Photo",
-        promptLabelCancel: "Cancel",
       });
 
       if (!photo.webPath) {
@@ -270,13 +266,44 @@ const CreateListing = () => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       if (/cancel/i.test(errorMessage)) return;
+      console.error("[CreateListing] Native take photo failed:", error);
+      toast({ title: "Photo capture failed", description: "Could not open the camera. Please try again.", variant: "destructive" });
+    }
+  };
 
-      console.error("[CreateListing] Native image pick failed:", error);
-      toast({
-        title: "Photo upload failed",
-        description: "Could not open the camera. Please try again.",
-        variant: "destructive",
+  const handleNativePickMultiple = async () => {
+    try {
+      const remaining = MAX_IMAGES - images.length;
+      if (remaining <= 0) {
+        toast({ title: "Maximum images reached", description: `You can have up to ${MAX_IMAGES} images.`, variant: "destructive" });
+        return;
+      }
+
+      const result = await Camera.pickImages({
+        quality: 80,
+        width: 1600,
+        correctOrientation: true,
+        limit: remaining,
       });
+
+      const files: File[] = [];
+      for (const photo of result.photos) {
+        if (!photo.webPath) continue;
+        const response = await fetch(photo.webPath);
+        const blob = await response.blob();
+        const format = (photo.format || blob.type.split("/")[1] || "jpeg").replace("jpeg", "jpg");
+        const mimeType = blob.type || `image/${format === "jpg" ? "jpeg" : format}`;
+        files.push(new File([blob], `listing-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${format}`, { type: mimeType }));
+      }
+
+      if (files.length > 0) {
+        addImageFiles(files);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (/cancel/i.test(errorMessage)) return;
+      console.error("[CreateListing] Native pick multiple failed:", error);
+      toast({ title: "Photo selection failed", description: "Could not open photo library. Please try again.", variant: "destructive" });
     }
   };
 
@@ -596,16 +623,20 @@ const CreateListing = () => {
                 images.length < 5 ? "border-destructive/50" : "border-border"
               }`}>
                 {Capacitor.isNativePlatform() ? (
-                  <button
-                    type="button"
-                    onClick={handleNativeImagePick}
-                    className="w-full flex flex-col items-center gap-2"
-                  >
+                  <div className="w-full flex flex-col items-center gap-3">
                     <Upload className="h-8 w-8 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      Tap to add images (min 5, max 10)
+                    <span className="text-muted-foreground text-sm">
+                      Add images (min 5, max {MAX_IMAGES}) — {images.length}/{MAX_IMAGES} added
                     </span>
-                  </button>
+                    <div className="flex gap-3">
+                      <Button type="button" variant="outline" size="sm" onClick={handleNativeTakePhoto}>
+                        📷 Take Photo
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={handleNativePickMultiple}>
+                        🖼 Choose from Library
+                      </Button>
+                    </div>
+                  </div>
                 ) : (
                   <>
                     <input

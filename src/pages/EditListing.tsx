@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Upload, X, Loader2, Star, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -634,6 +636,58 @@ const EditListing = () => {
                 </div>
               )}
 
+              {Capacitor.isNativePlatform() ? (
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                    <span className="text-muted-foreground text-sm">
+                      Add more images ({existingImages.length + newImages.length}/10)
+                    </span>
+                    <div className="flex gap-3">
+                      <Button type="button" variant="outline" size="sm" onClick={async () => {
+                        try {
+                          const photo = await Camera.getPhoto({ source: CameraSource.Camera, resultType: CameraResultType.Uri, quality: 80, width: 1600, correctOrientation: true });
+                          if (!photo.webPath) return;
+                          const resp = await fetch(photo.webPath);
+                          const blob = await resp.blob();
+                          const fmt = (photo.format || blob.type.split("/")[1] || "jpeg").replace("jpeg", "jpg");
+                          const file = new File([blob], `edit-${Date.now()}.${fmt}`, { type: blob.type || `image/${fmt === "jpg" ? "jpeg" : fmt}` });
+                          const totalImages = existingImages.length + newImages.length + 1;
+                          if (totalImages > 10) { toast({ title: "Too many images", description: "Maximum 10 images.", variant: "destructive" }); return; }
+                          setNewImages(prev => [...prev, file]);
+                          setNewImagePreviews(prev => [...prev, URL.createObjectURL(file)]);
+                        } catch (e) { if (/cancel/i.test(String(e))) return; toast({ title: "Photo capture failed", variant: "destructive" }); }
+                      }}>
+                        📷 Take Photo
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={async () => {
+                        try {
+                          const remaining = 10 - existingImages.length - newImages.length;
+                          if (remaining <= 0) { toast({ title: "Maximum images reached", variant: "destructive" }); return; }
+                          const result = await Camera.pickImages({ quality: 80, width: 1600, correctOrientation: true, limit: remaining });
+                          const files: File[] = [];
+                          for (const p of result.photos) {
+                            if (!p.webPath) continue;
+                            const resp = await fetch(p.webPath);
+                            const blob = await resp.blob();
+                            const fmt = (p.format || blob.type.split("/")[1] || "jpeg").replace("jpeg", "jpg");
+                            files.push(new File([blob], `edit-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${fmt}`, { type: blob.type || `image/${fmt === "jpg" ? "jpeg" : fmt}` }));
+                          }
+                          const totalImages = existingImages.length + newImages.length + files.length;
+                          if (totalImages > 10) {
+                            toast({ title: "Too many images", description: "Maximum 10 images total.", variant: "destructive" });
+                            return;
+                          }
+                          setNewImages(prev => [...prev, ...files]);
+                          setNewImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+                        } catch (e) { if (/cancel/i.test(String(e))) return; toast({ title: "Photo selection failed", variant: "destructive" }); }
+                      }}>
+                        🖼 Choose from Library
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
               <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                 <input
                   type="file"
@@ -653,6 +707,7 @@ const EditListing = () => {
                   </span>
                 </label>
               </div>
+              )}
             </div>
 
             {/* Vehicle Type */}

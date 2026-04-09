@@ -202,11 +202,13 @@ const CreateListing = () => {
     const newFiles: File[] = [];
 
     for (const file of incomingFiles) {
+      // Check by name+size+type (web) OR by size alone (native picks have random names)
       const isDuplicate = images.some(
         (existingFile) =>
-          existingFile.name === file.name &&
-          existingFile.size === file.size &&
-          existingFile.type === file.type
+          existingFile.size === file.size && (
+            (existingFile.name === file.name && existingFile.type === file.type) ||
+            Math.abs(existingFile.lastModified - file.lastModified) < 1000
+          )
       );
 
       if (isDuplicate) {

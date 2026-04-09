@@ -67,37 +67,6 @@ export function LocationAutocomplete({
     }
   };
 
-  const getCurrentPositionWithTimeout = () => {
-    return new Promise<GeolocationPosition>((resolve, reject) => {
-      let settled = false;
-
-      const timeoutId = window.setTimeout(() => {
-        if (settled) return;
-        settled = true;
-        reject(new Error('Geolocation request timed out'));
-      }, GEOLOCATION_TIMEOUT_MS);
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          if (settled) return;
-          settled = true;
-          window.clearTimeout(timeoutId);
-          resolve(position);
-        },
-        (error) => {
-          if (settled) return;
-          settled = true;
-          window.clearTimeout(timeoutId);
-          reject(error);
-        },
-        {
-          timeout: 8000,
-          enableHighAccuracy: false,
-          maximumAge: 600000,
-        }
-      );
-    });
-  };
 
   // Update input when initial values change
   useEffect(() => {

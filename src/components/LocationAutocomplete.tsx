@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Loader2, Navigation } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentPosition } from '@/lib/geolocation';
 
-const GEOLOCATION_TIMEOUT_MS = 9000;
 const REVERSE_GEOCODE_TIMEOUT_MS = 10000;
 const IP_GEOLOCATION_TIMEOUT_MS = 7000;
 

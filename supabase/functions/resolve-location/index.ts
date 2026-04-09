@@ -57,20 +57,35 @@ serve(async (req) => {
       return new Response(JSON.stringify({ ...parseLocation(data), source: "gps" }), { headers: JSON_HEADERS });
     }
 
-    const forwardedFor = req.headers.get("x-forwarded-for") || "";
-    const clientIp = forwardedFor.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "";
-    const ipUrl = clientIp ? `https://ipapi.co/${clientIp}/json/` : "https://ipapi.co/json/";
-    const response = await timeoutFetch(ipUrl, { headers: { "Accept": "application/json" } }, 7000);
+    // Try multiple IP geolocation services for reliability
+    let ipData: any = null;
 
-    if (!response.ok) {
-      throw new Error(`IP lookup failed with status ${response.status}`);
+    // Attempt 1: ip-api.com (no key needed, generous limits)
+    try {
+      const resp1 = await timeoutFetch("http://ip-api.com/json/?fields=city,regionName,status", {}, 7000);
+      if (resp1.ok) {
+        const d = await resp1.json();
+        if (d.status === "success") {
+          ipData = { city: d.city || "", state: d.regionName || "" };
+        }
+      }
+    } catch (_) { /* try next */ }
+
+    // Attempt 2: ipapi.co
+    if (!ipData) {
+      try {
+        const ipUrl = clientIp ? `https://ipapi.co/${clientIp}/json/` : "https://ipapi.co/json/";
+        const resp2 = await timeoutFetch(ipUrl, { headers: { "Accept": "application/json" } }, 7000);
+        if (resp2.ok) {
+          const d = await resp2.json();
+          ipData = { city: d.city || "", state: d.region || "" };
+        }
+      } catch (_) { /* fallback failed */ }
     }
 
-    const data = await response.json();
-    return new Response(
-      JSON.stringify({ city: data?.city || "", state: data?.region || "", source: "ip" }),
-      { headers: JSON_HEADERS },
-    );
+    if (!ipData) {
+      throw new Error("All IP geolocation services failed");
+    }
   } catch (error) {
     console.error("resolve-location error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";

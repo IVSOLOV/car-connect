@@ -680,7 +680,7 @@ const EditListing = () => {
                           const remaining = 10 - existingImages.length - newImages.length;
                           if (remaining <= 0) { toast({ title: "Maximum images reached", variant: "destructive" }); return; }
                           await ensureNativePhotoPermission();
-                          const result = await Camera.pickImages({ quality: 80, width: 1600, correctOrientation: true, limit: remaining, presentationStyle: "fullscreen" });
+                          const result = await Camera.pickImages({ quality: 80, width: 1600, correctOrientation: true, limit: 0, presentationStyle: "fullscreen" });
                           const existingSizes = new Set(newImages.map(f => f.size));
                           const files: File[] = [];
                           const dupes: string[] = [];

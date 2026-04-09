@@ -305,7 +305,7 @@ const CreateListing = () => {
         quality: 80,
         width: 1600,
         correctOrientation: true,
-        limit: remaining,
+        limit: 0,
         presentationStyle: "fullscreen",
       });
 

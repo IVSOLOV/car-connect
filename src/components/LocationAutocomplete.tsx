@@ -6,9 +6,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentPosition } from '@/lib/geolocation';
 
-const REVERSE_GEOCODE_TIMEOUT_MS = 10000;
-const IP_GEOLOCATION_TIMEOUT_MS = 7000;
-
 interface LocationPrediction {
   placeId: string;
   description: string;
@@ -50,32 +47,12 @@ export function LocationAutocomplete({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const fetchJsonWithTimeout = async (url: string, timeoutMs: number) => {
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      const response = await fetch(url, { signal: controller.signal });
-
-      if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-
-      return response.json();
-    } finally {
-      window.clearTimeout(timeoutId);
-    }
-  };
-
-
-  // Update input when initial values change
   useEffect(() => {
     if (initialCity && initialState) {
       setInputValue(`${initialCity}, ${initialState}`);
     }
   }, [initialCity, initialState]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
@@ -119,7 +96,6 @@ export function LocationAutocomplete({
     setInputValue(value);
     setShowDropdown(true);
 
-    // Debounce API calls - use trimmed value for the API call
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
@@ -136,71 +112,60 @@ export function LocationAutocomplete({
     setShowDropdown(false);
   };
 
+  const applyDetectedLocation = (city: string, state: string, message: string) => {
+    if (city && state && usStates.includes(state)) {
+      setInputValue(`${city}, ${state}`);
+      onLocationSelect(city, state);
+      toast.success(message);
+      return true;
+    }
+
+    if (city) {
+      setInputValue(city);
+      toast.info('City detected. Please type to select your full location.');
+      return true;
+    }
+
+    return false;
+  };
+
+  const resolveLocation = async (payload?: { latitude: number; longitude: number }) => {
+    const { data, error } = await supabase.functions.invoke('resolve-location', {
+      body: payload ?? {},
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return data as { city?: string; state?: string; source?: 'gps' | 'ip' };
+  };
+
   const handleGetLocation = async () => {
     setIsGettingLocation(true);
 
-    const applyDetectedLocation = (city: string, state: string, message: string) => {
-      if (city && state && usStates.includes(state)) {
-        setInputValue(`${city}, ${state}`);
-        onLocationSelect(city, state);
-        toast.success(message);
-        return true;
-      }
-
-      if (city) {
-        setInputValue(city);
-        toast.info("City detected. Please type to select your full location.");
-        return true;
-      }
-
-      return false;
-    };
-
-    const detectLocationFromIp = async (message: string) => {
-      try {
-        const data = await fetchJsonWithTimeout('https://ipapi.co/json/', IP_GEOLOCATION_TIMEOUT_MS);
-        const city = data.city || '';
-        const state = data.region || '';
-
-        if (!applyDetectedLocation(city, state, message)) {
-          toast.error("Could not determine your city. Please type your location.");
-        }
-      } catch (ipError) {
-        console.error('IP geolocation error:', ipError);
-        toast.error("Could not detect your location. Please type your city manually.");
-      }
-    };
-    
     try {
       const position = await getCurrentPosition();
+      const data = await resolveLocation(position);
 
-      const data = await fetchJsonWithTimeout(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&addressdetails=1`,
-        REVERSE_GEOCODE_TIMEOUT_MS
-      );
-      const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || "";
-      const state = data.address?.state || "";
-
-      if (!applyDetectedLocation(city, state, "Location detected!")) {
-        toast.error("Could not determine location. Please type your city.");
+      if (!applyDetectedLocation(data.city || '', data.state || '', 'Location detected!')) {
+        toast.error('Could not determine location. Please type your city.');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Geolocation error:', error);
-      
-      if (error && typeof error.code === 'number' && error.code >= 1 && error.code <= 3) {
-        if (error.code === 1) {
-          await detectLocationFromIp("Approximate location detected from your network.");
-        } else if (error.code === 3) {
-          await detectLocationFromIp("Using approximate location from your network.");
-        } else {
-          toast.error("Could not get location. Please type your city.");
+
+      try {
+        const data = await resolveLocation();
+        const fallbackMessage = data.source === 'ip'
+          ? 'Using approximate location from your network.'
+          : 'Location detected!';
+
+        if (!applyDetectedLocation(data.city || '', data.state || '', fallbackMessage)) {
+          toast.error('Could not detect your location. Please type your city manually.');
         }
-      } else if (error instanceof DOMException && error.name === 'AbortError') {
-        await detectLocationFromIp("Using approximate location from your network.");
-      } else if (error instanceof Error && /timed out/i.test(error.message)) {
-        await detectLocationFromIp("Using approximate location from your network.");
-      } else {
-        await detectLocationFromIp("Using approximate location from your network.");
+      } catch (fallbackError) {
+        console.error('Location fallback error:', fallbackError);
+        toast.error('Could not detect your location. Please type your city manually.');
       }
     } finally {
       setIsGettingLocation(false);
@@ -223,9 +188,9 @@ export function LocationAutocomplete({
             <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
           )}
         </div>
-        <Button 
-          type="button" 
-          variant="outline" 
+        <Button
+          type="button"
+          variant="outline"
           onClick={handleGetLocation}
           disabled={isGettingLocation}
           className="shrink-0"
@@ -235,7 +200,7 @@ export function LocationAutocomplete({
           ) : (
             <Navigation className="h-4 w-4 mr-2" />
           )}
-          {isGettingLocation ? "Getting..." : "My Location"}
+          {isGettingLocation ? 'Getting...' : 'My Location'}
         </Button>
       </div>
 

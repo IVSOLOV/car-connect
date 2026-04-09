@@ -10,18 +10,24 @@ export interface GeoPosition {
 
 export async function getCurrentPosition(): Promise<GeoPosition> {
   if (Capacitor.isNativePlatform()) {
-    // Use native Capacitor geolocation (handles permission prompts)
+    const permissions = await Geolocation.checkPermissions();
+
+    if (permissions.location === 'prompt' || permissions.coarseLocation === 'prompt') {
+      await Geolocation.requestPermissions();
+    }
+
     const position = await Geolocation.getCurrentPosition({
       timeout: GEOLOCATION_TIMEOUT_MS,
       enableHighAccuracy: false,
+      maximumAge: 600000,
     });
+
     return {
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,
     };
   }
 
-  // Web fallback
   return new Promise<GeoPosition>((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation not supported'));

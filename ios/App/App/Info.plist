@@ -51,5 +51,9 @@
 	<string>DiRent needs access to your photo library so you can select and upload profile and listing photos.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>DiRent needs permission to save photos to your library.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>DiRent needs your location to find nearby vehicle listings and auto-fill your city.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>DiRent needs your location to find nearby vehicle listings and auto-fill your city.</string>
 </dict>
 </plist>

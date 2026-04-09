@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Loader2, Navigation } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentPosition } from '@/lib/geolocation';
 
-const GEOLOCATION_TIMEOUT_MS = 9000;
 const REVERSE_GEOCODE_TIMEOUT_MS = 10000;
 const IP_GEOLOCATION_TIMEOUT_MS = 7000;
 
@@ -67,37 +67,6 @@ export function LocationAutocomplete({
     }
   };
 
-  const getCurrentPositionWithTimeout = () => {
-    return new Promise<GeolocationPosition>((resolve, reject) => {
-      let settled = false;
-
-      const timeoutId = window.setTimeout(() => {
-        if (settled) return;
-        settled = true;
-        reject(new Error('Geolocation request timed out'));
-      }, GEOLOCATION_TIMEOUT_MS);
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          if (settled) return;
-          settled = true;
-          window.clearTimeout(timeoutId);
-          resolve(position);
-        },
-        (error) => {
-          if (settled) return;
-          settled = true;
-          window.clearTimeout(timeoutId);
-          reject(error);
-        },
-        {
-          timeout: 8000,
-          enableHighAccuracy: false,
-          maximumAge: 600000,
-        }
-      );
-    });
-  };
 
   // Update input when initial values change
   useEffect(() => {
@@ -168,11 +137,6 @@ export function LocationAutocomplete({
   };
 
   const handleGetLocation = async () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported. Please enter your city manually.");
-      return;
-    }
-
     setIsGettingLocation(true);
 
     const applyDetectedLocation = (city: string, state: string, message: string) => {
@@ -208,10 +172,10 @@ export function LocationAutocomplete({
     };
     
     try {
-      const position = await getCurrentPositionWithTimeout();
+      const position = await getCurrentPosition();
 
       const data = await fetchJsonWithTimeout(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&addressdetails=1`,
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&addressdetails=1`,
         REVERSE_GEOCODE_TIMEOUT_MS
       );
       const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || "";

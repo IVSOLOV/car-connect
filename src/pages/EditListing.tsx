@@ -25,6 +25,7 @@ import SEO from "@/components/SEO";
 import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { VehicleTypeSelector, type VehicleType } from "@/components/VehicleTypeSelector";
 import type { Listing, FuelType } from "@/types/listing";
+import { getUniqueListingFiles } from "@/lib/listingImageFiles";
 
 import { carMakes, modelsByMake, usStates } from "@/data/vehicleData";
 
@@ -157,50 +158,46 @@ const EditListing = () => {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const totalImages = existingImages.length + newImages.length + files.length;
-    
-    if (totalImages > 10) {
+    if (files.length === 0) return;
+
+    const { duplicateFiles, filesToAdd, overflowCount } = await getUniqueListingFiles({
+      existingFiles: newImages,
+      incomingFiles: files,
+      maxFiles: 10 - existingImages.length,
+    });
+
+    if (duplicateFiles.length > 0) {
+      toast({
+        title: "Duplicate images detected",
+        description: `The following images were already added: ${duplicateFiles.map((file) => file.name).join(", ")}`,
+        variant: "destructive",
+      });
+    }
+
+    if (overflowCount > 0) {
       toast({
         title: "Too many images",
         description: "You can have up to 10 images total.",
         variant: "destructive",
       });
+    }
+
+    if (filesToAdd.length === 0) {
+      e.target.value = "";
       return;
     }
 
-    // Check for duplicates by file size
-    const duplicates: string[] = [];
-    const uniqueFiles: File[] = [];
-    const seenSizes = new Set(newImages.map(f => f.size));
+    setNewImages((prev) => [...prev, ...filesToAdd]);
 
-    for (const file of files) {
-      if (seenSizes.has(file.size)) {
-        duplicates.push(file.name);
-      } else {
-        uniqueFiles.push(file);
-        seenSizes.add(file.size);
-      }
-    }
-
-    if (duplicates.length > 0) {
-      toast({
-        title: "Duplicate images detected",
-        description: `The following images were already added: ${duplicates.join(", ")}`,
-        variant: "destructive",
-      });
-    }
-
-    if (uniqueFiles.length === 0) return;
-    
-    setNewImages((prev) => [...prev, ...uniqueFiles]);
-    
-    uniqueFiles.forEach((file) => {
+    filesToAdd.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setNewImagePreviews((prev) => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
     });
+
+    e.target.value = "";
   };
 
   const ensureNativePhotoPermission = async () => {
@@ -680,27 +677,21 @@ const EditListing = () => {
                           const remaining = 10 - existingImages.length - newImages.length;
                           if (remaining <= 0) { toast({ title: "Maximum images reached", variant: "destructive" }); return; }
                           await ensureNativePhotoPermission();
-                          const result = await Camera.pickImages({ quality: 80, width: 1600, correctOrientation: true, limit: 0, presentationStyle: "fullscreen" });
-                          const selectedPhotos = result.photos.slice(0, remaining);
-                          const existingSizes = new Set(newImages.map(f => f.size));
-                          const files: File[] = [];
-                          const dupes: string[] = [];
+                           const result = await Camera.pickImages({ quality: 80, width: 1600, correctOrientation: true, limit: 0, presentationStyle: "fullscreen" });
+                           const selectedPhotos = result.photos.slice(0, remaining);
+                           const files: File[] = [];
                           for (const p of selectedPhotos) {
                             const resp = await fetch(getNativePhotoSource(p));
                             const blob = await resp.blob();
                             const fmt = (p.format || blob.type.split("/")[1] || "jpeg").replace("jpeg", "jpg");
-                            const f = new File([blob], `edit-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${fmt}`, { type: blob.type || `image/${fmt === "jpg" ? "jpeg" : fmt}` });
-                            if (existingSizes.has(f.size)) { dupes.push(f.name); } else { files.push(f); existingSizes.add(f.size); }
+                             files.push(new File([blob], `edit-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${fmt}`, { type: blob.type || `image/${fmt === "jpg" ? "jpeg" : fmt}` }));
                           }
-                          if (dupes.length > 0) { toast({ title: "Duplicate images skipped", description: `${dupes.length} duplicate photo(s) were not added.`, variant: "destructive" }); }
-                          if (files.length === 0) return;
-                          const totalImages = existingImages.length + newImages.length + files.length;
-                          if (totalImages > 10) {
-                            toast({ title: "Too many images", description: "Maximum 10 images total.", variant: "destructive" });
-                            return;
-                          }
-                          setNewImages(prev => [...prev, ...files]);
-                          setNewImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+                           const { duplicateFiles, filesToAdd, overflowCount } = await getUniqueListingFiles({ existingFiles: newImages, incomingFiles: files, maxFiles: remaining });
+                           if (duplicateFiles.length > 0) { toast({ title: "Duplicate images skipped", description: `${duplicateFiles.length} duplicate photo(s) were not added.`, variant: "destructive" }); }
+                           if (overflowCount > 0) { toast({ title: "Too many images", description: "Maximum 10 images total.", variant: "destructive" }); }
+                           if (filesToAdd.length === 0) return;
+                           setNewImages(prev => [...prev, ...filesToAdd]);
+                           setNewImagePreviews(prev => [...prev, ...filesToAdd.map(f => URL.createObjectURL(f))]);
                         } catch (e) { if (/cancel/i.test(String(e))) return; toast({ title: "Photo selection failed", variant: "destructive" }); }
                       }}>
                         🖼 Choose from Library

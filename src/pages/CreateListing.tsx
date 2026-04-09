@@ -29,6 +29,7 @@ import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { VehicleTypeSelector, type VehicleType } from "@/components/VehicleTypeSelector";
 import { useListingSubscription } from "@/hooks/useListingSubscription";
 import type { FuelType } from "@/types/listing";
+import { getUniqueListingFiles } from "@/lib/listingImageFiles";
 
 import { carMakes, modelsByMake, usStates } from "@/data/vehicleData";
 
@@ -184,7 +185,7 @@ const CreateListing = () => {
     }
   }, [make]);
 
-  const addImageFiles = (incomingFiles: File[]) => {
+  const addImageFiles = async (incomingFiles: File[]) => {
     if (incomingFiles.length === 0) return;
 
     const remainingSlots = MAX_IMAGES - images.length;
@@ -198,41 +199,26 @@ const CreateListing = () => {
       return;
     }
 
-    const duplicates: string[] = [];
-    const newFiles: File[] = [];
+    const { duplicateFiles, filesToAdd, overflowCount } = await getUniqueListingFiles({
+      existingFiles: images,
+      incomingFiles,
+      maxFiles: MAX_IMAGES,
+    });
 
-    // Track sizes we've already seen in this batch to deduplicate within the batch too
-    const seenSizes = new Set(images.map(f => f.size));
-
-    for (const file of incomingFiles) {
-      // Duplicate = same file size (reliable for photos from the same source)
-      const isDuplicate = seenSizes.has(file.size);
-
-      if (isDuplicate) {
-        duplicates.push(file.name);
-      } else {
-        newFiles.push(file);
-        seenSizes.add(file.size);
-      }
-    }
-
-    if (duplicates.length > 0) {
+    if (duplicateFiles.length > 0) {
       toast({
         title: "Duplicate images detected",
-        description: `The following images were already added: ${duplicates.join(", ")}`,
+        description: `The following images were already added: ${duplicateFiles.map((file) => file.name).join(", ")}`,
         variant: "destructive",
       });
     }
 
-    if (newFiles.length === 0) return;
+    if (filesToAdd.length === 0) return;
 
-    const filesToAdd = newFiles.slice(0, remainingSlots);
-    const skippedCount = newFiles.length - filesToAdd.length;
-
-    if (skippedCount > 0) {
+    if (overflowCount > 0) {
       toast({
         title: "Some images not added",
-        description: `Only ${filesToAdd.length} of ${newFiles.length} images were added. Maximum is ${MAX_IMAGES} images.`,
+        description: `Only ${filesToAdd.length} more image${filesToAdd.length === 1 ? " was" : "s were"} added. Maximum is ${MAX_IMAGES} images.`,
       });
     }
 
@@ -282,7 +268,7 @@ const CreateListing = () => {
       const mimeType = blob.type || `image/${format === "jpg" ? "jpeg" : format}`;
       const file = new File([blob], `listing-${Date.now()}.${format}`, { type: mimeType });
 
-      addImageFiles([file]);
+        await addImageFiles([file]);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       if (/cancel/i.test(errorMessage)) return;
@@ -320,8 +306,8 @@ const CreateListing = () => {
         files.push(new File([blob], `listing-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${format}`, { type: mimeType }));
       }
 
-      if (files.length > 0) {
-        addImageFiles(files);
+        if (files.length > 0) {
+          await addImageFiles(files);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -335,7 +321,7 @@ const CreateListing = () => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    addImageFiles(files);
+    await addImageFiles(files);
     e.target.value = "";
   };
 

@@ -3,6 +3,7 @@ import { Geolocation } from '@capacitor/geolocation';
 
 const GEOLOCATION_TIMEOUT_MS = 9000;
 const GEOLOCATION_MAX_AGE_MS = 600000;
+const OVERALL_NATIVE_TIMEOUT_MS = 12000;
 
 export interface GeoPosition {
   latitude: number;
@@ -45,7 +46,16 @@ const getNativeCurrentPosition = async (): Promise<GeoPosition> => {
 
 export async function getCurrentPosition(): Promise<GeoPosition> {
   if (Capacitor.isNativePlatform()) {
-    return getNativeCurrentPosition();
+    // Wrap the ENTIRE native flow (permissions + GPS) in one hard timeout
+    // so a hanging checkPermissions/requestPermissions can never block forever.
+    return Promise.race([
+      getNativeCurrentPosition(),
+      new Promise<never>((_, reject) => {
+        globalThis.setTimeout(() => {
+          reject(new Error('Native geolocation flow timed out'));
+        }, OVERALL_NATIVE_TIMEOUT_MS);
+      }),
+    ]);
   }
 
   return new Promise<GeoPosition>((resolve, reject) => {

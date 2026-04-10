@@ -15,16 +15,21 @@ const hasNativeLocationPermission = (
 ) => permissions.location === 'granted' || permissions.coarseLocation === 'granted';
 
 const getNativeCurrentPosition = async (): Promise<GeoPosition> => {
+  console.log('[Geo] Native: checking permissions...');
   let permissions = await Geolocation.checkPermissions();
+  console.log('[Geo] Native: permissions result:', JSON.stringify(permissions));
 
   if (!hasNativeLocationPermission(permissions)) {
+    console.log('[Geo] Native: requesting permissions...');
     permissions = await Geolocation.requestPermissions();
+    console.log('[Geo] Native: request result:', JSON.stringify(permissions));
   }
 
   if (!hasNativeLocationPermission(permissions)) {
     throw new Error('Location permission not granted');
   }
 
+  console.log('[Geo] Native: calling getCurrentPosition...');
   const position = await Promise.race([
     Geolocation.getCurrentPosition({
       timeout: GEOLOCATION_TIMEOUT_MS,
@@ -42,10 +47,12 @@ const getNativeCurrentPosition = async (): Promise<GeoPosition> => {
     latitude: position.coords.latitude,
     longitude: position.coords.longitude,
   };
+  // Note: this log won't fire due to return above, but the catch in the caller will log errors
 };
 
 export async function getCurrentPosition(): Promise<GeoPosition> {
   if (Capacitor.isNativePlatform()) {
+    console.log('[Geo] Using native platform path');
     // Wrap the ENTIRE native flow (permissions + GPS) in one hard timeout
     // so a hanging checkPermissions/requestPermissions can never block forever.
     return Promise.race([
@@ -58,6 +65,7 @@ export async function getCurrentPosition(): Promise<GeoPosition> {
     ]);
   }
 
+  console.log('[Geo] Using web browser path');
   return new Promise<GeoPosition>((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation not supported'));

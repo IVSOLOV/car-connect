@@ -74,15 +74,19 @@ const CreateListing = () => {
     if (!pendingListing || !checkoutPending) return false;
 
     try {
-      const { data, error } = await supabase.functions.invoke("check-listing-subscription");
+      for (let attempt = 0; attempt < 6; attempt += 1) {
+        const { data, error } = await supabase.functions.invoke("check-listing-subscription");
 
-      if (error) throw error;
+        if (error) throw error;
 
-      if (data?.hasSubscription) {
-        localStorage.removeItem("listingCheckoutPending");
-        setIsSubmitting(false);
-        navigate("/listing-success?payment=success", { replace: true });
-        return true;
+        if ((data?.availableSlots ?? 0) > 0) {
+          localStorage.removeItem("listingCheckoutPending");
+          setIsSubmitting(false);
+          navigate("/listing-success?payment=success", { replace: true });
+          return true;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
 
       setIsSubmitting(false);

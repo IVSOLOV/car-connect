@@ -65,12 +65,16 @@ serve(async (req) => {
     // Get active subscriptions and count paid listing slots
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "active",
-      limit: 10,
+      status: "all",
+      limit: 100,
     });
 
     let paidListingSlots = 0;
     for (const sub of subscriptions.data) {
+      if (sub.status !== "active" && sub.status !== "trialing") {
+        continue;
+      }
+
       for (const item of sub.items.data) {
         if (item.price.id === LISTING_FEE_PRICE_ID) {
           paidListingSlots += item.quantity || 0;

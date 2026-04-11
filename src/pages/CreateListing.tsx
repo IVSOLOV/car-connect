@@ -74,13 +74,17 @@ const CreateListing = () => {
     if (!pendingListing || !checkoutPending) return false;
 
     try {
+      console.log("[CreateListing] Recovering pending checkout...");
       for (let attempt = 0; attempt < 6; attempt += 1) {
+        console.log(`[CreateListing] Recovery attempt ${attempt + 1}/6`);
         const { data, error } = await supabase.functions.invoke("check-listing-subscription");
 
         if (error) throw error;
 
         if ((data?.availableSlots ?? 0) > 0) {
+          console.log("[CreateListing] Subscription confirmed, navigating to success page");
           localStorage.removeItem("listingCheckoutPending");
+          setAwaitingPayment(false);
           setIsSubmitting(false);
           navigate("/listing-success?payment=success", { replace: true });
           return true;
@@ -90,9 +94,11 @@ const CreateListing = () => {
       }
 
       setIsSubmitting(false);
+      setAwaitingPayment(false);
     } catch (error) {
       console.error("[CreateListing] Failed to recover checkout:", error);
       setIsSubmitting(false);
+      setAwaitingPayment(false);
     }
 
     return false;
@@ -106,8 +112,18 @@ const CreateListing = () => {
     const paymentStatus = searchParams.get("payment");
     if (paymentStatus === "success") {
       localStorage.removeItem("listingCheckoutPending");
+      setAwaitingPayment(false);
+      setIsSubmitting(false);
       checkSubscription();
-      navigate("/listing-success", { replace: true });
+      navigate("/listing-success?payment=success", { replace: true });
+      return;
+    }
+
+    if (paymentStatus === "canceled") {
+      localStorage.removeItem("listingCheckoutPending");
+      setAwaitingPayment(false);
+      setIsSubmitting(false);
+      navigate("/listing-success?payment=canceled", { replace: true });
       return;
     }
 
@@ -545,6 +561,7 @@ const CreateListing = () => {
       
       if (result?.url) {
         console.log("[CreateListing] Redirecting to Stripe:", result.url);
+        setAwaitingPayment(true);
         window.location.href = result.url;
         return new Promise(() => {});
       } else {

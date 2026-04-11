@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -44,8 +45,9 @@ export function useListingSubscription() {
   }, [checkSubscription]);
 
   const startCheckout = async (quantity: number = 1) => {
+    const platform = Capacitor.getPlatform(); // "ios", "android", or "web"
     const { data, error: funcError } = await supabase.functions.invoke("create-listing-checkout", {
-      body: { quantity },
+      body: { quantity, platform },
     });
 
     if (funcError) throw funcError;

@@ -40,6 +40,19 @@ serve(async (req) => {
     const appOrigin = requestOrigin.startsWith("http://") || requestOrigin.startsWith("https://")
       ? requestOrigin
       : "https://directrental.lovable.app";
+
+    // Clone request body to check for platform
+    const body = await req.json().catch(() => ({}));
+    const platform = body.platform || "";
+    const isNativeIOS = platform === "ios";
+
+    // For native iOS, use custom URL scheme to redirect back into the app
+    const successBase = isNativeIOS
+      ? "com.solostar.dirent://listing-success"
+      : `${appOrigin}/listing-success`;
+    const cancelBase = isNativeIOS
+      ? "com.solostar.dirent://listing-success"
+      : `${appOrigin}/listing-success`;
     
     // Check if customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -49,7 +62,7 @@ serve(async (req) => {
       console.log("[CREATE-LISTING-CHECKOUT] Found existing customer", { customerId });
     }
 
-    const { quantity = 1 } = await req.json().catch(() => ({}));
+    const quantity = body.quantity || 1;
 
     // Always create a checkout session so the user goes through Stripe
     // Each listing gets its own subscription with a 30-day free trial
@@ -68,8 +81,8 @@ serve(async (req) => {
       subscription_data: {
         trial_period_days: 30,
       },
-      success_url: `${appOrigin}/listing-success?payment=success`,
-      cancel_url: `${appOrigin}/listing-success?payment=canceled`,
+      success_url: `${successBase}?payment=success`,
+      cancel_url: `${cancelBase}?payment=canceled`,
       custom_text: {
         submit: {
           message: "Start your 30-day free trial. Your payment method will be saved and you'll be charged $4.99/month per listing after the trial ends. After payment, return to DiRent to finish your listing.",

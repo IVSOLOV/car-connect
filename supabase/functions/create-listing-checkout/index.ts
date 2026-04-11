@@ -36,6 +36,10 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const requestOrigin = req.headers.get("origin") ?? "";
+    const appOrigin = requestOrigin.startsWith("http://") || requestOrigin.startsWith("https://")
+      ? requestOrigin
+      : "https://directrental.lovable.app";
     
     // Check if customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -64,11 +68,11 @@ serve(async (req) => {
       subscription_data: {
         trial_period_days: 30,
       },
-      success_url: `${req.headers.get("origin") || "https://directrental.lovable.app"}/listing-success?payment=success`,
-      cancel_url: `${req.headers.get("origin") || "https://directrental.lovable.app"}/listing-success?payment=canceled`,
+      success_url: `${appOrigin}/listing-success?payment=success`,
+      cancel_url: `${appOrigin}/listing-success?payment=canceled`,
       custom_text: {
         submit: {
-          message: "Start your 30-day free trial. Your payment method will be saved and you'll be charged $4.99/month per listing after the trial ends.",
+          message: "Start your 30-day free trial. Your payment method will be saved and you'll be charged $4.99/month per listing after the trial ends. After payment, return to DiRent to finish your listing.",
         },
       },
       metadata: {

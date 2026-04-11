@@ -258,7 +258,7 @@ const ListingSuccess = () => {
               
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold text-foreground">
-                  🎉 You're All Set!
+                   🎉 Congratulations!
                 </h1>
                 <p className="text-lg text-muted-foreground">
                   Your 30-day free trial has started! Your payment method is saved and you'll be charged $4.99/month per listing after the trial ends.
@@ -274,19 +274,19 @@ const ListingSuccess = () => {
 
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button 
-                  onClick={() => navigate("/create-listing")} 
+                   onClick={() => navigate("/my-listings")} 
                   className="flex-1 gap-2"
                 >
                   <Car className="h-4 w-4" />
-                  List Another Vehicle
+                   See My Listing
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate("/my-listings")} 
+                   onClick={() => navigate("/create-listing")} 
                   className="flex-1 gap-2"
                 >
                   <Car className="h-4 w-4" />
-                  My Listings
+                   Create New Listing
                 </Button>
               </div>
 
@@ -295,7 +295,7 @@ const ListingSuccess = () => {
                 onClick={() => navigate("/dashboard")}
                 className="text-muted-foreground"
               >
-                Browse All Cars
+                 View All Listings
               </Button>
             </CardContent>
           </Card>

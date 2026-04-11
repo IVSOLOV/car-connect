@@ -55,5 +55,16 @@
 	<string>DiRent needs your location to find nearby vehicle listings and auto-fill your city.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>DiRent needs your location to find nearby vehicle listings and auto-fill your city.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.solostar.dirent</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.solostar.dirent</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -8,6 +8,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PushNotificationProvider from "@/components/PushNotificationProvider";
+import DeepLinkHandler from "@/components/DeepLinkHandler";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BecomeHost from "./pages/BecomeHost";
@@ -44,6 +45,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <PushNotificationProvider>
+              <DeepLinkHandler />
               <ScrollToTop />
               <Routes>
                 <Route path="/" element={<Index />} />

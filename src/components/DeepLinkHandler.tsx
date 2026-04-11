@@ -9,26 +9,51 @@ const DeepLinkHandler = () => {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    const handleAppUrlOpen = (event: { url: string }) => {
-      console.log("[DeepLink] Received URL:", event.url);
+    const navigateFromUrl = (incomingUrl: string) => {
+      console.log("[DeepLink] Received URL:", incomingUrl);
+
       try {
-        // Parse custom scheme URL: com.solostar.dirent://listing-success?payment=success
-        const url = new URL(event.url);
-        const path = url.hostname + url.pathname; // "listing-success" or "listing-success/"
-        const search = url.search; // "?payment=success"
-        
-        const cleanPath = "/" + path.replace(/\/$/, "");
-        console.log("[DeepLink] Navigating to:", cleanPath + search);
-        navigate(cleanPath + search, { replace: true });
+        const url = new URL(incomingUrl);
+        const routePath = url.hostname
+          ? `/${`${url.hostname}${url.pathname}`.replace(/^\/+/, "").replace(/\/$/, "")}`
+          : url.pathname.replace(/\/$/, "") || "/";
+        const destination = `${routePath}${url.search}`;
+
+        console.log("[DeepLink] Navigating to:", destination);
+        navigate(destination, { replace: true });
       } catch (err) {
         console.error("[DeepLink] Failed to parse URL:", err);
       }
     };
 
-    App.addListener("appUrlOpen", handleAppUrlOpen);
+    const handleAppUrlOpen = (event: { url: string }) => {
+      navigateFromUrl(event.url);
+    };
+
+    let isActive = true;
+    let urlOpenListener: { remove: () => Promise<void> } | undefined;
+
+    App.getLaunchUrl()
+      .then((launchData) => {
+        if (!isActive || !launchData?.url) return;
+        navigateFromUrl(launchData.url);
+      })
+      .catch((error) => {
+        console.error("[DeepLink] Failed to read launch URL:", error);
+      });
+
+    App.addListener("appUrlOpen", handleAppUrlOpen).then((listener) => {
+      if (!isActive) {
+        void listener.remove();
+        return;
+      }
+
+      urlOpenListener = listener;
+    });
 
     return () => {
-      App.removeAllListeners();
+      isActive = false;
+      void urlOpenListener?.remove();
     };
   }, [navigate]);
 

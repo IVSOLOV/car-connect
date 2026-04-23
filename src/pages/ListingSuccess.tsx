@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { CheckCircle, Car, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Car, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { sendNotificationEmail } from "@/lib/notifications";
 
+type VerifyState = "verifying" | "success" | "failed";
+
 const ListingSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -22,35 +24,68 @@ const ListingSuccess = () => {
   const [hasWaited, setHasWaited] = useState(false);
   const [isCreatingListing, setIsCreatingListing] = useState(false);
   const [listingCreated, setListingCreated] = useState(false);
-  const [paymentFailed, setPaymentFailed] = useState(false);
 
-  // Check payment status via URL params
   const paymentStatus = searchParams.get("payment");
-  const wasCanceled = paymentStatus === "canceled";
-  const wasUpdated = paymentStatus === "updated";
+  const sessionId = searchParams.get("session_id");
+
+  // Start as "verifying" if we have a session_id to check; otherwise trust the URL flag.
+  const [verifyState, setVerifyState] = useState<VerifyState>(() => {
+    if (paymentStatus === "canceled") return "failed";
+    if (paymentStatus === "success" && sessionId) return "verifying";
+    if (paymentStatus === "success" && !sessionId) return "success"; // legacy fallback
+    return "failed";
+  });
+
+  // Verify with Stripe that the session was actually paid before showing success.
+  useEffect(() => {
+    if (verifyState !== "verifying" || !sessionId) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("verify-listing-checkout", {
+          body: { session_id: sessionId },
+        });
+        if (cancelled) return;
+        if (error) throw error;
+        if (data?.paid) {
+          setVerifyState("success");
+        } else {
+          console.warn("[ListingSuccess] Stripe verification failed", data);
+          setVerifyState("failed");
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.error("[ListingSuccess] Verification error:", err);
+        setVerifyState("failed");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [verifyState, sessionId]);
 
   useEffect(() => {
-    if (paymentStatus === "success" || wasCanceled || listingCreated) {
+    if (verifyState === "success" || verifyState === "failed" || listingCreated) {
       localStorage.removeItem("listingCheckoutPending");
     }
-  }, [paymentStatus, wasCanceled, listingCreated]);
+    if (verifyState === "failed") {
+      // Don't keep stale pending listing data on failure
+      localStorage.removeItem("pendingListing");
+    }
+  }, [verifyState, listingCreated]);
 
   // Give auth time to restore from Stripe redirect
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setHasWaited(true);
-    }, 1500);
+    const timer = setTimeout(() => setHasWaited(true), 1500);
     return () => clearTimeout(timer);
   }, []);
 
-  // Actively try to restore session on mount
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          console.log("[ListingSuccess] Session restored:", session.user.email);
-        }
+        await supabase.auth.getSession();
       } catch (error) {
         console.error("[ListingSuccess] Error restoring session:", error);
       }
@@ -59,21 +94,17 @@ const ListingSuccess = () => {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      checkSubscription();
-    }
+    if (user) checkSubscription();
   }, [checkSubscription, user]);
 
-  // Create the pending listing after successful payment (NOT if canceled)
+  // Only create the listing AFTER Stripe verification succeeds
   useEffect(() => {
     const createPendingListing = async () => {
-      if (!user || isCreatingListing || listingCreated || wasCanceled) return;
-      
+      if (verifyState !== "success") return;
+      if (!user || isCreatingListing || listingCreated) return;
+
       const pendingListingData = localStorage.getItem("pendingListing");
-      
-      if (!pendingListingData) {
-        return;
-      }
+      if (!pendingListingData) return;
 
       setIsCreatingListing(true);
 
@@ -106,7 +137,6 @@ const ListingSuccess = () => {
 
         if (error) {
           console.error("Error creating listing:", error);
-          setPaymentFailed(true);
         } else {
           const listingData = data as any;
           if (listingData?.id && listing.licensePlate?.trim()) {
@@ -117,29 +147,27 @@ const ListingSuccess = () => {
                 license_plate: listing.licensePlate.trim().toUpperCase(),
                 state: listing.state,
               });
-            if (sensitiveError) {
-              console.error("Error saving sensitive data:", sensitiveError);
-            }
+            if (sensitiveError) console.error("Error saving sensitive data:", sensitiveError);
           }
 
           localStorage.removeItem("listingCheckoutPending");
           localStorage.removeItem("pendingListing");
           setListingCreated(true);
-          
+
           const { data: profile } = await supabase
             .from("profiles")
             .select("first_name, full_name")
             .eq("user_id", user.id)
             .single();
-          
+
           const submitterName = profile?.first_name || profile?.full_name || "A user";
           const listingTitle = `${listing.year} ${listing.make} ${listing.model}`;
-          
+
           sendNotificationEmail("admin_new_listing", null, {
             listingTitle,
             submitterName,
           }).catch(err => console.error("Failed to send admin notification:", err));
-          
+
           toast({
             title: "🚗 Listing Created!",
             description: "Your vehicle has been submitted for approval.",
@@ -147,32 +175,37 @@ const ListingSuccess = () => {
         }
       } catch (error) {
         console.error("Error processing pending listing:", error);
-        setPaymentFailed(true);
       } finally {
         setIsCreatingListing(false);
       }
     };
 
-    if (user && hasWaited) {
+    if (user && hasWaited && verifyState === "success") {
       createPendingListing();
     }
-  }, [user, hasWaited, isCreatingListing, listingCreated, wasCanceled, toast]);
+  }, [user, hasWaited, isCreatingListing, listingCreated, verifyState, toast]);
 
   // Keep trying to restore session
   useEffect(() => {
     if (!loading && hasWaited && !user) {
       const retryInterval = setInterval(async () => {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          console.log("[ListingSuccess] Session restored on retry:", session.user.email);
-          clearInterval(retryInterval);
-        }
+        if (session) clearInterval(retryInterval);
       }, 3000);
       return () => clearInterval(retryInterval);
     }
   }, [user, loading, hasWaited]);
 
-  // Show loading while creating listing
+  // Verifying with Stripe
+  if (verifyState === "verifying") {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <LoadingSpinner />
+        <p className="text-muted-foreground animate-pulse">Confirming your payment...</p>
+      </div>
+    );
+  }
+
   if (isCreatingListing) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
@@ -182,8 +215,8 @@ const ListingSuccess = () => {
     );
   }
 
-  // Payment was canceled or failed
-  if (wasCanceled || paymentFailed) {
+  // Payment failed / canceled / unverified
+  if (verifyState === "failed") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <SEO title="Payment Issue | DiRent" description="Payment was not completed" />
@@ -199,29 +232,21 @@ const ListingSuccess = () => {
                 </div>
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold text-foreground">
-                    Vehicle Not Listed
+                    Payment Not Completed
                   </h1>
-                   <p className="text-lg text-muted-foreground">
-                     Your payment was not completed. Your vehicle has not been listed.
-                   </p>
-                 </div>
-                 <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-                   <p>
-                     Each listing requires a $4.99/month fee. Please try again to complete your payment and activate your listing.
-                   </p>
+                  <p className="text-lg text-muted-foreground">
+                    Your payment was not completed. Please try again.
+                  </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <Button 
-                    onClick={() => {
-                      localStorage.removeItem("pendingListing");
-                      navigate("/create-listing");
-                    }}
+                  <Button
+                    onClick={() => navigate("/create-listing")}
                     className="flex-1 gap-2"
                   >
                     <Car className="h-4 w-4" />
-                    Try Again
+                    Back to Listing
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={() => navigate("/dashboard")}
                     className="flex-1"
@@ -240,12 +265,9 @@ const ListingSuccess = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <SEO 
-        title="Success! | DiRent"
-        description="Your subscription is active"
-      />
+      <SEO title="Success! | DiRent" description="Your subscription is active" />
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
         <div className="max-w-lg mx-auto">
           <Card className="border-primary/20 bg-card/50 backdrop-blur">
@@ -255,10 +277,10 @@ const ListingSuccess = () => {
                   <CheckCircle className="h-16 w-16 text-primary" />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold text-foreground">
-                   🎉 Congratulations!
+                  🎉 Congratulations, your listing is live!
                 </h1>
                 <p className="text-lg text-muted-foreground">
                   Your 30-day free trial has started! Your payment method is saved and you'll be charged $4.99/month per listing after the trial ends.
@@ -267,35 +289,32 @@ const ListingSuccess = () => {
 
               <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
                 <p>
-                  Your listing will be reviewed by our team and go live within 24 hours. 
+                  Your listing will be reviewed by our team and go live within 24 hours.
                   You'll receive an email notification once it's approved!
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <Button 
-                   onClick={() => navigate("/my-listings")} 
-                  className="flex-1 gap-2"
-                >
+                <Button onClick={() => navigate("/my-listings")} className="flex-1 gap-2">
                   <Car className="h-4 w-4" />
-                   See My Listing
+                  See My Listing
                 </Button>
-                <Button 
-                  variant="outline" 
-                   onClick={() => navigate("/create-listing")} 
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/create-listing")}
                   className="flex-1 gap-2"
                 >
                   <Car className="h-4 w-4" />
-                   Create New Listing
+                  Create New Listing
                 </Button>
               </div>
 
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => navigate("/dashboard")}
                 className="text-muted-foreground"
               >
-                 View All Listings
+                View All Listings
               </Button>
             </CardContent>
           </Card>

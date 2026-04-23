@@ -74,7 +74,7 @@ const CreateListing = () => {
     if (!pendingListing || !checkoutPending) return false;
 
     try {
-      console.log("[CreateListing] Recovering pending checkout...");
+      console.log("[CreateListing] Recovering pending checkout (verifying via Stripe)...");
       for (let attempt = 0; attempt < 6; attempt += 1) {
         console.log(`[CreateListing] Recovery attempt ${attempt + 1}/6`);
         const { data, error } = await supabase.functions.invoke("check-listing-subscription");
@@ -82,10 +82,12 @@ const CreateListing = () => {
         if (error) throw error;
 
         if ((data?.availableSlots ?? 0) > 0) {
-          console.log("[CreateListing] Subscription confirmed, navigating to success page");
+          console.log("[CreateListing] Subscription confirmed by backend");
           localStorage.removeItem("listingCheckoutPending");
           setAwaitingPayment(false);
           setIsSubmitting(false);
+          // Navigate WITHOUT a session_id; ListingSuccess legacy fallback will trust this
+          // because backend already confirmed an active/trialing subscription exists.
           navigate("/listing-success?payment=success", { replace: true });
           return true;
         }
@@ -93,8 +95,12 @@ const CreateListing = () => {
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
 
+      // Never confirmed — treat as failed so user isn't stuck on success page.
+      console.warn("[CreateListing] Subscription not confirmed after retries; marking as failed");
+      localStorage.removeItem("listingCheckoutPending");
       setIsSubmitting(false);
       setAwaitingPayment(false);
+      navigate("/listing-success?payment=failed", { replace: true });
     } catch (error) {
       console.error("[CreateListing] Failed to recover checkout:", error);
       setIsSubmitting(false);

@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.solostar.dirent',
-  appName: 'directrental',
+  appName: 'DiRent',
   webDir: 'dist',
   plugins: {
     PushNotifications: {

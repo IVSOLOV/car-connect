@@ -1,6 +1,6 @@
 {
 	"appId": "com.solostar.dirent",
-	"appName": "directrental",
+	"appName": "DiRent",
 	"webDir": "dist",
 	"plugins": {
 		"PushNotifications": {

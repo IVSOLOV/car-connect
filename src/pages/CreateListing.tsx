@@ -116,12 +116,16 @@ const CreateListing = () => {
   // Handle payment success redirect (if user lands back on create-listing after Stripe)
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
+    const incomingSessionId = searchParams.get("session_id");
     if (paymentStatus === "success") {
       localStorage.removeItem("listingCheckoutPending");
       setAwaitingPayment(false);
       setIsSubmitting(false);
       checkSubscription();
-      navigate("/listing-success?payment=success", { replace: true });
+      const qs = incomingSessionId
+        ? `?payment=success&session_id=${encodeURIComponent(incomingSessionId)}`
+        : "?payment=success";
+      navigate(`/listing-success${qs}`, { replace: true });
       return;
     }
 

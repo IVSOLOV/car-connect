@@ -81,7 +81,7 @@ serve(async (req) => {
       subscription_data: {
         trial_period_days: 30,
       },
-      success_url: `${successBase}?payment=success`,
+      success_url: `${successBase}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${cancelBase}?payment=canceled`,
       custom_text: {
         submit: {

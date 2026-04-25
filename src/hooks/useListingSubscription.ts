@@ -45,6 +45,8 @@ export function useListingSubscription() {
   }, [checkSubscription]);
 
   const startCheckout = async (quantity: number = 1) => {
+    // Clear any prior success lock so a new checkout can be verified fresh.
+    try { sessionStorage.removeItem("listingCheckoutSuccessLock"); } catch { /* ignore */ }
     const platform = Capacitor.getPlatform(); // "ios", "android", or "web"
     const { data, error: funcError } = await supabase.functions.invoke("create-listing-checkout", {
       body: { quantity, platform },

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,67 @@ serve(async (req) => {
     const paid = isComplete && subOk;
 
     console.log("[VERIFY-CHECKOUT]", { sessionId, sessionStatus: session.status, subStatus, paid });
+
+    // Persist subscription to our DB so it shows up in our records immediately,
+    // even though the first charge happens after the 30-day trial.
+    if (paid && subscription && typeof subscription === "object") {
+      try {
+        const userId = session.metadata?.user_id ?? null;
+        const customerId = typeof session.customer === "string"
+          ? session.customer
+          : session.customer?.id ?? null;
+        const quantity = subscription.items?.data?.[0]?.quantity ?? 1;
+        const trialEnd = subscription.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null;
+        const periodEnd = (subscription as any).current_period_end
+          ? new Date((subscription as any).current_period_end * 1000).toISOString()
+          : null;
+
+        if (userId && customerId) {
+          const supabaseAdmin = createClient(
+            Deno.env.get("SUPABASE_URL") ?? "",
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+            { auth: { persistSession: false } },
+          );
+
+          const { error: upsertError } = await supabaseAdmin
+            .from("listing_subscriptions")
+            .upsert(
+              {
+                user_id: userId,
+                stripe_customer_id: customerId,
+                stripe_subscription_id: subscription.id,
+                stripe_checkout_session_id: session.id,
+                subscription_status: subscription.status,
+                trial_end: trialEnd,
+                current_period_end: periodEnd,
+                quantity,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "stripe_subscription_id" },
+            );
+
+          if (upsertError) {
+            console.error("[VERIFY-CHECKOUT] Failed to persist subscription", upsertError);
+          } else {
+            console.log("[VERIFY-CHECKOUT] Subscription persisted", {
+              subscriptionId: subscription.id,
+              userId,
+              customerId,
+            });
+          }
+        } else {
+          console.warn("[VERIFY-CHECKOUT] Missing userId or customerId; skipping persist", {
+            userId,
+            customerId,
+          });
+        }
+      } catch (persistErr) {
+        // Never let persistence failure break the user's success flow
+        console.error("[VERIFY-CHECKOUT] Persist exception:", persistErr);
+      }
+    }
 
     return new Response(
       JSON.stringify({

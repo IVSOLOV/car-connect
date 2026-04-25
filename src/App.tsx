@@ -30,6 +30,7 @@ import AdminPanel from "./pages/AdminPanel";
 import SupportTickets from "./pages/SupportTickets";
 import WriteToSupport from "./pages/WriteToSupport";
 import ListingSuccess from "./pages/ListingSuccess";
+import StripeMobileReturn from "./pages/StripeMobileReturn";
 import MyListings from "./pages/MyListings";
 import NotFound from "./pages/NotFound";
 
@@ -69,6 +70,7 @@ const App = () => (
                 <Route path="/support-tickets" element={<SupportTickets />} />
                 <Route path="/write-to-support" element={<WriteToSupport />} />
                 <Route path="/listing-success" element={<ListingSuccess />} />
+                <Route path="/stripe-mobile-return" element={<StripeMobileReturn />} />
                 <Route path="/my-listings" element={<MyListings />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

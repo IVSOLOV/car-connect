@@ -46,12 +46,13 @@ serve(async (req) => {
     const platform = body.platform || "";
     const isNativeIOS = platform === "ios";
 
-    // For native iOS, use custom URL scheme to redirect back into the app
+    // For native iOS, use a web fallback page so Safari never lands directly
+    // on the custom app scheme if the deep link cannot be opened.
     const successBase = isNativeIOS
-      ? "com.solostar.dirent://listing-success"
+      ? `${appOrigin}/stripe-mobile-return`
       : `${appOrigin}/listing-success`;
     const cancelBase = isNativeIOS
-      ? "com.solostar.dirent://listing-success"
+      ? `${appOrigin}/stripe-mobile-return`
       : `${appOrigin}/listing-success`;
     
     // Check if customer exists

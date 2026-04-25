@@ -15,6 +15,27 @@ import { sendNotificationEmail } from "@/lib/notifications";
 
 type VerifyState = "verifying" | "success" | "failed";
 
+// Persist success across remounts (e.g., duplicate iOS deep-link events that
+// re-open the page without query params). Once Stripe confirms payment, we
+// lock into success and never allow a downgrade to "failed".
+const SUCCESS_LOCK_KEY = "listingCheckoutSuccessLock";
+
+const readSuccessLock = (): string | null => {
+  try {
+    return sessionStorage.getItem(SUCCESS_LOCK_KEY);
+  } catch {
+    return null;
+  }
+};
+
+const writeSuccessLock = (sessionId: string | null) => {
+  try {
+    sessionStorage.setItem(SUCCESS_LOCK_KEY, sessionId || "legacy");
+  } catch {
+    // ignore
+  }
+};
+
 const ListingSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -29,12 +50,26 @@ const ListingSuccess = () => {
   const sessionId = searchParams.get("session_id");
 
   // Start as "verifying" if we have a session_id to check; otherwise trust the URL flag.
-  const [verifyState, setVerifyState] = useState<VerifyState>(() => {
+  // If we previously locked success in this browser session, always start in success.
+  const [verifyState, setVerifyStateRaw] = useState<VerifyState>(() => {
+    if (readSuccessLock()) return "success";
     if (paymentStatus === "canceled") return "failed";
     if (paymentStatus === "success" && sessionId) return "verifying";
-    if (paymentStatus === "success" && !sessionId) return "success"; // legacy fallback
+    if (paymentStatus === "success" && !sessionId) {
+      writeSuccessLock(null);
+      return "success"; // legacy fallback
+    }
     return "failed";
   });
+
+  // Guarded setter: once success is reached, NEVER allow flipping back to failed/verifying.
+  const setVerifyState = (next: VerifyState) => {
+    setVerifyStateRaw((prev) => {
+      if (prev === "success") return "success";
+      if (next === "success") writeSuccessLock(sessionId);
+      return next;
+    });
+  };
 
   // Verify with Stripe that the session was actually paid before showing success.
   useEffect(() => {

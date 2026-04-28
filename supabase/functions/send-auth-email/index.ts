@@ -71,6 +71,17 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (error) {
         console.error("Failed to generate confirmation link:", error);
+        // If user already exists & is confirmed (auto_confirm scenario), they can log in directly.
+        // Return success so the signup UX isn't broken.
+        const msg = (error as any)?.message?.toLowerCase() || "";
+        const code = (error as any)?.code || (error as any)?.status;
+        if (msg.includes("already") || msg.includes("registered") || code === "email_exists" || code === 422) {
+          console.log("User already confirmed - skipping confirmation email");
+          return new Response(
+            JSON.stringify({ success: true, skipped: "already_confirmed" }),
+            { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
         return new Response(
           JSON.stringify({ error: "Failed to generate confirmation link" }),
           { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }

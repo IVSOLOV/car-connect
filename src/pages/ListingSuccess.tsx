@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, Car, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,8 @@ const ListingSuccess = () => {
   const [hasWaited, setHasWaited] = useState(false);
   const [isCreatingListing, setIsCreatingListing] = useState(false);
   const [listingCreated, setListingCreated] = useState(false);
+  const [newListingId, setNewListingId] = useState<string | null>(null);
+  const creationStartedRef = useRef(false);
 
   const paymentStatus = searchParams.get("payment");
   const sessionId = searchParams.get("session_id");
@@ -136,11 +138,12 @@ const ListingSuccess = () => {
   useEffect(() => {
     const createPendingListing = async () => {
       if (verifyState !== "success") return;
-      if (!user || isCreatingListing || listingCreated) return;
+      if (!user || creationStartedRef.current || listingCreated) return;
 
       const pendingListingData = localStorage.getItem("pendingListing");
       if (!pendingListingData) return;
 
+      creationStartedRef.current = true;
       setIsCreatingListing(true);
 
       try {
@@ -174,15 +177,18 @@ const ListingSuccess = () => {
           console.error("Error creating listing:", error);
         } else {
           const listingData = data as any;
-          if (listingData?.id && listing.licensePlate?.trim()) {
-            const { error: sensitiveError } = await supabase
-              .from('listing_sensitive_data' as any)
-              .insert({
-                listing_id: listingData.id,
-                license_plate: listing.licensePlate.trim().toUpperCase(),
-                state: listing.state,
-              });
-            if (sensitiveError) console.error("Error saving sensitive data:", sensitiveError);
+          if (listingData?.id) {
+            setNewListingId(listingData.id);
+            if (listing.licensePlate?.trim()) {
+              const { error: sensitiveError } = await supabase
+                .from('listing_sensitive_data' as any)
+                .insert({
+                  listing_id: listingData.id,
+                  license_plate: listing.licensePlate.trim().toUpperCase(),
+                  state: listing.state,
+                });
+              if (sensitiveError) console.error("Error saving sensitive data:", sensitiveError);
+            }
           }
 
           localStorage.removeItem("listingCheckoutPending");
@@ -218,7 +224,7 @@ const ListingSuccess = () => {
     if (user && hasWaited && verifyState === "success") {
       createPendingListing();
     }
-  }, [user, hasWaited, isCreatingListing, listingCreated, verifyState, toast]);
+  }, [user, hasWaited, listingCreated, verifyState, toast]);
 
   // Keep trying to restore session
   useEffect(() => {
@@ -241,14 +247,6 @@ const ListingSuccess = () => {
     );
   }
 
-  if (isCreatingListing) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <LoadingSpinner />
-        <p className="text-muted-foreground animate-pulse">Creating your listing...</p>
-      </div>
-    );
-  }
 
   // Payment failed / canceled / unverified
   if (verifyState === "failed") {
@@ -315,22 +313,26 @@ const ListingSuccess = () => {
 
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold text-foreground">
-                  🎉 Congratulations, your listing is live!
+                  🎉 Congratulations, your listing has been submitted for review!
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  Your 30-day free trial has started! Your payment method is saved and you'll be charged $4.99/month per listing after the trial ends.
+                  Your 30-day free trial has started. Your listing will be reviewed by our team and should go live within 24 hours. You'll receive an email notification once it's approved.
                 </p>
               </div>
 
-              <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-                <p>
-                  Your listing will be reviewed by our team and go live within 24 hours.
-                  You'll receive an email notification once it's approved!
-                </p>
-              </div>
+              {isCreatingListing && (
+                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground flex items-center justify-center gap-2">
+                  <LoadingSpinner />
+                  <span>Finalizing your listing...</span>
+                </div>
+              )}
 
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <Button onClick={() => navigate("/my-listings")} className="flex-1 gap-2">
+                <Button
+                  onClick={() => navigate(newListingId ? `/listing/${newListingId}` : "/my-listings")}
+                  className="flex-1 gap-2"
+                  disabled={isCreatingListing}
+                >
                   <Car className="h-4 w-4" />
                   See My Listing
                 </Button>

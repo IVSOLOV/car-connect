@@ -247,14 +247,6 @@ const ListingSuccess = () => {
     );
   }
 
-  if (isCreatingListing) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <LoadingSpinner />
-        <p className="text-muted-foreground animate-pulse">Creating your listing...</p>
-      </div>
-    );
-  }
 
   // Payment failed / canceled / unverified
   if (verifyState === "failed") {

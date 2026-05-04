@@ -16,6 +16,9 @@ const FullscreenImageViewer = ({ images, initialIndex, onClose }: FullscreenImag
   const lastCenter = useRef<{ x: number; y: number } | null>(null);
   const isPanning = useRef(false);
   const lastPan = useRef<{ x: number; y: number } | null>(null);
+  const swipeStart = useRef<{ x: number; y: number; t: number } | null>(null);
+  const [swipeDx, setSwipeDx] = useState(0);
+  const isSwiping = useRef(false);
 
   const resetTransform = useCallback(() => {
     setScale(1);
@@ -65,9 +68,14 @@ const FullscreenImageViewer = ({ images, initialIndex, onClose }: FullscreenImag
         x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
         y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
       };
+      swipeStart.current = null;
+      isSwiping.current = false;
     } else if (e.touches.length === 1 && scale > 1) {
       isPanning.current = true;
       lastPan.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 1 && scale === 1) {
+      swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
+      isSwiping.current = false;
     }
   };
 
@@ -84,6 +92,15 @@ const FullscreenImageViewer = ({ images, initialIndex, onClose }: FullscreenImag
       const dy = e.touches[0].clientY - lastPan.current.y;
       setTranslate((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
       lastPan.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 1 && swipeStart.current && scale === 1) {
+      const dx = e.touches[0].clientX - swipeStart.current.x;
+      const dy = e.touches[0].clientY - swipeStart.current.y;
+      if (!isSwiping.current && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+        isSwiping.current = true;
+      }
+      if (isSwiping.current) {
+        setSwipeDx(dx);
+      }
     }
   };
 
@@ -95,6 +112,17 @@ const FullscreenImageViewer = ({ images, initialIndex, onClose }: FullscreenImag
     if (e.touches.length === 0) {
       isPanning.current = false;
       lastPan.current = null;
+      if (isSwiping.current && images.length > 1) {
+        const threshold = Math.min(80, window.innerWidth * 0.18);
+        if (swipeDx <= -threshold) {
+          goNext();
+        } else if (swipeDx >= threshold) {
+          goPrev();
+        }
+      }
+      isSwiping.current = false;
+      swipeStart.current = null;
+      setSwipeDx(0);
       // Snap back if zoomed out
       if (scale <= 1.05) {
         resetTransform();
@@ -168,8 +196,8 @@ const FullscreenImageViewer = ({ images, initialIndex, onClose }: FullscreenImag
           alt={`Image ${currentIndex + 1}`}
           className="max-w-[95vw] max-h-[80vh] object-contain select-none"
           style={{
-            transform: `scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
-            transition: scale === 1 ? "transform 0.2s ease-out" : "none",
+            transform: `translateX(${scale === 1 ? swipeDx : 0}px) scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
+            transition: scale === 1 && swipeDx === 0 ? "transform 0.2s ease-out" : "none",
           }}
           draggable={false}
         />

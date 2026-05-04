@@ -247,6 +247,16 @@ const ListingSuccess = () => {
     );
   }
 
+  // Show full-screen overlay only while listing is actively being created.
+  // Once creation completes (success or error), fall through so buttons work.
+  if (isCreatingListing && !listingCreated) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <LoadingSpinner />
+        <p className="text-muted-foreground animate-pulse">Creating your listing...</p>
+      </div>
+    );
+  }
 
   // Payment failed / canceled / unverified
   if (verifyState === "failed") {
@@ -320,18 +330,10 @@ const ListingSuccess = () => {
                 </p>
               </div>
 
-              {isCreatingListing && (
-                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground flex items-center justify-center gap-2">
-                  <LoadingSpinner />
-                  <span>Finalizing your listing...</span>
-                </div>
-              )}
-
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button
                   onClick={() => navigate(newListingId ? `/listing/${newListingId}` : "/my-listings")}
                   className="flex-1 gap-2"
-                  disabled={isCreatingListing}
                 >
                   <Car className="h-4 w-4" />
                   See My Listing

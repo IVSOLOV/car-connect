@@ -16,6 +16,9 @@ const FullscreenImageViewer = ({ images, initialIndex, onClose }: FullscreenImag
   const lastCenter = useRef<{ x: number; y: number } | null>(null);
   const isPanning = useRef(false);
   const lastPan = useRef<{ x: number; y: number } | null>(null);
+  const swipeStart = useRef<{ x: number; y: number; t: number } | null>(null);
+  const [swipeDx, setSwipeDx] = useState(0);
+  const isSwiping = useRef(false);
 
   const resetTransform = useCallback(() => {
     setScale(1);

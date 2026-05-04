@@ -196,8 +196,8 @@ const FullscreenImageViewer = ({ images, initialIndex, onClose }: FullscreenImag
           alt={`Image ${currentIndex + 1}`}
           className="max-w-[95vw] max-h-[80vh] object-contain select-none"
           style={{
-            transform: `scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
-            transition: scale === 1 ? "transform 0.2s ease-out" : "none",
+            transform: `translateX(${scale === 1 ? swipeDx : 0}px) scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
+            transition: scale === 1 && swipeDx === 0 ? "transform 0.2s ease-out" : "none",
           }}
           draggable={false}
         />

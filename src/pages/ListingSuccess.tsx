@@ -138,11 +138,12 @@ const ListingSuccess = () => {
   useEffect(() => {
     const createPendingListing = async () => {
       if (verifyState !== "success") return;
-      if (!user || isCreatingListing || listingCreated) return;
+      if (!user || creationStartedRef.current || listingCreated) return;
 
       const pendingListingData = localStorage.getItem("pendingListing");
       if (!pendingListingData) return;
 
+      creationStartedRef.current = true;
       setIsCreatingListing(true);
 
       try {
@@ -176,15 +177,18 @@ const ListingSuccess = () => {
           console.error("Error creating listing:", error);
         } else {
           const listingData = data as any;
-          if (listingData?.id && listing.licensePlate?.trim()) {
-            const { error: sensitiveError } = await supabase
-              .from('listing_sensitive_data' as any)
-              .insert({
-                listing_id: listingData.id,
-                license_plate: listing.licensePlate.trim().toUpperCase(),
-                state: listing.state,
-              });
-            if (sensitiveError) console.error("Error saving sensitive data:", sensitiveError);
+          if (listingData?.id) {
+            setNewListingId(listingData.id);
+            if (listing.licensePlate?.trim()) {
+              const { error: sensitiveError } = await supabase
+                .from('listing_sensitive_data' as any)
+                .insert({
+                  listing_id: listingData.id,
+                  license_plate: listing.licensePlate.trim().toUpperCase(),
+                  state: listing.state,
+                });
+              if (sensitiveError) console.error("Error saving sensitive data:", sensitiveError);
+            }
           }
 
           localStorage.removeItem("listingCheckoutPending");
@@ -220,7 +224,7 @@ const ListingSuccess = () => {
     if (user && hasWaited && verifyState === "success") {
       createPendingListing();
     }
-  }, [user, hasWaited, isCreatingListing, listingCreated, verifyState, toast]);
+  }, [user, hasWaited, listingCreated, verifyState, toast]);
 
   // Keep trying to restore session
   useEffect(() => {

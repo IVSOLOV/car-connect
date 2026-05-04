@@ -313,22 +313,26 @@ const ListingSuccess = () => {
 
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold text-foreground">
-                  🎉 Congratulations, your listing is live!
+                  🎉 Congratulations, your listing has been submitted for review!
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  Your 30-day free trial has started! Your payment method is saved and you'll be charged $4.99/month per listing after the trial ends.
+                  Your 30-day free trial has started. Your listing will be reviewed by our team and should go live within 24 hours. You'll receive an email notification once it's approved.
                 </p>
               </div>
 
-              <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-                <p>
-                  Your listing will be reviewed by our team and go live within 24 hours.
-                  You'll receive an email notification once it's approved!
-                </p>
-              </div>
+              {isCreatingListing && (
+                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground flex items-center justify-center gap-2">
+                  <LoadingSpinner />
+                  <span>Finalizing your listing...</span>
+                </div>
+              )}
 
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <Button onClick={() => navigate("/my-listings")} className="flex-1 gap-2">
+                <Button
+                  onClick={() => navigate(newListingId ? `/listing/${newListingId}` : "/my-listings")}
+                  className="flex-1 gap-2"
+                  disabled={isCreatingListing}
+                >
                   <Car className="h-4 w-4" />
                   See My Listing
                 </Button>

@@ -45,6 +45,8 @@ const ListingSuccess = () => {
   const [hasWaited, setHasWaited] = useState(false);
   const [isCreatingListing, setIsCreatingListing] = useState(false);
   const [listingCreated, setListingCreated] = useState(false);
+  const [newListingId, setNewListingId] = useState<string | null>(null);
+  const creationStartedRef = useRef(false);
 
   const paymentStatus = searchParams.get("payment");
   const sessionId = searchParams.get("session_id");

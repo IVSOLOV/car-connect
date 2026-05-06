@@ -119,6 +119,19 @@ const ListingSuccess = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Defensive: clear any lingering body locks (e.g. from fullscreen viewer, dialogs,
+  // or the previous create-listing flow) so the success page is always interactive
+  // after the iOS deep-link redirect.
+  useEffect(() => {
+    try {
+      document.body.style.overflow = "";
+      document.body.style.pointerEvents = "";
+      document.documentElement.style.overflow = "";
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   useEffect(() => {
     const restoreSession = async () => {
       try {

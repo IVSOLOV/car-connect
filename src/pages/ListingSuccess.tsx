@@ -53,6 +53,22 @@ const ListingSuccess = () => {
   const paymentStatus = searchParams.get("payment");
   const sessionId = searchParams.get("session_id");
 
+  const goToListing = () => {
+    const destination = newListingId ? `/listing/${newListingId}` : "/my-listings";
+    console.log("[ListingSuccess] See My Listing clicked", { destination, newListingId });
+    navigate(destination);
+  };
+
+  const goToCreateListing = () => {
+    console.log("[ListingSuccess] Create New Listing clicked");
+    navigate("/create-listing");
+  };
+
+  const goToDashboard = () => {
+    console.log("[ListingSuccess] View All Listings clicked");
+    navigate("/dashboard");
+  };
+
   // Start as "verifying" if we have a session_id to check; otherwise trust the URL flag.
   // If we previously locked success in this browser session, always start in success.
   const [verifyState, setVerifyStateRaw] = useState<VerifyState>(() => {
@@ -379,7 +395,7 @@ const ListingSuccess = () => {
 
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button
-                  onClick={() => navigate(newListingId ? `/listing/${newListingId}` : "/my-listings")}
+                  onClick={goToListing}
                   className="flex-1 gap-2"
                 >
                   <Car className="h-4 w-4" />
@@ -387,7 +403,7 @@ const ListingSuccess = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/create-listing")}
+                  onClick={goToCreateListing}
                   className="flex-1 gap-2"
                 >
                   <Car className="h-4 w-4" />
@@ -397,7 +413,7 @@ const ListingSuccess = () => {
 
               <Button
                 variant="ghost"
-                onClick={() => navigate("/dashboard")}
+                onClick={goToDashboard}
                 className="text-muted-foreground"
               >
                 View All Listings

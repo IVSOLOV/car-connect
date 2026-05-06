@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { sendNotificationEmail } from "@/lib/notifications";
+import { scheduleGlobalInteractionUnlock } from "@/lib/interactionReset";
 
 type VerifyState = "verifying" | "success" | "failed";
 
@@ -47,6 +48,7 @@ const ListingSuccess = () => {
   const [listingCreated, setListingCreated] = useState(false);
   const [newListingId, setNewListingId] = useState<string | null>(null);
   const creationStartedRef = useRef(false);
+  const overlayVisibleRef = useRef(false);
 
   const paymentStatus = searchParams.get("payment");
   const sessionId = searchParams.get("session_id");
@@ -119,18 +121,50 @@ const ListingSuccess = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Defensive: clear any lingering body locks (e.g. from fullscreen viewer, dialogs,
-  // or the previous create-listing flow) so the success page is always interactive
-  // after the iOS deep-link redirect.
+  // Defensive: clear any lingering body/root locks across the iOS deep-link handoff.
   useEffect(() => {
-    try {
-      document.body.style.overflow = "";
-      document.body.style.pointerEvents = "";
-      document.documentElement.style.overflow = "";
-    } catch {
-      /* ignore */
-    }
+    console.log("[ListingSuccess] Route mounted", {
+      pathname: window.location.pathname,
+      search: window.location.search,
+      paymentStatus,
+      sessionId: sessionId ? "present" : "missing",
+    });
+
+    const cancelUnlock = scheduleGlobalInteractionUnlock("ListingSuccess mount");
+    return () => {
+      console.log("[ListingSuccess] Route unmounted");
+      cancelUnlock();
+    };
   }, []);
+
+  useEffect(() => {
+    console.log("[ListingSuccess] Loading/state snapshot", {
+      authLoading: loading,
+      hasWaited,
+      verifyState,
+      isCreatingListing,
+      listingCreated,
+      hasPendingListing: Boolean(localStorage.getItem("pendingListing")),
+      checkoutPending: Boolean(localStorage.getItem("listingCheckoutPending")),
+      successReady: verifyState === "success" && !isCreatingListing,
+    });
+
+    if (verifyState === "success" && !isCreatingListing) {
+      console.log("[ListingSuccess] All blocking loading states cleared");
+      scheduleGlobalInteractionUnlock("ListingSuccess success ready");
+    }
+  }, [loading, hasWaited, verifyState, isCreatingListing, listingCreated]);
+
+  useEffect(() => {
+    const overlayVisible = verifyState === "verifying" || (isCreatingListing && !listingCreated);
+    if (overlayVisible && !overlayVisibleRef.current) {
+      console.log("[ListingSuccess] Blocking overlay rendered", { verifyState, isCreatingListing, listingCreated });
+    }
+    if (!overlayVisible && overlayVisibleRef.current) {
+      console.log("[ListingSuccess] Blocking overlay unmounted", { verifyState, isCreatingListing, listingCreated });
+    }
+    overlayVisibleRef.current = overlayVisible;
+  }, [verifyState, isCreatingListing, listingCreated]);
 
   useEffect(() => {
     const restoreSession = async () => {

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
+import { scheduleGlobalInteractionUnlock } from "@/lib/interactionReset";
 
 const DeepLinkHandler = () => {
   const navigate = useNavigate();
@@ -33,18 +34,19 @@ const DeepLinkHandler = () => {
           : url.pathname.replace(/\/$/, "") || "/";
         const destination = `${routePath}${url.search}`;
 
-        // Defensive: clear any leftover body locks (e.g. fullscreen image viewer,
-        // dialogs) so the destination page is always interactive after a deep link.
-        try {
-          document.body.style.overflow = "";
-          document.body.style.pointerEvents = "";
-          document.documentElement.style.overflow = "";
-        } catch {
-          /* ignore */
-        }
+        // Defensive: clear any leftover body/root locks across the native handoff.
+        scheduleGlobalInteractionUnlock("DeepLink before navigation");
 
         console.log("[DeepLink] Navigating to:", destination);
         navigate(destination, { replace: true });
+        window.setTimeout(() => {
+          console.log("[DeepLink] Navigation executed:", {
+            destination,
+            currentPath: window.location.pathname,
+            currentSearch: window.location.search,
+          });
+          scheduleGlobalInteractionUnlock("DeepLink after navigation");
+        }, 0);
       } catch (err) {
         console.error("[DeepLink] Failed to parse URL:", err);
       }

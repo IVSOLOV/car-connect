@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
 import { useListingSubscription } from "@/hooks/useListingSubscription";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,15 +13,6 @@ import {
   clearGlobalInteractionLocks,
   scheduleGlobalInteractionUnlock,
 } from "@/lib/interactionReset";
-
-/**
- * Visible Congratulations page after Stripe Checkout success.
- * Single CTA: "See My Listings".
- * Listing creation is IDEMPOTENT keyed on Stripe checkout_session_id:
- *   - in-memory Set guard (per app session)
- *   - localStorage guard `listing_success_processed_<session_id>`
- *   - DB unique index on listings.stripe_checkout_session_id
- */
 
 const PROCESSED_KEY_PREFIX = "listing_success_processed_";
 const TOAST_KEY_PREFIX = "listing_success_toast_";
@@ -97,6 +90,21 @@ const ListingSuccess = () => {
     userRef.current = user;
   }, [user]);
 
+  const goToMyListings = useCallback(
+    (source: string) => {
+      console.log(`${source} clicked`);
+      console.log("Navigating to /my-listings");
+      clearGlobalInteractionLocks(`ListingSuccess ${source}`);
+      try {
+        toast.dismiss();
+      } catch {
+        /* ignore */
+      }
+      navigate("/my-listings", { replace: true });
+    },
+    [navigate]
+  );
+
   useEffect(() => {
     if (handledRef.current) return;
     handledRef.current = true;
@@ -113,19 +121,15 @@ const ListingSuccess = () => {
       sessionId: sessionId || "(none)",
     });
 
-    // Defensive: clear any leftover interaction locks so the page is fully tappable.
     clearGlobalInteractionLocks("ListingSuccess mount");
     scheduleGlobalInteractionUnlock("ListingSuccess mount");
 
     const canceled = paymentStatus === "canceled";
     const toastKey = sessionId || (canceled ? "canceled" : "no-session");
 
-    // Show toast exactly once per session_id (or canceled key).
     if (!wasToastShown(toastKey)) {
       markToastShown(toastKey);
-      // Defer to next tick so the page paints first.
       window.setTimeout(() => {
-        // Dismiss any existing toasts to avoid stacking.
         toast.dismiss();
         if (canceled) {
           toast.warning("Checkout was canceled.", { id: `ls-${toastKey}`, duration: 4000 });
@@ -137,8 +141,6 @@ const ListingSuccess = () => {
         }
         console.log("Success toast shown");
       }, 80);
-    } else {
-      console.log("Toast already shown for this session — skipping");
     }
 
     if (canceled) {
@@ -154,7 +156,6 @@ const ListingSuccess = () => {
       return;
     }
 
-    // Mark immediately to block concurrent remounts/deep-link re-fires.
     markSessionProcessed(sessionId);
 
     const runBackground = async () => {
@@ -174,7 +175,6 @@ const ListingSuccess = () => {
           }
         }
 
-        // Resolve user reliably (AuthContext may not have hydrated yet after redirect).
         let currentUser = userRef.current;
         if (!currentUser) {
           for (let i = 0; i < 10; i += 1) {
@@ -307,36 +307,52 @@ const ListingSuccess = () => {
   const canceled = searchParams.get("payment") === "canceled";
 
   return (
-    <main
-      className="min-h-screen bg-background flex items-center justify-center px-6 py-12"
-      style={{
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 3rem)",
-      }}
-    >
-      <div className="w-full max-w-md text-center space-y-6">
-        <div className="flex justify-center">
-          <div className="rounded-full bg-primary/10 p-5">
-            <CheckCircle2 className="h-16 w-16 text-primary" strokeWidth={2} />
-          </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main
+        className="container mx-auto px-4 py-8 pt-36 sm:pt-24"
+        style={{
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 2rem)",
+        }}
+      >
+        <div className="max-w-2xl mx-auto">
+          <Card className="relative">
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => goToMyListings("Close success")}
+              className="absolute top-3 right-3 z-10 inline-flex items-center justify-center h-9 w-9 rounded-full bg-muted/60 hover:bg-muted text-foreground transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <CardContent className="py-10 px-6 sm:px-10 text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="rounded-full bg-primary/10 p-5">
+                  <CheckCircle2 className="h-14 w-14 text-primary" strokeWidth={2} />
+                </div>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                {canceled ? "Checkout canceled" : "Congratulations!"}
+              </h1>
+              <p className="text-base leading-relaxed text-muted-foreground max-w-md mx-auto">
+                {canceled
+                  ? "Your checkout was canceled. You can try again from My Listings."
+                  : "Your listing was submitted for review and your 30-day free trial has started."}
+              </p>
+              <div className="pt-2">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto sm:min-w-[260px] h-12 text-base"
+                  onClick={() => goToMyListings("See My Listings")}
+                >
+                  See My Listings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        <h1 className="text-3xl font-bold text-foreground">
-          {canceled ? "Checkout canceled" : "Congratulations!"}
-        </h1>
-        <p className="text-base leading-relaxed text-muted-foreground">
-          {canceled
-            ? "Your checkout was canceled. You can try again from My Listings."
-            : "Your listing was submitted for review and your 30-day free trial has started."}
-        </p>
-        <Button
-          size="lg"
-          className="w-full h-12 text-base"
-          onClick={() => navigate("/my-listings", { replace: true })}
-        >
-          See My Listings
-        </Button>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 };
 

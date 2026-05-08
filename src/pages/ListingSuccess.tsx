@@ -109,15 +109,17 @@ const ListingSuccess = () => {
     `listingCreated=${listingCreated}`,
   ], [hasWaited, isCreatingListing, listingCreated, loading, verifyState]);
 
-  const refreshDebugSnapshot = useCallback((source: string) => {
+  const refreshDebugSnapshot = useCallback((source: string, shouldLog = true) => {
     const snapshot = getInteractionSnapshot();
     setDebugSnapshot(snapshot);
-    console.log(`[ListingSuccess][Debug] ${source}`, {
-      paymentStatus,
-      sessionId: sessionId ? "present" : "missing",
-      activeOverlayStates: activeOverlayStates(),
-      ...snapshot,
-    });
+    if (shouldLog) {
+      console.log(`[ListingSuccess][Debug] ${source}`, {
+        paymentStatus,
+        sessionId: sessionId ? "present" : "missing",
+        activeOverlayStates: activeOverlayStates(),
+        ...snapshot,
+      });
+    }
     return snapshot;
   }, [activeOverlayStates, paymentStatus, sessionId]);
 
@@ -234,6 +236,37 @@ const ListingSuccess = () => {
       scheduleGlobalInteractionUnlock("ListingSuccess success ready");
     }
   }, [loading, hasWaited, verifyState, isCreatingListing, listingCreated]);
+
+  useEffect(() => {
+    const logDocumentTap = (event: PointerEvent | TouchEvent) => {
+      const point = getPointFromEvent(event);
+      const target = describeEventTarget(event.target);
+      const elementStack = document
+        .elementsFromPoint(point.x, point.y)
+        .slice(0, 8)
+        .map((element) => describeEventTarget(element));
+      const label = `${event.type} ${point.x},${point.y} ${target}`;
+      setLastDocumentTap(label);
+      console.log(`[ListingSuccess][TapDiagnostics] ${event.type}`, {
+        target,
+        point,
+        elementStack,
+        activeOverlayStates: activeOverlayStates(),
+        ...getInteractionSnapshot(),
+      });
+      refreshDebugSnapshot(`document:${event.type}`, false);
+    };
+
+    window.addEventListener("pointerdown", logDocumentTap, { capture: true, passive: true });
+    window.addEventListener("touchstart", logDocumentTap, { capture: true, passive: true });
+    const interval = window.setInterval(() => refreshDebugSnapshot("poll", false), 1000);
+
+    return () => {
+      window.removeEventListener("pointerdown", logDocumentTap, { capture: true });
+      window.removeEventListener("touchstart", logDocumentTap, { capture: true });
+      window.clearInterval(interval);
+    };
+  }, [activeOverlayStates, refreshDebugSnapshot]);
 
   useEffect(() => {
     const overlayVisible = verifyState === "verifying" || (isCreatingListing && !listingCreated);

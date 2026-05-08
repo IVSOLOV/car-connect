@@ -1,5 +1,6 @@
-import { useEffect, useRef, useCallback, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import type React from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import {
 
 const PROCESSED_KEY_PREFIX = "listing_success_processed_";
 const TOAST_KEY_PREFIX = "listing_success_toast_";
+const MANUAL_EXIT_UNTIL_KEY = "listing_success_manual_exit_until";
 const processedSessionsInMemory = new Set<string>();
 const toastShownInMemory = new Set<string>();
 
@@ -109,7 +111,6 @@ const snapshotEnv = (label: string) => {
 };
 
 const ListingSuccess = () => {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { checkSubscription } = useListingSubscription();
@@ -121,9 +122,11 @@ const ListingSuccess = () => {
   const [debugInfo, setDebugInfo] = useState({
     path: typeof window !== "undefined" ? window.location.pathname : "(ssr)",
     lastClick: "(none)",
+    pointerDown: "not fired" as "not fired" | "fired",
+    hardRedirect: "not called" as "not called" | "called",
     navAttempted: "no" as "no" | "yes",
     pathAfter: "(pending)",
-    fallbackTriggered: "no" as "no" | "yes",
+    fallbackTriggered: "n/a",
   });
 
   useEffect(() => {

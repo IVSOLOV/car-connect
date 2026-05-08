@@ -113,6 +113,8 @@ const ListingSuccess = () => {
     let cancelled = false;
     let completed = false;
     let startDelay: number | undefined;
+    let fallbackTimer: number | undefined;
+    let missingParamsTimer: number | undefined;
     const logExit = (reason: string, details?: Record<string, unknown>) => {
       console.log("[ListingSuccess] Exit path:", reason, details ?? {});
       updateDebug({ exitReason: reason });
@@ -223,14 +225,14 @@ const ListingSuccess = () => {
       route: getCurrentRoute(),
     });
     updateDebug({ timerStarted: true, exitReason: "fallback timer started" });
-    const fallbackTimer = window.setTimeout(() => {
+    fallbackTimer = window.setTimeout(() => {
       console.warn("[ListingSuccess] Verification timeout fallback triggered");
       updateDebug({ fallbackFired: true, exitReason: "9-second fallback fired" });
       clearGlobalInteractionLocks("ListingSuccess hard timeout fallback");
       finish("/my-listings", "warning", "9-second verification timeout fallback");
     }, VERIFY_TIMEOUT_MS);
 
-    const missingParamsTimer = window.setTimeout(() => {
+    missingParamsTimer = window.setTimeout(() => {
       if (completed || cancelled) {
         logExit("missing params timer ignored", { completed, cancelled });
         return;

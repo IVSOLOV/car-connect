@@ -11,13 +11,9 @@ import {
 } from "@/lib/interactionReset";
 
 /**
- * Post-Stripe redirect handler.
- *
- * INVISIBLE to the user:
- *  - Navigates immediately to /listing/:id or /my-listings on mount.
- *  - Shows a non-blocking sonner toast (~4s).
- *  - Runs verification + listing creation in the background AFTER navigation.
- *  - Never renders a loader screen.
+ * Post-Stripe redirect handler. INVISIBLE to the user.
+ * Always navigates to /my-listings first, then shows a toast.
+ * Background work runs after navigation and never blocks UI.
  */
 const SUCCESS_LOCK_KEY = "listingCheckoutSuccessLock";
 
@@ -60,41 +56,61 @@ const ListingSuccess = () => {
       searchParams.get("session_id") ||
       searchParams.get("session") ||
       searchParams.get("checkout_session");
-    const listingIdParam =
-      searchParams.get("listingId") || searchParams.get("listing_id");
 
-    console.log("[ListingSuccess] Mounted - navigating immediately", {
-      paymentStatus,
-      hasSessionId: Boolean(sessionId),
-      listingIdParam: listingIdParam || "missing",
-    });
+    console.log("[ListingSuccess] Mounted", { paymentStatus, hasSessionId: Boolean(sessionId) });
 
-    // 1) Clear any interaction locks immediately.
+    // Clear any interaction locks immediately and on next ticks.
     clearGlobalInteractionLocks("ListingSuccess mount");
     scheduleGlobalInteractionUnlock("ListingSuccess mount");
 
-    // 2) Decide destination and navigate IMMEDIATELY (before any async work).
     const canceled = paymentStatus === "canceled";
-    const destination = canceled
-      ? "/my-listings"
-      : listingIdParam
-      ? `/listing/${listingIdParam}`
-      : "/my-listings";
 
-    navigate(destination, { replace: true });
-    console.log("[ListingSuccess] Navigated to", destination);
+    // ALWAYS navigate to /my-listings first - it's a known-good route.
+    navigate("/my-listings", { replace: true });
+    console.log("Navigated to /my-listings");
 
-    // 3) Show non-blocking toast.
-    if (canceled) {
-      toast.warning("Checkout was canceled.", { duration: 4000 });
-    } else {
-      toast.success(
-        "Congratulations! Your listing was submitted for review and your 30-day free trial has started.",
-        { duration: 4000 }
-      );
-    }
+    // Show toast AFTER navigation, on next tick, so it renders over the new page.
+    window.setTimeout(() => {
+      if (canceled) {
+        toast.warning("Checkout was canceled.", {
+          duration: 4000,
+          onDismiss: () => {
+            console.log("Success toast dismissed");
+            console.log(`Current route after toast dismissed: ${window.location.pathname}`);
+            clearGlobalInteractionLocks("ListingSuccess toast dismissed");
+            console.log("No overlay remains");
+          },
+          onAutoClose: () => {
+            console.log("Success toast dismissed");
+            console.log(`Current route after toast dismissed: ${window.location.pathname}`);
+            clearGlobalInteractionLocks("ListingSuccess toast auto-close");
+            console.log("No overlay remains");
+          },
+        });
+      } else {
+        toast.success(
+          "Congratulations! Your listing was submitted for review and your 30-day free trial has started.",
+          {
+            duration: 4000,
+            onDismiss: () => {
+              console.log("Success toast dismissed");
+              console.log(`Current route after toast dismissed: ${window.location.pathname}`);
+              clearGlobalInteractionLocks("ListingSuccess toast dismissed");
+              console.log("No overlay remains");
+            },
+            onAutoClose: () => {
+              console.log("Success toast dismissed");
+              console.log(`Current route after toast dismissed: ${window.location.pathname}`);
+              clearGlobalInteractionLocks("ListingSuccess toast auto-close");
+              console.log("No overlay remains");
+            },
+          }
+        );
+      }
+      console.log("Success toast shown");
+    }, 80);
 
-    // 4) Re-clear locks after navigation completes.
+    // Re-clear locks after navigation completes.
     scheduleGlobalInteractionUnlock("ListingSuccess post-navigate");
 
     if (canceled) {
@@ -104,7 +120,7 @@ const ListingSuccess = () => {
       return;
     }
 
-    // 5) Background verification + listing creation. NEVER blocks the UI.
+    // Background verification + listing creation. NEVER blocks the UI.
     const runBackground = async () => {
       try {
         if (sessionId) {
@@ -154,12 +170,8 @@ const ListingSuccess = () => {
                 vehicle_type: listing.vehicleType,
                 fuel_type: listing.fuelType,
                 daily_price: parseInt(listing.dailyPrice),
-                weekly_price: listing.weeklyPrice
-                  ? parseInt(listing.weeklyPrice)
-                  : null,
-                monthly_price: listing.monthlyPrice
-                  ? parseInt(listing.monthlyPrice)
-                  : null,
+                weekly_price: listing.weeklyPrice ? parseInt(listing.weeklyPrice) : null,
+                monthly_price: listing.monthlyPrice ? parseInt(listing.monthlyPrice) : null,
                 description: listing.description || null,
                 images: uploadedImageUrls,
                 delivery_available: listing.deliveryAvailable || false,
@@ -180,10 +192,7 @@ const ListingSuccess = () => {
                     state: listing.state,
                   });
                 if (sensitiveError) {
-                  console.error(
-                    "[ListingSuccess][bg] Error saving sensitive data:",
-                    sensitiveError
-                  );
+                  console.error("[ListingSuccess][bg] Error saving sensitive data:", sensitiveError);
                 }
               }
 
@@ -191,32 +200,23 @@ const ListingSuccess = () => {
               localStorage.removeItem("pendingListing");
 
               const { data: profile } = await db
-                .from<{ first_name: string | null; full_name: string | null }>(
-                  "profiles"
-                )
+                .from<{ first_name: string | null; full_name: string | null }>("profiles")
                 .select("first_name, full_name")
                 .eq("user_id", currentUser.id)
                 .single();
 
-              const submitterName =
-                profile?.first_name || profile?.full_name || "A user";
+              const submitterName = profile?.first_name || profile?.full_name || "A user";
               const listingTitle = `${listing.year} ${listing.make} ${listing.model}`;
 
               sendNotificationEmail("admin_new_listing", null, {
                 listingTitle,
                 submitterName,
               }).catch((err) =>
-                console.error(
-                  "[ListingSuccess][bg] Failed to send admin notification:",
-                  err
-                )
+                console.error("[ListingSuccess][bg] Failed to send admin notification:", err)
               );
             }
           } catch (err) {
-            console.error(
-              "[ListingSuccess][bg] Error processing pending listing:",
-              err
-            );
+            console.error("[ListingSuccess][bg] Error processing pending listing:", err);
           }
         }
 
@@ -227,7 +227,6 @@ const ListingSuccess = () => {
       }
     };
 
-    // Defer slightly so navigation/render finishes first.
     window.setTimeout(() => {
       void runBackground();
     }, 50);

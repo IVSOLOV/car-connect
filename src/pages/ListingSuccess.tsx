@@ -270,14 +270,13 @@ const ListingSuccess = () => {
           if (error) {
             console.error("[ListingSuccess] Error creating listing:", error);
           } else {
-            const listingData = data as any;
-            if (listingData?.id) {
-              createdListingId = listingData.id;
+            if (data?.id) {
+              createdListingId = data.id;
               if (listing.licensePlate?.trim()) {
                 const { error: sensitiveError } = await db
                   .from("listing_sensitive_data")
                   .insert({
-                    listing_id: listingData.id,
+                    listing_id: data.id,
                     license_plate: listing.licensePlate
                       .trim()
                       .toUpperCase(),

@@ -260,6 +260,31 @@ const ListingSuccess = () => {
   }, [loading, hasWaited, verifyState, isCreatingListing, listingCreated]);
 
   useEffect(() => {
+    if (verifyState !== "success" || isCreatingListing) return;
+
+    const cancelUnlock = scheduleGlobalInteractionUnlock("ListingSuccess stable success");
+    const interval = window.setInterval(() => {
+      const snapshot = getInteractionSnapshot();
+      const hasGlobalLock =
+        snapshot.bodyPointerEvents === "none" ||
+        snapshot.htmlPointerEvents === "none" ||
+        snapshot.rootPointerEvents === "none" ||
+        snapshot.rootInert;
+
+      if (hasGlobalLock) {
+        console.warn("[ListingSuccess] Global interaction lock detected after success; clearing", snapshot);
+        clearGlobalInteractionLocks("ListingSuccess recurring guard");
+      }
+      refreshDebugSnapshot("success guard", false);
+    }, 500);
+
+    return () => {
+      cancelUnlock();
+      window.clearInterval(interval);
+    };
+  }, [isCreatingListing, refreshDebugSnapshot, verifyState]);
+
+  useEffect(() => {
     const logDocumentTap = (event: PointerEvent | TouchEvent) => {
       const point = getPointFromEvent(event);
       const target = describeEventTarget(event.target);

@@ -160,7 +160,21 @@ const ListingSuccess = () => {
           }
         }
 
-        const currentUser = userRef.current;
+        // Resolve user reliably: AuthContext may not have hydrated yet right after
+        // a Stripe redirect, so fall back to supabase.auth.getUser() and poll briefly.
+        let currentUser = userRef.current;
+        if (!currentUser) {
+          for (let i = 0; i < 10; i += 1) {
+            const { data: authData } = await supabase.auth.getUser();
+            if (authData?.user) {
+              currentUser = authData.user as typeof currentUser;
+              break;
+            }
+            await new Promise((r) => setTimeout(r, 300));
+          }
+        }
+        console.log("[ListingSuccess][bg] resolved user:", currentUser?.id ?? "(none)");
+
         if (currentUser) {
           checkSubscription().catch((err) =>
             console.error("[ListingSuccess][bg] checkSubscription error:", err)

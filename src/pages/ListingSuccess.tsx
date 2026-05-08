@@ -85,6 +85,7 @@ const ListingSuccess = () => {
   const { checkSubscription } = useListingSubscription();
   const handledRef = useRef(false);
   const userRef = useRef(user);
+  const userLeavingSuccessRef = useRef(false);
 
   useEffect(() => {
     userRef.current = user;
@@ -92,18 +93,48 @@ const ListingSuccess = () => {
 
   const goToMyListings = useCallback(
     (source: string) => {
-      console.log(`${source} clicked`);
-      console.log("Navigating to /my-listings");
+      console.log("Go to My Listings clicked", source);
       clearGlobalInteractionLocks(`ListingSuccess ${source}`);
+      userLeavingSuccessRef.current = true;
       try {
         toast.dismiss();
       } catch {
         /* ignore */
       }
+      console.log("navigation attempted", { source, destination: "/my-listings" });
       navigate("/my-listings", { replace: true });
+
+      window.setTimeout(() => {
+        console.log("current path after navigation", {
+          source,
+          pathname: window.location.pathname,
+          search: window.location.search,
+        });
+        if (window.location.pathname.includes("listing-success")) {
+          console.warn("Navigation fallback forcing /my-listings", { source });
+          window.location.href = "/my-listings";
+        }
+      }, 300);
     },
     [navigate]
   );
+
+  useEffect(() => {
+    const logPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      const element = target instanceof Element ? target : null;
+      console.log("document pointerdown target", {
+        tag: element?.tagName?.toLowerCase() || "unknown",
+        id: element?.id || "",
+        className: element instanceof HTMLElement ? element.className : "",
+        text: element?.textContent?.trim().slice(0, 80) || "",
+        path: window.location.pathname,
+      });
+    };
+
+    document.addEventListener("pointerdown", logPointerDown, true);
+    return () => document.removeEventListener("pointerdown", logPointerDown, true);
+  }, []);
 
   useEffect(() => {
     if (handledRef.current) return;
@@ -130,6 +161,10 @@ const ListingSuccess = () => {
     if (!wasToastShown(toastKey)) {
       markToastShown(toastKey);
       window.setTimeout(() => {
+      if (userLeavingSuccessRef.current) {
+        console.log("Success toast skipped because user is leaving success page");
+        return;
+      }
         toast.dismiss();
         if (canceled) {
           toast.warning("Checkout was canceled.", { id: `ls-${toastKey}`, duration: 4000 });
@@ -160,6 +195,10 @@ const ListingSuccess = () => {
 
     const runBackground = async () => {
       try {
+        console.log("[ListingSuccess][bg] started", {
+          userLeavingSuccess: userLeavingSuccessRef.current,
+          path: window.location.pathname,
+        });
         if (sessionId) {
           try {
             const { data, error } = await supabase.functions.invoke(
@@ -294,7 +333,10 @@ const ListingSuccess = () => {
         localStorage.removeItem("listingCheckoutPending");
       } finally {
         clearGlobalInteractionLocks("ListingSuccess background complete");
-        console.log("Listing success flow completed safely");
+        console.log("Listing success flow completed safely", {
+          userLeavingSuccess: userLeavingSuccessRef.current,
+          path: window.location.pathname,
+        });
       }
     };
 
@@ -316,16 +358,19 @@ const ListingSuccess = () => {
         }}
       >
         <div className="max-w-2xl mx-auto">
-          <Card className="relative">
+          <Card className="relative pointer-events-auto">
             <button
               type="button"
               aria-label="Close"
-              onClick={() => goToMyListings("Close success")}
-              className="absolute top-3 right-3 z-10 inline-flex items-center justify-center h-9 w-9 rounded-full bg-muted/60 hover:bg-muted text-foreground transition-colors"
+              onClick={() => {
+                console.log("button onClick fired", "close");
+                goToMyListings("close");
+              }}
+              className="absolute top-3 right-3 z-10 inline-flex pointer-events-auto items-center justify-center h-9 w-9 rounded-full bg-muted/60 hover:bg-muted text-foreground transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
-            <CardContent className="py-10 px-6 sm:px-10 text-center space-y-6">
+            <CardContent className="py-10 px-6 sm:px-10 text-center space-y-6 pointer-events-auto">
               <div className="flex justify-center">
                 <div className="rounded-full bg-primary/10 p-5">
                   <CheckCircle2 className="h-14 w-14 text-primary" strokeWidth={2} />
@@ -341,9 +386,13 @@ const ListingSuccess = () => {
               </p>
               <div className="pt-2">
                 <Button
+                  type="button"
                   size="lg"
-                  className="w-full sm:w-auto sm:min-w-[260px] h-12 text-base"
-                  onClick={() => goToMyListings("See My Listings")}
+                  className="w-full sm:w-auto sm:min-w-[260px] h-12 text-base pointer-events-auto"
+                  onClick={() => {
+                    console.log("button onClick fired", "button");
+                    goToMyListings("button");
+                  }}
                 >
                   See My Listings
                 </Button>

@@ -469,11 +469,32 @@ const ListingSuccess = () => {
   // Minimal, non-blocking placeholder (no header/footer, no overlay layers).
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-6">
-      <div className="flex flex-col items-center gap-3 text-center">
+      <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
         <LoadingSpinner />
         <p className="text-sm text-muted-foreground">
           Finalizing your listing…
         </p>
+        <div className="w-full rounded-md border border-border bg-card p-4 text-left text-xs text-card-foreground shadow-sm">
+          <p className="font-semibold text-foreground">Listing success debug</p>
+          <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 break-words">
+            <dt className="text-muted-foreground">payment</dt>
+            <dd>{paymentStatus || "missing"}</dd>
+            <dt className="text-muted-foreground">session</dt>
+            <dd>{sessionId || "missing"}</dd>
+            <dt className="text-muted-foreground">listingId</dt>
+            <dd>{listingIdParam || "missing"}</dd>
+            <dt className="text-muted-foreground">timer started</dt>
+            <dd>{debugState.timerStarted ? "yes" : "no"}</dd>
+            <dt className="text-muted-foreground">fallback fired</dt>
+            <dd>{debugState.fallbackFired ? "yes" : "no"}</dd>
+            <dt className="text-muted-foreground">navigation attempted</dt>
+            <dd>{debugState.navigationAttempted ? "yes" : "no"}</dd>
+            <dt className="text-muted-foreground">current route</dt>
+            <dd>{debugState.currentRoute}</dd>
+            <dt className="text-muted-foreground">last branch</dt>
+            <dd>{debugState.exitReason}</dd>
+          </dl>
+        </div>
       </div>
     </div>
   );

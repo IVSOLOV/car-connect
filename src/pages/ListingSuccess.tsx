@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useListingSubscription } from "@/hooks/useListingSubscription";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,8 +13,8 @@ import {
 } from "@/lib/interactionReset";
 
 /**
- * Post-Stripe redirect handler. INVISIBLE to the user.
- * Always navigates to /my-listings first, then shows a toast.
+ * Visible Congratulations page after Stripe Checkout success.
+ * Single CTA: "See My Listings".
  * Listing creation is IDEMPOTENT keyed on Stripe checkout_session_id:
  *   - in-memory Set guard (per app session)
  *   - localStorage guard `listing_success_processed_<session_id>`
@@ -20,8 +22,9 @@ import {
  */
 
 const PROCESSED_KEY_PREFIX = "listing_success_processed_";
-// Module-level in-memory lock - survives component remounts within the same JS session.
+const TOAST_KEY_PREFIX = "listing_success_toast_";
 const processedSessionsInMemory = new Set<string>();
+const toastShownInMemory = new Set<string>();
 
 const isSessionProcessed = (sessionId: string | null): boolean => {
   if (!sessionId) return false;
@@ -38,6 +41,24 @@ const markSessionProcessed = (sessionId: string | null) => {
   processedSessionsInMemory.add(sessionId);
   try {
     localStorage.setItem(`${PROCESSED_KEY_PREFIX}${sessionId}`, String(Date.now()));
+  } catch {
+    /* ignore */
+  }
+};
+
+const wasToastShown = (key: string): boolean => {
+  if (toastShownInMemory.has(key)) return true;
+  try {
+    return localStorage.getItem(`${TOAST_KEY_PREFIX}${key}`) !== null;
+  } catch {
+    return false;
+  }
+};
+
+const markToastShown = (key: string) => {
+  toastShownInMemory.add(key);
+  try {
+    localStorage.setItem(`${TOAST_KEY_PREFIX}${key}`, String(Date.now()));
   } catch {
     /* ignore */
   }
@@ -92,50 +113,44 @@ const ListingSuccess = () => {
       sessionId: sessionId || "(none)",
     });
 
+    // Defensive: clear any leftover interaction locks so the page is fully tappable.
     clearGlobalInteractionLocks("ListingSuccess mount");
     scheduleGlobalInteractionUnlock("ListingSuccess mount");
 
     const canceled = paymentStatus === "canceled";
-    const alreadyProcessed = !canceled && isSessionProcessed(sessionId);
+    const toastKey = sessionId || (canceled ? "canceled" : "no-session");
 
-    if (alreadyProcessed) {
-      console.log(
-        "Duplicate checkout session detected — skipping listing creation",
-        { sessionId }
-      );
+    // Show toast exactly once per session_id (or canceled key).
+    if (!wasToastShown(toastKey)) {
+      markToastShown(toastKey);
+      // Defer to next tick so the page paints first.
+      window.setTimeout(() => {
+        // Dismiss any existing toasts to avoid stacking.
+        toast.dismiss();
+        if (canceled) {
+          toast.warning("Checkout was canceled.", { id: `ls-${toastKey}`, duration: 4000 });
+        } else {
+          toast.success(
+            "Congratulations! Your listing was submitted for review and your 30-day free trial has started.",
+            { id: `ls-${toastKey}`, duration: 4000 }
+          );
+        }
+        console.log("Success toast shown");
+      }, 80);
+    } else {
+      console.log("Toast already shown for this session — skipping");
     }
-
-    // ALWAYS navigate to /my-listings first.
-    navigate("/my-listings", { replace: true });
-    console.log("Navigated to /my-listings");
-
-    // Toast on next tick.
-    window.setTimeout(() => {
-      if (canceled) {
-        toast.warning("Checkout was canceled.", { duration: 4000 });
-      } else {
-        toast.success(
-          "Congratulations! Your listing was submitted for review and your 30-day free trial has started.",
-          { duration: 4000 }
-        );
-      }
-      console.log("Success toast shown");
-    }, 80);
-
-    scheduleGlobalInteractionUnlock("ListingSuccess post-navigate");
 
     if (canceled) {
       localStorage.removeItem("listingCheckoutPending");
       localStorage.removeItem("pendingListing");
-      console.log("Listing success flow completed safely");
       return;
     }
 
-    if (alreadyProcessed) {
-      // Clean any stale pending payload but DO NOT insert again.
+    if (isSessionProcessed(sessionId)) {
+      console.log("Duplicate checkout session detected — skipping listing creation", { sessionId });
       localStorage.removeItem("listingCheckoutPending");
       localStorage.removeItem("pendingListing");
-      console.log("Listing success flow completed safely (idempotent skip)");
       return;
     }
 
@@ -144,7 +159,6 @@ const ListingSuccess = () => {
 
     const runBackground = async () => {
       try {
-        // 1) Verify checkout (also persists subscription server-side).
         if (sessionId) {
           try {
             const { data, error } = await supabase.functions.invoke(
@@ -160,8 +174,7 @@ const ListingSuccess = () => {
           }
         }
 
-        // Resolve user reliably: AuthContext may not have hydrated yet right after
-        // a Stripe redirect, so fall back to supabase.auth.getUser() and poll briefly.
+        // Resolve user reliably (AuthContext may not have hydrated yet after redirect).
         let currentUser = userRef.current;
         if (!currentUser) {
           for (let i = 0; i < 10; i += 1) {
@@ -181,10 +194,8 @@ const ListingSuccess = () => {
           );
         }
 
-        // 2) Create the listing - idempotent on stripe_checkout_session_id.
         const pendingListingData = localStorage.getItem("pendingListing");
         if (currentUser && pendingListingData && sessionId) {
-          // DB-level pre-check.
           const { data: existing } = await db
             .from<{ id: string }>("listings")
             .select("id")
@@ -230,7 +241,6 @@ const ListingSuccess = () => {
               .single();
 
             if (error) {
-              // Unique violation (23505) = another insert won the race - that's fine.
               if (error.code === "23505") {
                 console.log(
                   "Duplicate checkout session detected — skipping listing creation",
@@ -294,7 +304,40 @@ const ListingSuccess = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return null;
+  const canceled = searchParams.get("payment") === "canceled";
+
+  return (
+    <main
+      className="min-h-screen bg-background flex items-center justify-center px-6 py-12"
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 3rem)",
+      }}
+    >
+      <div className="w-full max-w-md text-center space-y-6">
+        <div className="flex justify-center">
+          <div className="rounded-full bg-primary/10 p-5">
+            <CheckCircle2 className="h-16 w-16 text-primary" strokeWidth={2} />
+          </div>
+        </div>
+        <h1 className="text-3xl font-bold text-foreground">
+          {canceled ? "Checkout canceled" : "Congratulations!"}
+        </h1>
+        <p className="text-base leading-relaxed text-muted-foreground">
+          {canceled
+            ? "Your checkout was canceled. You can try again from My Listings."
+            : "Your listing was submitted for review and your 30-day free trial has started."}
+        </p>
+        <Button
+          size="lg"
+          className="w-full h-12 text-base"
+          onClick={() => navigate("/my-listings", { replace: true })}
+        >
+          See My Listings
+        </Button>
+      </div>
+    </main>
+  );
 };
 
 export default ListingSuccess;

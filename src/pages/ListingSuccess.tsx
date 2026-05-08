@@ -205,7 +205,9 @@ const ListingSuccess = () => {
           console.log("[ListingSuccess] Verification success");
           try {
             sessionStorage.setItem(SUCCESS_LOCK_KEY, sessionId);
-          } catch {}
+          } catch {
+            console.warn("[ListingSuccess] Unable to persist checkout success lock");
+          }
         } catch (err) {
           console.error("[ListingSuccess] Verification failed", err);
           finish("/my-listings", "warning");
@@ -215,7 +217,9 @@ const ListingSuccess = () => {
         // Legacy fallback path: trust the URL flag
         try {
           sessionStorage.setItem(SUCCESS_LOCK_KEY, "legacy");
-        } catch {}
+        } catch {
+          console.warn("[ListingSuccess] Unable to persist legacy checkout success lock");
+        }
       } else if (!sessionStorage.getItem(SUCCESS_LOCK_KEY)) {
         handleFailure("missing_status");
         return;
@@ -236,8 +240,8 @@ const ListingSuccess = () => {
           const listing = JSON.parse(pendingListingData);
           const uploadedImageUrls: string[] = listing.imageUrls || [];
 
-          const { data, error } = await supabase
-            .from("listings" as any)
+          const { data, error } = await db
+            .from<{ id: string }>("listings")
             .insert({
               user_id: user.id,
               year: parseInt(listing.year),
@@ -270,8 +274,8 @@ const ListingSuccess = () => {
             if (listingData?.id) {
               createdListingId = listingData.id;
               if (listing.licensePlate?.trim()) {
-                const { error: sensitiveError } = await supabase
-                  .from("listing_sensitive_data" as any)
+                const { error: sensitiveError } = await db
+                  .from("listing_sensitive_data")
                   .insert({
                     listing_id: listingData.id,
                     license_plate: listing.licensePlate
@@ -290,8 +294,8 @@ const ListingSuccess = () => {
             localStorage.removeItem("listingCheckoutPending");
             localStorage.removeItem("pendingListing");
 
-            const { data: profile } = await supabase
-              .from("profiles")
+            const { data: profile } = await db
+              .from<{ first_name: string | null; full_name: string | null }>("profiles")
               .select("first_name, full_name")
               .eq("user_id", user.id)
               .single();

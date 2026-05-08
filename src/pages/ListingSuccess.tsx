@@ -123,15 +123,6 @@ const ListingSuccess = () => {
   const userLeavingSuccessRef = useRef(false);
   const effectRunCountRef = useRef(0);
 
-  const [debugInfo, setDebugInfo] = useState({
-    path: typeof window !== "undefined" ? window.location.pathname : "(ssr)",
-    lastClick: "(none)",
-    pointerDown: "not fired" as "not fired" | "fired",
-    hardRedirect: "not called" as "not called" | "called",
-    navAttempted: "no" as "no" | "yes",
-    pathAfter: "(pending)",
-    fallbackTriggered: "n/a",
-  });
 
   useEffect(() => {
     userRef.current = user;

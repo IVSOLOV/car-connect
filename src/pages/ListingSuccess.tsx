@@ -31,6 +31,24 @@ type VerificationResult =
   | { status: "failed" }
   | { status: "timeout" };
 
+type DbError = { message?: string } | null;
+type InsertOnlyResult = { error: DbError };
+type InsertSelectResult<T> = { data: T | null; error: DbError };
+type InsertSelectBuilder<T> = PromiseLike<InsertOnlyResult> & {
+  select: (columns: string) => { single: () => Promise<InsertSelectResult<T>> };
+};
+type UntypedTable<T> = {
+  insert: (values: Record<string, unknown>) => InsertSelectBuilder<T>;
+  select: (columns: string) => {
+    eq: (column: string, value: string) => { single: () => Promise<InsertSelectResult<T>> };
+  };
+};
+type UntypedSupabase = {
+  from: <T = unknown>(table: string) => UntypedTable<T>;
+};
+
+const db = supabase as unknown as UntypedSupabase;
+
 const timeout = (ms: number) =>
   new Promise<{ status: "timeout" }>((resolve) => {
     window.setTimeout(() => resolve({ status: "timeout" }), ms);
@@ -57,7 +75,7 @@ const ListingSuccess = () => {
     clearGlobalInteractionLocks("ListingSuccess mount");
     const cancel = scheduleGlobalInteractionUnlock("ListingSuccess mount");
     return cancel;
-  }, []);
+  }, [paymentStatus, sessionId]);
 
   useEffect(() => {
     if (handledRef.current) return;

@@ -444,6 +444,48 @@ const ListingSuccess = () => {
     }
   }, [user, loading, hasWaited]);
 
+  const DebugPanel = () => (
+    <div className="fixed left-2 right-2 top-[calc(env(safe-area-inset-top,0px)+4.75rem)] z-[2147483646] max-h-[38vh] overflow-y-auto rounded-lg border border-border bg-background/95 p-3 text-left text-[11px] leading-tight text-foreground shadow-lg backdrop-blur sm:left-auto sm:right-4 sm:w-[26rem]">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <strong className="text-primary">ListingSuccess iOS Debug</strong>
+        <button type="button" className="rounded border border-border px-2 py-1 text-[10px]" onClick={() => refreshDebugSnapshot("manual refresh")}>Refresh</button>
+      </div>
+      <div>route: {debugSnapshot.route}</div>
+      <div>payment: {paymentStatus ?? "missing"}</div>
+      <div>detected: {detectedBlocker}</div>
+      <div>body.pe: {debugSnapshot.bodyPointerEvents}</div>
+      <div>html.pe: {debugSnapshot.htmlPointerEvents}</div>
+      <div>root.pe: {debugSnapshot.rootPointerEvents}</div>
+      <div>body.overflow: {debugSnapshot.bodyOverflow}</div>
+      <div>html.overflow: {debugSnapshot.htmlOverflow}</div>
+      <div>body.touchAction: {debugSnapshot.bodyTouchAction}</div>
+      <div>root.inert: {String(debugSnapshot.rootInert)}</div>
+      <div>states: {activeOverlayStates().join(" | ")}</div>
+      <div>last doc tap: {lastDocumentTap}</div>
+      <div>last button: {lastButtonClick}</div>
+      <div className="mt-1">element stack: {debugSnapshot.elementStack.join(" > ") || "none"}</div>
+      <div className="mt-1">active overlays:</div>
+      <ul className="list-disc pl-4">
+        {debugSnapshot.activeOverlays.length > 0 ? (
+          debugSnapshot.activeOverlays.slice(0, 6).map((overlay, index) => <li key={`${overlay}-${index}`}>{overlay}</li>)
+        ) : (
+          <li>none</li>
+        )}
+      </ul>
+    </div>
+  );
+
+  const EmergencyResetButton = () => (
+    <button
+      type="button"
+      onClick={emergencyReset}
+      onPointerDown={() => console.log("[ListingSuccess] Emergency Reset UI pointerdown")}
+      className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] left-1/2 z-[2147483647] -translate-x-1/2 rounded-full border border-border bg-destructive px-5 py-3 text-sm font-bold text-destructive-foreground shadow-lg"
+    >
+      Reset UI
+    </button>
+  );
+
   // Verifying with Stripe
   if (verifyState === "verifying") {
     return (

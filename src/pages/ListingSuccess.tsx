@@ -79,6 +79,28 @@ const ListingSuccess = () => {
   const paymentStatus = searchParams.get("payment");
   const sessionId = searchParams.get("session_id");
 
+  // Start as "verifying" if we have a session_id to check; otherwise trust the URL flag.
+  // If we previously locked success in this browser session, always start in success.
+  const [verifyState, setVerifyStateRaw] = useState<VerifyState>(() => {
+    if (readSuccessLock()) return "success";
+    if (paymentStatus === "canceled") return "failed";
+    if (paymentStatus === "success" && sessionId) return "verifying";
+    if (paymentStatus === "success" && !sessionId) {
+      writeSuccessLock(null);
+      return "success"; // legacy fallback
+    }
+    return "failed";
+  });
+
+  // Guarded setter: once success is reached, NEVER allow flipping back to failed/verifying.
+  const setVerifyState = (next: VerifyState) => {
+    setVerifyStateRaw((prev) => {
+      if (prev === "success") return "success";
+      if (next === "success") writeSuccessLock(sessionId);
+      return next;
+    });
+  };
+
   const activeOverlayStates = useCallback(() => [
     `verifyState=${verifyState}`,
     `loading=${loading}`,
@@ -131,28 +153,6 @@ const ListingSuccess = () => {
     logButtonClick("Emergency Reset UI clicked", "/");
     clearGlobalInteractionLocks("ListingSuccess emergency button");
     setTimeout(() => navigate("/"), 0);
-  };
-
-  // Start as "verifying" if we have a session_id to check; otherwise trust the URL flag.
-  // If we previously locked success in this browser session, always start in success.
-  const [verifyState, setVerifyStateRaw] = useState<VerifyState>(() => {
-    if (readSuccessLock()) return "success";
-    if (paymentStatus === "canceled") return "failed";
-    if (paymentStatus === "success" && sessionId) return "verifying";
-    if (paymentStatus === "success" && !sessionId) {
-      writeSuccessLock(null);
-      return "success"; // legacy fallback
-    }
-    return "failed";
-  });
-
-  // Guarded setter: once success is reached, NEVER allow flipping back to failed/verifying.
-  const setVerifyState = (next: VerifyState) => {
-    setVerifyStateRaw((prev) => {
-      if (prev === "success") return "success";
-      if (next === "success") writeSuccessLock(sessionId);
-      return next;
-    });
   };
 
   // Verify with Stripe that the session was actually paid before showing success.

@@ -48,6 +48,30 @@ const DeepLinkHandler = () => {
             });
             return;
           }
+
+          // Session-level guard: once a success URL has been handled in this app session,
+          // ignore replays (app resume, notification open, stale deep-link) UNLESS a new
+          // Stripe checkout session id is present that we haven't seen.
+          try {
+            const incomingSession =
+              url.searchParams.get("session_id") ||
+              url.searchParams.get("session") ||
+              url.searchParams.get("checkout_session");
+            const handled = sessionStorage.getItem("listingSuccessHandled") === "true";
+            const lastSession = sessionStorage.getItem("listingSuccessHandledSession");
+            if (handled && (!incomingSession || incomingSession === lastSession)) {
+              console.log("[DeepLink] Exit path: listing-success ignored — already handled this session", {
+                incomingSession,
+                lastSession,
+              });
+              return;
+            }
+            if (incomingSession) {
+              sessionStorage.setItem("listingSuccessHandledSession", incomingSession);
+            }
+          } catch {
+            /* ignore */
+          }
         }
 
         // Defensive: clear any leftover body/root locks across the native handoff.

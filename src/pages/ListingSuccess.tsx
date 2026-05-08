@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type * as React from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -123,15 +123,6 @@ const ListingSuccess = () => {
   const userLeavingSuccessRef = useRef(false);
   const effectRunCountRef = useRef(0);
 
-  const [debugInfo, setDebugInfo] = useState({
-    path: typeof window !== "undefined" ? window.location.pathname : "(ssr)",
-    lastClick: "(none)",
-    pointerDown: "not fired" as "not fired" | "fired",
-    hardRedirect: "not called" as "not called" | "called",
-    navAttempted: "no" as "no" | "yes",
-    pathAfter: "(pending)",
-    fallbackTriggered: "n/a",
-  });
 
   useEffect(() => {
     userRef.current = user;
@@ -162,16 +153,6 @@ const ListingSuccess = () => {
 
     console.log("Hard redirect to My Listings fired", source);
     snapshotEnv(`hard-redirect-${source}`);
-    setDebugInfo((d) => ({
-      ...d,
-      path: window.location.pathname,
-      lastClick: source,
-      pointerDown: "fired",
-      hardRedirect: "called",
-      navAttempted: "yes",
-      pathAfter: "window.location.replace('/my-listings') called",
-      fallbackTriggered: "not used",
-    }));
     userLeavingSuccessRef.current = true;
     try {
       toast.dismiss();
@@ -181,6 +162,7 @@ const ListingSuccess = () => {
 
     try {
       localStorage.setItem(MANUAL_EXIT_UNTIL_KEY, String(Date.now() + 10000));
+      sessionStorage.setItem("listingSuccessHandled", "true");
     } catch {
       /* ignore */
     }
@@ -470,16 +452,6 @@ const ListingSuccess = () => {
                 </Button>
               </div>
 
-              <div className="mt-6 rounded-md border border-dashed border-muted-foreground/40 bg-muted/30 p-3 text-left text-xs font-mono text-muted-foreground space-y-1">
-                <div className="font-semibold text-foreground">Debug</div>
-                <div>path: {debugInfo.path}</div>
-                <div>last click: {debugInfo.lastClick}</div>
-                <div>pointerDown fired: {debugInfo.pointerDown}</div>
-                <div>hard redirect called: {debugInfo.hardRedirect}</div>
-                <div>nav attempted: {debugInfo.navAttempted}</div>
-                <div>path after: {debugInfo.pathAfter}</div>
-                <div>fallback: {debugInfo.fallbackTriggered}</div>
-              </div>
             </CardContent>
           </Card>
         </div>

@@ -197,6 +197,12 @@ const ListingSuccess = () => {
   }, []);
 
   useEffect(() => {
+    effectRunCountRef.current += 1;
+    console.log("[ListingSuccess][effect:main] run #", effectRunCountRef.current, {
+      handled: handledRef.current,
+      path: window.location.pathname,
+      search: window.location.search,
+    });
     if (handledRef.current) return;
     handledRef.current = true;
 
@@ -206,7 +212,7 @@ const ListingSuccess = () => {
       searchParams.get("session") ||
       searchParams.get("checkout_session");
 
-    console.log("[ListingSuccess] Mounted", {
+    console.log("[ListingSuccess] Mounted (params)", {
       paymentStatus,
       hasSessionId: Boolean(sessionId),
       sessionId: sessionId || "(none)",

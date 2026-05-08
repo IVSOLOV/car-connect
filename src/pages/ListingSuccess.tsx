@@ -24,6 +24,35 @@ import LoadingSpinner from "@/components/LoadingSpinner";
  *    before and after navigation so iOS isn't left frozen.
  */
 const SUCCESS_LOCK_KEY = "listingCheckoutSuccessLock";
+const VERIFY_TIMEOUT_MS = 9000;
+
+type VerificationResult =
+  | { status: "success" }
+  | { status: "failed" }
+  | { status: "timeout" };
+
+type DbError = { message?: string } | null;
+type InsertOnlyResult = { error: DbError };
+type InsertSelectResult<T> = { data: T | null; error: DbError };
+type InsertSelectBuilder<T> = PromiseLike<InsertOnlyResult> & {
+  select: (columns: string) => { single: () => Promise<InsertSelectResult<T>> };
+};
+type UntypedTable<T> = {
+  insert: (values: Record<string, unknown>) => InsertSelectBuilder<T>;
+  select: (columns: string) => {
+    eq: (column: string, value: string) => { single: () => Promise<InsertSelectResult<T>> };
+  };
+};
+type UntypedSupabase = {
+  from: <T = unknown>(table: string) => UntypedTable<T>;
+};
+
+const db = supabase as unknown as UntypedSupabase;
+
+const timeout = (ms: number) =>
+  new Promise<{ status: "timeout" }>((resolve) => {
+    window.setTimeout(() => resolve({ status: "timeout" }), ms);
+  });
 
 const ListingSuccess = () => {
   const navigate = useNavigate();
@@ -37,7 +66,7 @@ const ListingSuccess = () => {
 
   // Always clear interaction locks the moment this route mounts.
   useEffect(() => {
-    console.log("[ListingSuccess] Stripe success deep link received", {
+    console.log("[ListingSuccess] Listing success handler mounted", {
       pathname: window.location.pathname,
       search: window.location.search,
       paymentStatus,
@@ -46,46 +75,77 @@ const ListingSuccess = () => {
     clearGlobalInteractionLocks("ListingSuccess mount");
     const cancel = scheduleGlobalInteractionUnlock("ListingSuccess mount");
     return cancel;
-  }, []);
+  }, [paymentStatus, sessionId]);
 
   useEffect(() => {
     if (handledRef.current) return;
     handledRef.current = true;
 
     let cancelled = false;
+    let completed = false;
+    let fallbackTimer: number | undefined;
 
-    const finish = (destination: string) => {
-      if (cancelled) return;
-      console.log("[ListingSuccess] Navigating to", destination);
+    const finish = (
+      destination: string,
+      variant: "success" | "warning" = "success",
+    ) => {
+      if (cancelled || completed) return;
+      completed = true;
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
+      console.log("[ListingSuccess] Navigating to listing or My Listings", {
+        destination,
+        variant,
+      });
 
       // Clear locks BEFORE navigation
       clearGlobalInteractionLocks("ListingSuccess pre-navigate");
 
       navigate(destination, { replace: true });
+      console.log("[ListingSuccess] Loader unmounted");
 
       // Clear locks AFTER navigation (next tick + delayed sweeps)
       scheduleGlobalInteractionUnlock("ListingSuccess post-navigate");
 
       // Non-blocking toast banner for 4s
-      console.log("[ListingSuccess] Success toast shown");
-      toast.success(
-        "Success! Your listing has been submitted for review and your 30-day free trial has started.",
-        {
-          duration: 4000,
-          onAutoClose: () => {
-            console.log("[ListingSuccess] Success toast dismissed");
-            clearGlobalInteractionLocks("ListingSuccess toast dismissed");
-          },
-          onDismiss: () => {
-            console.log("[ListingSuccess] Success toast dismissed (manual)");
-            clearGlobalInteractionLocks("ListingSuccess toast dismissed");
-          },
-        }
-      );
+      if (variant === "success") {
+        console.log("[ListingSuccess] Success toast shown");
+        toast.success(
+          "Success! Your listing has been submitted for review and your 30-day free trial has started.",
+          {
+            duration: 4000,
+            onAutoClose: () => {
+              console.log("[ListingSuccess] Success toast dismissed");
+              clearGlobalInteractionLocks("ListingSuccess toast dismissed");
+            },
+            onDismiss: () => {
+              console.log("[ListingSuccess] Success toast dismissed (manual)");
+              clearGlobalInteractionLocks("ListingSuccess toast dismissed");
+            },
+          }
+        );
+      } else {
+        console.log("[ListingSuccess] Warning toast shown");
+        toast.warning(
+          "Payment completed. Your listing is being finalized and should appear shortly.",
+          {
+            duration: 4000,
+            onAutoClose: () => {
+              console.log("[ListingSuccess] Warning toast dismissed");
+              clearGlobalInteractionLocks("ListingSuccess warning toast dismissed");
+            },
+            onDismiss: () => {
+              console.log("[ListingSuccess] Warning toast dismissed (manual)");
+              clearGlobalInteractionLocks("ListingSuccess warning toast dismissed");
+            },
+          }
+        );
+      }
     };
 
     const handleFailure = (reason: string) => {
-      if (cancelled) return;
+      if (cancelled || completed) return;
+      completed = true;
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
       console.warn("[ListingSuccess] Checkout failed/canceled:", reason);
       localStorage.removeItem("listingCheckoutPending");
       localStorage.removeItem("pendingListing");
@@ -97,10 +157,17 @@ const ListingSuccess = () => {
         { duration: 4000 }
       );
       navigate("/create-listing", { replace: true });
+      console.log("[ListingSuccess] Loader unmounted");
       scheduleGlobalInteractionUnlock("ListingSuccess failure post-navigate");
     };
 
     const run = async () => {
+      fallbackTimer = window.setTimeout(() => {
+        console.warn("[ListingSuccess] Verification timeout fallback triggered");
+        clearGlobalInteractionLocks("ListingSuccess hard timeout fallback");
+        finish("/my-listings", "warning");
+      }, VERIFY_TIMEOUT_MS);
+
       // Handle explicit failure/cancel
       if (paymentStatus === "canceled") {
         handleFailure("canceled");
@@ -110,29 +177,49 @@ const ListingSuccess = () => {
       // Verify Stripe session if we have one
       if (paymentStatus === "success" && sessionId) {
         try {
-          const { data, error } = await supabase.functions.invoke(
-            "verify-listing-checkout",
-            { body: { session_id: sessionId } }
-          );
+          console.log("[ListingSuccess] Starting checkout verification");
+          const verificationResult = await Promise.race<VerificationResult>([
+            supabase.functions
+              .invoke("verify-listing-checkout", { body: { session_id: sessionId } })
+              .then(({ data, error }) => {
+                if (error) throw error;
+                return data?.paid ? { status: "success" as const } : { status: "failed" as const };
+              })
+              .catch((err) => {
+                console.error("[ListingSuccess] Verification failed", err);
+                return { status: "failed" as const };
+              }),
+            timeout(VERIFY_TIMEOUT_MS - 500),
+          ]);
           if (cancelled) return;
-          if (error) throw error;
-          if (!data?.paid) {
-            handleFailure("not_paid");
+          if (verificationResult.status === "timeout") {
+            console.warn("[ListingSuccess] Verification timeout fallback triggered");
+            finish("/my-listings", "warning");
             return;
           }
+          if (verificationResult.status === "failed") {
+            console.warn("[ListingSuccess] Verification failed");
+            finish("/my-listings", "warning");
+            return;
+          }
+          console.log("[ListingSuccess] Verification success");
           try {
             sessionStorage.setItem(SUCCESS_LOCK_KEY, sessionId);
-          } catch {}
+          } catch {
+            console.warn("[ListingSuccess] Unable to persist checkout success lock");
+          }
         } catch (err) {
-          console.error("[ListingSuccess] Verification error:", err);
-          handleFailure("verification_error");
+          console.error("[ListingSuccess] Verification failed", err);
+          finish("/my-listings", "warning");
           return;
         }
       } else if (paymentStatus === "success" && !sessionId) {
         // Legacy fallback path: trust the URL flag
         try {
           sessionStorage.setItem(SUCCESS_LOCK_KEY, "legacy");
-        } catch {}
+        } catch {
+          console.warn("[ListingSuccess] Unable to persist legacy checkout success lock");
+        }
       } else if (!sessionStorage.getItem(SUCCESS_LOCK_KEY)) {
         handleFailure("missing_status");
         return;
@@ -153,8 +240,8 @@ const ListingSuccess = () => {
           const listing = JSON.parse(pendingListingData);
           const uploadedImageUrls: string[] = listing.imageUrls || [];
 
-          const { data, error } = await supabase
-            .from("listings" as any)
+          const { data, error } = await db
+            .from<{ id: string }>("listings")
             .insert({
               user_id: user.id,
               year: parseInt(listing.year),
@@ -183,14 +270,13 @@ const ListingSuccess = () => {
           if (error) {
             console.error("[ListingSuccess] Error creating listing:", error);
           } else {
-            const listingData = data as any;
-            if (listingData?.id) {
-              createdListingId = listingData.id;
+            if (data?.id) {
+              createdListingId = data.id;
               if (listing.licensePlate?.trim()) {
-                const { error: sensitiveError } = await supabase
-                  .from("listing_sensitive_data" as any)
+                const { error: sensitiveError } = await db
+                  .from("listing_sensitive_data")
                   .insert({
-                    listing_id: listingData.id,
+                    listing_id: data.id,
                     license_plate: listing.licensePlate
                       .trim()
                       .toUpperCase(),
@@ -207,8 +293,8 @@ const ListingSuccess = () => {
             localStorage.removeItem("listingCheckoutPending");
             localStorage.removeItem("pendingListing");
 
-            const { data: profile } = await supabase
-              .from("profiles")
+            const { data: profile } = await db
+              .from<{ first_name: string | null; full_name: string | null }>("profiles")
               .select("first_name, full_name")
               .eq("user_id", user.id)
               .single();
@@ -238,10 +324,12 @@ const ListingSuccess = () => {
       // Cleanup any stale flags
       localStorage.removeItem("listingCheckoutPending");
 
+      if (completed) return;
+
       const destination = createdListingId
         ? `/listing/${createdListingId}`
         : "/my-listings";
-      finish(destination);
+      finish(destination, createdListingId ? "success" : "warning");
     };
 
     // Wait briefly for auth to restore from the Stripe redirect handoff,
@@ -251,6 +339,8 @@ const ListingSuccess = () => {
     return () => {
       cancelled = true;
       window.clearTimeout(startDelay);
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
+      console.log("[ListingSuccess] Loader unmounted");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);

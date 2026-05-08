@@ -76,14 +76,16 @@ const resetGlobalInteractionLocks = (source: string) => {
   targets.forEach((target) => {
     target.style.removeProperty("pointer-events");
     target.style.removeProperty("touch-action");
+    target.style.removeProperty("overflow");
     target.removeAttribute("inert");
     if ("inert" in target) {
       (target as HTMLElement & { inert: boolean }).inert = false;
     }
   });
 
-  document.body.style.overflow = "";
-  document.documentElement.style.overflow = "";
+  document.body.style.removeProperty("overflow");
+  document.documentElement.style.removeProperty("overflow");
+  root?.style.removeProperty("overflow");
 
   console.log(`[InteractionReset] ${source}`, getInteractionSnapshot());
 };

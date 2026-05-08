@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type React from "react";
+import type * as React from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { CheckCircle2, X } from "lucide-react";

@@ -60,6 +60,24 @@ const getPointFromEvent = (event: PointerEvent | TouchEvent) => {
   return { x: Math.round((event as PointerEvent).clientX), y: Math.round((event as PointerEvent).clientY) };
 };
 
+const diagnoseInteractionBlocker = (
+  snapshot: ReturnType<typeof getInteractionSnapshot>,
+  verifyState: VerifyState,
+  isCreatingListing: boolean,
+  listingCreated: boolean,
+) => {
+  const bodyLocked = snapshot.bodyPointerEvents === "none";
+  const htmlLocked = snapshot.htmlPointerEvents === "none";
+  const rootLocked = snapshot.rootPointerEvents === "none" || snapshot.rootInert;
+  const reactOverlay = verifyState === "verifying" || (isCreatingListing && !listingCreated);
+  const fixedBlocker = snapshot.activeOverlays.find((overlay) => overlay.includes("fixed") && overlay.includes("pe=auto"));
+
+  if (bodyLocked || htmlLocked || rootLocked) return "body/html/root lock";
+  if (reactOverlay) return "React loading overlay";
+  if (fixedBlocker) return "invisible overlay/CSS layer possible";
+  return "none detected; if clicks log but no route changes, navigation handler";
+};
+
 const ListingSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -73,6 +91,7 @@ const ListingSuccess = () => {
   const [debugSnapshot, setDebugSnapshot] = useState(() => getInteractionSnapshot());
   const [lastDocumentTap, setLastDocumentTap] = useState("none");
   const [lastButtonClick, setLastButtonClick] = useState("none");
+  const [detectedBlocker, setDetectedBlocker] = useState("checking");
   const creationStartedRef = useRef(false);
   const overlayVisibleRef = useRef(false);
 
@@ -111,17 +130,20 @@ const ListingSuccess = () => {
 
   const refreshDebugSnapshot = useCallback((source: string, shouldLog = true) => {
     const snapshot = getInteractionSnapshot();
+    const blocker = diagnoseInteractionBlocker(snapshot, verifyState, isCreatingListing, listingCreated);
     setDebugSnapshot(snapshot);
+    setDetectedBlocker(blocker);
     if (shouldLog) {
       console.log(`[ListingSuccess][Debug] ${source}`, {
         paymentStatus,
         sessionId: sessionId ? "present" : "missing",
+        detectedBlocker: blocker,
         activeOverlayStates: activeOverlayStates(),
         ...snapshot,
       });
     }
     return snapshot;
-  }, [activeOverlayStates, paymentStatus, sessionId]);
+  }, [activeOverlayStates, isCreatingListing, listingCreated, paymentStatus, sessionId, verifyState]);
 
   const logButtonClick = useCallback((label: string, destination?: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -236,6 +258,31 @@ const ListingSuccess = () => {
       scheduleGlobalInteractionUnlock("ListingSuccess success ready");
     }
   }, [loading, hasWaited, verifyState, isCreatingListing, listingCreated]);
+
+  useEffect(() => {
+    if (verifyState !== "success" || isCreatingListing) return;
+
+    const cancelUnlock = scheduleGlobalInteractionUnlock("ListingSuccess stable success");
+    const interval = window.setInterval(() => {
+      const snapshot = getInteractionSnapshot();
+      const hasGlobalLock =
+        snapshot.bodyPointerEvents === "none" ||
+        snapshot.htmlPointerEvents === "none" ||
+        snapshot.rootPointerEvents === "none" ||
+        snapshot.rootInert;
+
+      if (hasGlobalLock) {
+        console.warn("[ListingSuccess] Global interaction lock detected after success; clearing", snapshot);
+        clearGlobalInteractionLocks("ListingSuccess recurring guard");
+      }
+      refreshDebugSnapshot("success guard", false);
+    }, 500);
+
+    return () => {
+      cancelUnlock();
+      window.clearInterval(interval);
+    };
+  }, [isCreatingListing, refreshDebugSnapshot, verifyState]);
 
   useEffect(() => {
     const logDocumentTap = (event: PointerEvent | TouchEvent) => {
@@ -397,10 +444,54 @@ const ListingSuccess = () => {
     }
   }, [user, loading, hasWaited]);
 
+  const DebugPanel = () => (
+    <div className="pointer-events-auto fixed left-2 right-2 top-[calc(env(safe-area-inset-top,0px)+4.75rem)] z-[2147483646] max-h-[38vh] overflow-y-auto rounded-lg border border-border bg-background/95 p-3 text-left text-[11px] leading-tight text-foreground shadow-lg backdrop-blur sm:left-auto sm:right-4 sm:w-[26rem]">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <strong className="text-primary">ListingSuccess iOS Debug</strong>
+        <button type="button" className="rounded border border-border px-2 py-1 text-[10px]" onClick={() => refreshDebugSnapshot("manual refresh")}>Refresh</button>
+      </div>
+      <div>route: {debugSnapshot.route}</div>
+      <div>payment: {paymentStatus ?? "missing"}</div>
+      <div>detected: {detectedBlocker}</div>
+      <div>body.pe: {debugSnapshot.bodyPointerEvents}</div>
+      <div>html.pe: {debugSnapshot.htmlPointerEvents}</div>
+      <div>root.pe: {debugSnapshot.rootPointerEvents}</div>
+      <div>body.overflow: {debugSnapshot.bodyOverflow}</div>
+      <div>html.overflow: {debugSnapshot.htmlOverflow}</div>
+      <div>body.touchAction: {debugSnapshot.bodyTouchAction}</div>
+      <div>root.inert: {String(debugSnapshot.rootInert)}</div>
+      <div>states: {activeOverlayStates().join(" | ")}</div>
+      <div>last doc tap: {lastDocumentTap}</div>
+      <div>last button: {lastButtonClick}</div>
+      <div className="mt-1">element stack: {debugSnapshot.elementStack.join(" > ") || "none"}</div>
+      <div className="mt-1">active overlays:</div>
+      <ul className="list-disc pl-4">
+        {debugSnapshot.activeOverlays.length > 0 ? (
+          debugSnapshot.activeOverlays.slice(0, 6).map((overlay, index) => <li key={`${overlay}-${index}`}>{overlay}</li>)
+        ) : (
+          <li>none</li>
+        )}
+      </ul>
+    </div>
+  );
+
+  const EmergencyResetButton = () => (
+    <button
+      type="button"
+      onClick={emergencyReset}
+      onPointerDown={() => console.log("[ListingSuccess] Emergency Reset UI pointerdown")}
+      className="pointer-events-auto fixed bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] left-1/2 z-[2147483647] -translate-x-1/2 rounded-full border border-border bg-destructive px-5 py-3 text-sm font-bold text-destructive-foreground shadow-lg"
+    >
+      Reset UI
+    </button>
+  );
+
   // Verifying with Stripe
   if (verifyState === "verifying") {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+      <div className="pointer-events-auto min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <DebugPanel />
+        <EmergencyResetButton />
         <LoadingSpinner />
         <p className="text-muted-foreground animate-pulse">Confirming your payment...</p>
       </div>
@@ -411,7 +502,9 @@ const ListingSuccess = () => {
   // Once creation completes (success or error), fall through so buttons work.
   if (isCreatingListing && !listingCreated) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+      <div className="pointer-events-auto min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <DebugPanel />
+        <EmergencyResetButton />
         <LoadingSpinner />
         <p className="text-muted-foreground animate-pulse">Creating your listing...</p>
       </div>
@@ -421,9 +514,11 @@ const ListingSuccess = () => {
   // Payment failed / canceled / unverified
   if (verifyState === "failed") {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="pointer-events-auto min-h-screen bg-background flex flex-col">
         <SEO title="Payment Issue | DiRent" description="Payment was not completed" />
         <Header />
+        <DebugPanel />
+        <EmergencyResetButton />
         <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
           <div className="max-w-lg mx-auto">
             <Card className="border-destructive/20 bg-card/50 backdrop-blur">
@@ -443,7 +538,10 @@ const ListingSuccess = () => {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <Button
-                    onClick={() => navigate("/create-listing")}
+                    onClick={() => {
+                      logButtonClick("Back to Listing clicked", "/create-listing");
+                      navigate("/create-listing");
+                    }}
                     className="flex-1 gap-2"
                   >
                     <Car className="h-4 w-4" />
@@ -451,7 +549,10 @@ const ListingSuccess = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => {
+                      logButtonClick("Browse Cars clicked", "/dashboard");
+                      navigate("/dashboard");
+                    }}
                     className="flex-1"
                   >
                     Browse Cars
@@ -467,9 +568,11 @@ const ListingSuccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="pointer-events-auto min-h-screen bg-background flex flex-col">
       <SEO title="Success! | DiRent" description="Your subscription is active" />
       <Header />
+      <DebugPanel />
+      <EmergencyResetButton />
 
       <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
         <div className="max-w-lg mx-auto">

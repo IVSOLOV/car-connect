@@ -209,6 +209,7 @@ export type Database = {
           original_weekly_price: number | null
           rejection_reason: string | null
           state: string
+          stripe_checkout_session_id: string | null
           title_status: string
           updated_at: string
           user_id: string
@@ -235,6 +236,7 @@ export type Database = {
           original_weekly_price?: number | null
           rejection_reason?: string | null
           state: string
+          stripe_checkout_session_id?: string | null
           title_status?: string
           updated_at?: string
           user_id: string
@@ -261,6 +263,7 @@ export type Database = {
           original_weekly_price?: number | null
           rejection_reason?: string | null
           state?: string
+          stripe_checkout_session_id?: string | null
           title_status?: string
           updated_at?: string
           user_id?: string

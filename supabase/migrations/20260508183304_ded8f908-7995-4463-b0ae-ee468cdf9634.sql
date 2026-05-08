@@ -1,0 +1,2 @@
+ALTER TABLE public.listings ADD COLUMN IF NOT EXISTS stripe_checkout_session_id text;
+CREATE UNIQUE INDEX IF NOT EXISTS listings_stripe_checkout_session_id_key ON public.listings (stripe_checkout_session_id) WHERE stripe_checkout_session_id IS NOT NULL;

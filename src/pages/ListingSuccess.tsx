@@ -91,6 +91,7 @@ const ListingSuccess = () => {
   const [debugSnapshot, setDebugSnapshot] = useState(() => getInteractionSnapshot());
   const [lastDocumentTap, setLastDocumentTap] = useState("none");
   const [lastButtonClick, setLastButtonClick] = useState("none");
+  const [detectedBlocker, setDetectedBlocker] = useState("checking");
   const creationStartedRef = useRef(false);
   const overlayVisibleRef = useRef(false);
 
@@ -129,17 +130,20 @@ const ListingSuccess = () => {
 
   const refreshDebugSnapshot = useCallback((source: string, shouldLog = true) => {
     const snapshot = getInteractionSnapshot();
+    const blocker = diagnoseInteractionBlocker(snapshot, verifyState, isCreatingListing, listingCreated);
     setDebugSnapshot(snapshot);
+    setDetectedBlocker(blocker);
     if (shouldLog) {
       console.log(`[ListingSuccess][Debug] ${source}`, {
         paymentStatus,
         sessionId: sessionId ? "present" : "missing",
+        detectedBlocker: blocker,
         activeOverlayStates: activeOverlayStates(),
         ...snapshot,
       });
     }
     return snapshot;
-  }, [activeOverlayStates, paymentStatus, sessionId]);
+  }, [activeOverlayStates, isCreatingListing, listingCreated, paymentStatus, sessionId, verifyState]);
 
   const logButtonClick = useCallback((label: string, destination?: string) => {
     const timestamp = new Date().toLocaleTimeString();

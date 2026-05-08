@@ -160,6 +160,7 @@ const ListingSuccess = () => {
       navigate("/create-listing", { replace: true });
       console.log("[ListingSuccess] Loader unmounted");
       scheduleGlobalInteractionUnlock("ListingSuccess failure post-navigate");
+      console.log("Listing success flow completed safely");
     };
 
     const run = async () => {

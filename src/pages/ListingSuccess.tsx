@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +25,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
  */
 const SUCCESS_LOCK_KEY = "listingCheckoutSuccessLock";
 const VERIFY_TIMEOUT_MS = 9000;
+const MISSING_PARAMS_TIMEOUT_MS = 3000;
 
 type VerificationResult =
   | { status: "success" }
@@ -60,9 +61,31 @@ const ListingSuccess = () => {
   const { user } = useAuth();
   const { checkSubscription } = useListingSubscription();
   const handledRef = useRef(false);
+  const userRef = useRef(user);
 
   const paymentStatus = searchParams.get("payment");
-  const sessionId = searchParams.get("session_id");
+  const sessionId = searchParams.get("session_id") || searchParams.get("session") || searchParams.get("checkout_session");
+  const listingIdParam = searchParams.get("listingId") || searchParams.get("listing_id");
+  const [debugState, setDebugState] = useState({
+    timerStarted: false,
+    fallbackFired: false,
+    navigationAttempted: false,
+    currentRoute: typeof window === "undefined" ? "unknown" : `${window.location.pathname}${window.location.search}`,
+    exitReason: "mounted",
+  });
+
+  useEffect(() => {
+    userRef.current = user;
+    console.log("[ListingSuccess] Auth state observed", { hasUser: Boolean(user?.id) });
+  }, [user]);
+
+  const updateDebug = (patch: Partial<typeof debugState>) => {
+    setDebugState((current) => ({
+      ...current,
+      ...patch,
+      currentRoute: typeof window === "undefined" ? current.currentRoute : `${window.location.pathname}${window.location.search}`,
+    }));
+  };
 
   // Always clear interaction locks the moment this route mounts.
   useEffect(() => {

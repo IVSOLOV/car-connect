@@ -8,7 +8,10 @@ const DeepLinkHandler = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
+    if (!Capacitor.isNativePlatform()) {
+      console.log("[DeepLink] Exit path: not running on native platform");
+      return;
+    }
 
     let lastHandledUrl: string | null = null;
     let lastHandledAt = 0;
@@ -21,7 +24,7 @@ const DeepLinkHandler = () => {
       // deduping, ListingSuccess remounts repeatedly and can leave overlay state stuck.
       const now = Date.now();
       if (incomingUrl === lastHandledUrl && now - lastHandledAt < 2000) {
-        console.log("[DeepLink] Ignoring duplicate URL within debounce window");
+        console.log("[DeepLink] Exit path: ignoring duplicate URL within debounce window");
         return;
       }
       lastHandledUrl = incomingUrl;
@@ -61,7 +64,14 @@ const DeepLinkHandler = () => {
 
     App.getLaunchUrl()
       .then((launchData) => {
-        if (!isActive || !launchData?.url) return;
+        if (!isActive) {
+          console.log("[DeepLink] Exit path: launch URL ignored because handler inactive");
+          return;
+        }
+        if (!launchData?.url) {
+          console.log("[DeepLink] Exit path: no launch URL available");
+          return;
+        }
         navigateFromUrl(launchData.url);
       })
       .catch((error) => {
@@ -70,6 +80,7 @@ const DeepLinkHandler = () => {
 
     App.addListener("appUrlOpen", handleAppUrlOpen).then((listener) => {
       if (!isActive) {
+        console.log("[DeepLink] Exit path: removing listener because handler inactive");
         void listener.remove();
         return;
       }
@@ -79,6 +90,7 @@ const DeepLinkHandler = () => {
 
     return () => {
       isActive = false;
+      console.log("[DeepLink] Exit path: cleanup removing URL listener");
       void urlOpenListener?.remove();
     };
   }, [navigate]);

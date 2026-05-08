@@ -470,16 +470,6 @@ const ListingSuccess = () => {
                 </Button>
               </div>
 
-              <div className="mt-6 rounded-md border border-dashed border-muted-foreground/40 bg-muted/30 p-3 text-left text-xs font-mono text-muted-foreground space-y-1">
-                <div className="font-semibold text-foreground">Debug</div>
-                <div>path: {debugInfo.path}</div>
-                <div>last click: {debugInfo.lastClick}</div>
-                <div>pointerDown fired: {debugInfo.pointerDown}</div>
-                <div>hard redirect called: {debugInfo.hardRedirect}</div>
-                <div>nav attempted: {debugInfo.navAttempted}</div>
-                <div>path after: {debugInfo.pathAfter}</div>
-                <div>fallback: {debugInfo.fallbackTriggered}</div>
-              </div>
             </CardContent>
           </Card>
         </div>

@@ -55,6 +55,9 @@ const timeout = (ms: number) =>
     window.setTimeout(() => resolve({ status: "timeout" }), ms);
   });
 
+const getCurrentRoute = () =>
+  typeof window === "undefined" ? "unknown" : `${window.location.pathname}${window.location.search}`;
+
 const ListingSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -70,7 +73,7 @@ const ListingSuccess = () => {
     timerStarted: false,
     fallbackFired: false,
     navigationAttempted: false,
-    currentRoute: typeof window === "undefined" ? "unknown" : `${window.location.pathname}${window.location.search}`,
+    currentRoute: getCurrentRoute(),
     exitReason: "mounted",
   });
 
@@ -83,7 +86,7 @@ const ListingSuccess = () => {
     setDebugState((current) => ({
       ...current,
       ...patch,
-      currentRoute: typeof window === "undefined" ? current.currentRoute : `${window.location.pathname}${window.location.search}`,
+      currentRoute: getCurrentRoute(),
     }));
   };
 

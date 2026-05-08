@@ -64,12 +64,16 @@ const ListingSuccess = () => {
     handledRef.current = true;
 
     let cancelled = false;
+    let completed = false;
+    let fallbackTimer: number | undefined;
 
     const finish = (
       destination: string,
       variant: "success" | "warning" = "success",
     ) => {
-      if (cancelled) return;
+      if (cancelled || completed) return;
+      completed = true;
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
       console.log("[ListingSuccess] Navigating to listing or My Listings", {
         destination,
         variant,
@@ -137,6 +141,12 @@ const ListingSuccess = () => {
     };
 
     const run = async () => {
+      fallbackTimer = window.setTimeout(() => {
+        console.warn("[ListingSuccess] Verification timeout fallback triggered");
+        clearGlobalInteractionLocks("ListingSuccess hard timeout fallback");
+        finish("/my-listings", "warning");
+      }, 8800);
+
       // Handle explicit failure/cancel
       if (paymentStatus === "canceled") {
         handleFailure("canceled");
@@ -146,22 +156,38 @@ const ListingSuccess = () => {
       // Verify Stripe session if we have one
       if (paymentStatus === "success" && sessionId) {
         try {
-          const { data, error } = await supabase.functions.invoke(
-            "verify-listing-checkout",
-            { body: { session_id: sessionId } }
-          );
+          console.log("[ListingSuccess] Starting checkout verification");
+          const verificationResult = await Promise.race<VerificationResult>([
+            supabase.functions
+              .invoke("verify-listing-checkout", { body: { session_id: sessionId } })
+              .then(({ data, error }) => {
+                if (error) throw error;
+                return data?.paid ? { status: "success" as const } : { status: "failed" as const };
+              })
+              .catch((err) => {
+                console.error("[ListingSuccess] Verification failed", err);
+                return { status: "failed" as const };
+              }),
+            timeout(8500),
+          ]);
           if (cancelled) return;
-          if (error) throw error;
-          if (!data?.paid) {
-            handleFailure("not_paid");
+          if (verificationResult.status === "timeout") {
+            console.warn("[ListingSuccess] Verification timeout fallback triggered");
+            finish("/my-listings", "warning");
             return;
           }
+          if (verificationResult.status === "failed") {
+            console.warn("[ListingSuccess] Verification failed");
+            finish("/my-listings", "warning");
+            return;
+          }
+          console.log("[ListingSuccess] Verification success");
           try {
             sessionStorage.setItem(SUCCESS_LOCK_KEY, sessionId);
           } catch {}
         } catch (err) {
-          console.error("[ListingSuccess] Verification error:", err);
-          handleFailure("verification_error");
+          console.error("[ListingSuccess] Verification failed", err);
+          finish("/my-listings", "warning");
           return;
         }
       } else if (paymentStatus === "success" && !sessionId) {
@@ -274,10 +300,12 @@ const ListingSuccess = () => {
       // Cleanup any stale flags
       localStorage.removeItem("listingCheckoutPending");
 
+      if (completed) return;
+
       const destination = createdListingId
         ? `/listing/${createdListingId}`
         : "/my-listings";
-      finish(destination);
+      finish(destination, createdListingId ? "success" : "warning");
     };
 
     // Wait briefly for auth to restore from the Stripe redirect handoff,
@@ -287,6 +315,8 @@ const ListingSuccess = () => {
     return () => {
       cancelled = true;
       window.clearTimeout(startDelay);
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
+      console.log("[ListingSuccess] Loader unmounted");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);

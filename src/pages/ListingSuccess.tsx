@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, Car, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { sendNotificationEmail } from "@/lib/notifications";
-import { scheduleGlobalInteractionUnlock } from "@/lib/interactionReset";
+import { clearGlobalInteractionLocks, getInteractionSnapshot, scheduleGlobalInteractionUnlock } from "@/lib/interactionReset";
 
 type VerifyState = "verifying" | "success" | "failed";
 
@@ -37,6 +37,29 @@ const writeSuccessLock = (sessionId: string | null) => {
   }
 };
 
+const describeEventTarget = (target: EventTarget | null) => {
+  if (!(target instanceof Element)) return String(target);
+  const id = target.id ? `#${target.id}` : "";
+  const classes = target instanceof HTMLElement && target.className
+    ? `.${String(target.className).trim().split(/\s+/).slice(0, 3).join(".")}`
+    : "";
+  const role = target.getAttribute("role") ? `[role=${target.getAttribute("role")}]` : "";
+  const state = target.getAttribute("data-state") ? `[data-state=${target.getAttribute("data-state")}]` : "";
+  return `${target.tagName.toLowerCase()}${id}${classes}${role}${state}`;
+};
+
+const getPointFromEvent = (event: PointerEvent | TouchEvent) => {
+  if ("touches" in event && event.touches.length > 0) {
+    return { x: Math.round(event.touches[0].clientX), y: Math.round(event.touches[0].clientY) };
+  }
+
+  if ("changedTouches" in event && event.changedTouches.length > 0) {
+    return { x: Math.round(event.changedTouches[0].clientX), y: Math.round(event.changedTouches[0].clientY) };
+  }
+
+  return { x: Math.round((event as PointerEvent).clientX), y: Math.round((event as PointerEvent).clientY) };
+};
+
 const ListingSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -47,26 +70,67 @@ const ListingSuccess = () => {
   const [isCreatingListing, setIsCreatingListing] = useState(false);
   const [listingCreated, setListingCreated] = useState(false);
   const [newListingId, setNewListingId] = useState<string | null>(null);
+  const [debugSnapshot, setDebugSnapshot] = useState(() => getInteractionSnapshot());
+  const [lastDocumentTap, setLastDocumentTap] = useState("none");
+  const [lastButtonClick, setLastButtonClick] = useState("none");
   const creationStartedRef = useRef(false);
   const overlayVisibleRef = useRef(false);
 
   const paymentStatus = searchParams.get("payment");
   const sessionId = searchParams.get("session_id");
 
+  const activeOverlayStates = useCallback(() => [
+    `verifyState=${verifyState}`,
+    `loading=${loading}`,
+    `hasWaited=${hasWaited}`,
+    `isCreatingListing=${isCreatingListing}`,
+    `listingCreated=${listingCreated}`,
+  ], [hasWaited, isCreatingListing, listingCreated, loading, verifyState]);
+
+  const refreshDebugSnapshot = useCallback((source: string) => {
+    const snapshot = getInteractionSnapshot();
+    setDebugSnapshot(snapshot);
+    console.log(`[ListingSuccess][Debug] ${source}`, {
+      paymentStatus,
+      sessionId: sessionId ? "present" : "missing",
+      activeOverlayStates: activeOverlayStates(),
+      ...snapshot,
+    });
+    return snapshot;
+  }, [activeOverlayStates, paymentStatus, sessionId]);
+
+  const logButtonClick = useCallback((label: string, destination?: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setLastButtonClick(`${timestamp} ${label}`);
+    console.log(`[ListingSuccess] ${label}`, {
+      destination,
+      paymentStatus,
+      sessionId: sessionId ? "present" : "missing",
+      activeOverlayStates: activeOverlayStates(),
+      ...refreshDebugSnapshot(`button:${label}`),
+    });
+  }, [activeOverlayStates, paymentStatus, refreshDebugSnapshot, sessionId]);
+
   const goToListing = () => {
     const destination = newListingId ? `/listing/${newListingId}` : "/my-listings";
-    console.log("[ListingSuccess] See My Listing clicked", { destination, newListingId });
+    logButtonClick("See My Listing clicked", destination);
     navigate(destination);
   };
 
   const goToCreateListing = () => {
-    console.log("[ListingSuccess] Create New Listing clicked");
+    logButtonClick("Create New Listing clicked", "/create-listing");
     navigate("/create-listing");
   };
 
   const goToDashboard = () => {
-    console.log("[ListingSuccess] View All Listings clicked");
+    logButtonClick("View All Listings clicked", "/dashboard");
     navigate("/dashboard");
+  };
+
+  const emergencyReset = () => {
+    logButtonClick("Emergency Reset UI clicked", "/");
+    clearGlobalInteractionLocks("ListingSuccess emergency button");
+    setTimeout(() => navigate("/"), 0);
   };
 
   // Start as "verifying" if we have a session_id to check; otherwise trust the URL flag.

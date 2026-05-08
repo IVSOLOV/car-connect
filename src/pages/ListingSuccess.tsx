@@ -104,23 +104,40 @@ const ListingSuccess = () => {
   }, [paymentStatus, sessionId]);
 
   useEffect(() => {
-    if (handledRef.current) return;
+    if (handledRef.current) {
+      console.warn("[ListingSuccess] Exit path: handler already active for this route setup");
+      return;
+    }
     handledRef.current = true;
 
     let cancelled = false;
     let completed = false;
-    let fallbackTimer: number | undefined;
+    let startDelay: number | undefined;
+    const logExit = (reason: string, details?: Record<string, unknown>) => {
+      console.log("[ListingSuccess] Exit path:", reason, details ?? {});
+      updateDebug({ exitReason: reason });
+    };
 
     const finish = (
       destination: string,
       variant: "success" | "warning" = "success",
+      reason = "finish",
     ) => {
-      if (cancelled || completed) return;
+      if (cancelled) {
+        logExit("finish skipped because effect was cancelled", { destination, reason });
+        return;
+      }
+      if (completed) {
+        logExit("finish skipped because flow already completed", { destination, reason });
+        return;
+      }
       completed = true;
-      if (fallbackTimer) window.clearTimeout(fallbackTimer);
+      if (startDelay) window.clearTimeout(startDelay);
+      updateDebug({ navigationAttempted: true, exitReason: reason });
       console.log("[ListingSuccess] Navigating to listing or My Listings", {
         destination,
         variant,
+        reason,
       });
 
       // Clear locks BEFORE navigation
@@ -170,35 +187,84 @@ const ListingSuccess = () => {
     };
 
     const handleFailure = (reason: string) => {
-      if (cancelled || completed) return;
+      if (cancelled) {
+        logExit("failure skipped because effect was cancelled", { reason });
+        return;
+      }
+      if (completed) {
+        logExit("failure skipped because flow already completed", { reason });
+        return;
+      }
       completed = true;
-      if (fallbackTimer) window.clearTimeout(fallbackTimer);
+      if (startDelay) window.clearTimeout(startDelay);
+      updateDebug({ navigationAttempted: true, exitReason: reason });
       console.warn("[ListingSuccess] Checkout failed/canceled:", reason);
       localStorage.removeItem("listingCheckoutPending");
       localStorage.removeItem("pendingListing");
       clearGlobalInteractionLocks("ListingSuccess failure");
-      toast.error(
+      toast.warning(
         reason === "canceled"
           ? "Checkout was canceled."
-          : "We couldn't verify your payment. Please try again.",
+          : "Payment completed. Your listing is being finalized and should appear shortly.",
         { duration: 4000 }
       );
-      navigate("/create-listing", { replace: true });
+      navigate("/my-listings", { replace: true });
       console.log("[ListingSuccess] Loader unmounted");
       scheduleGlobalInteractionUnlock("ListingSuccess failure post-navigate");
       console.log("Listing success flow completed safely");
     };
 
+    console.log("[ListingSuccess] Confirming 9-second fallback timer starts on mount", {
+      timeoutMs: VERIFY_TIMEOUT_MS,
+      route: getCurrentRoute(),
+    });
+    updateDebug({ timerStarted: true, exitReason: "fallback timer started" });
+    const fallbackTimer = window.setTimeout(() => {
+      console.warn("[ListingSuccess] Verification timeout fallback triggered");
+      updateDebug({ fallbackFired: true, exitReason: "9-second fallback fired" });
+      clearGlobalInteractionLocks("ListingSuccess hard timeout fallback");
+      finish("/my-listings", "warning", "9-second verification timeout fallback");
+    }, VERIFY_TIMEOUT_MS);
+
+    const missingParamsTimer = window.setTimeout(() => {
+      if (completed || cancelled) {
+        logExit("missing params timer ignored", { completed, cancelled });
+        return;
+      }
+      if (paymentStatus !== "success" || (!sessionId && !listingIdParam)) {
+        console.warn("[ListingSuccess] Missing required success params; navigating fallback", {
+          paymentStatus,
+          hasSessionId: Boolean(sessionId),
+          listingIdParam: listingIdParam || "missing",
+        });
+        finish("/my-listings", "warning", "missing required params fallback");
+        return;
+      }
+      logExit("missing params check passed", {
+        paymentStatus,
+        hasSessionId: Boolean(sessionId),
+        listingIdParam: listingIdParam || "missing",
+      });
+    }, MISSING_PARAMS_TIMEOUT_MS);
+
     const run = async () => {
-      fallbackTimer = window.setTimeout(() => {
-        console.warn("[ListingSuccess] Verification timeout fallback triggered");
-        clearGlobalInteractionLocks("ListingSuccess hard timeout fallback");
-        finish("/my-listings", "warning");
-      }, VERIFY_TIMEOUT_MS);
+      if (cancelled || completed) {
+        logExit("run skipped", { cancelled, completed });
+        return;
+      }
 
       // Handle explicit failure/cancel
       if (paymentStatus === "canceled") {
+        logExit("payment canceled branch");
         handleFailure("canceled");
+        return;
+      }
+
+      if (listingIdParam && !sessionId && paymentStatus === "success") {
+        console.warn("[ListingSuccess] Success URL has listingId but no session; using safe listing fallback", {
+          listingIdParam,
+        });
+        finish(`/listing/${listingIdParam}`, "warning", "listingId param fallback without session");
         return;
       }
 
@@ -219,15 +285,23 @@ const ListingSuccess = () => {
               }),
             timeout(VERIFY_TIMEOUT_MS - 500),
           ]);
-          if (cancelled) return;
+          if (cancelled) {
+            logExit("verification resolved after effect cancellation");
+            return;
+          }
+          if (completed) {
+            logExit("verification resolved after fallback completion");
+            return;
+          }
           if (verificationResult.status === "timeout") {
             console.warn("[ListingSuccess] Verification timeout fallback triggered");
-            finish("/my-listings", "warning");
+            updateDebug({ fallbackFired: true });
+            finish("/my-listings", "warning", "verification promise race timeout");
             return;
           }
           if (verificationResult.status === "failed") {
             console.warn("[ListingSuccess] Verification failed");
-            finish("/my-listings", "warning");
+            finish("/my-listings", "warning", "verification failed");
             return;
           }
           console.log("[ListingSuccess] Verification success");
@@ -238,32 +312,37 @@ const ListingSuccess = () => {
           }
         } catch (err) {
           console.error("[ListingSuccess] Verification failed", err);
-          finish("/my-listings", "warning");
+          finish("/my-listings", "warning", "verification exception");
           return;
         }
       } else if (paymentStatus === "success" && !sessionId) {
         // Legacy fallback path: trust the URL flag
+        logExit("success without session_id; legacy fallback continuing");
         try {
           sessionStorage.setItem(SUCCESS_LOCK_KEY, "legacy");
         } catch {
           console.warn("[ListingSuccess] Unable to persist legacy checkout success lock");
         }
       } else if (!sessionStorage.getItem(SUCCESS_LOCK_KEY)) {
+        logExit("missing status and no success lock");
         handleFailure("missing_status");
         return;
       }
 
       // Refresh subscription state (non-blocking)
-      if (user) {
+      const currentUser = userRef.current;
+      if (currentUser) {
         checkSubscription().catch((err) =>
           console.error("[ListingSuccess] checkSubscription error:", err)
         );
+      } else {
+        logExit("no restored user before optional subscription refresh");
       }
 
       // Create the pending listing
       let createdListingId: string | null = null;
       const pendingListingData = localStorage.getItem("pendingListing");
-      if (user && pendingListingData) {
+      if (currentUser && pendingListingData) {
         try {
           const listing = JSON.parse(pendingListingData);
           const uploadedImageUrls: string[] = listing.imageUrls || [];
@@ -271,7 +350,7 @@ const ListingSuccess = () => {
           const { data, error } = await db
             .from<{ id: string }>("listings")
             .insert({
-              user_id: user.id,
+              user_id: currentUser.id,
               year: parseInt(listing.year),
               make: listing.make,
               model: listing.model,
@@ -324,7 +403,7 @@ const ListingSuccess = () => {
             const { data: profile } = await db
               .from<{ first_name: string | null; full_name: string | null }>("profiles")
               .select("first_name, full_name")
-              .eq("user_id", user.id)
+              .eq("user_id", currentUser.id)
               .single();
 
             const submitterName =
@@ -347,31 +426,41 @@ const ListingSuccess = () => {
             err
           );
         }
+      } else {
+        logExit("skipping pending listing insert", {
+          hasUser: Boolean(currentUser?.id),
+          hasPendingListingData: Boolean(pendingListingData),
+        });
       }
 
       // Cleanup any stale flags
       localStorage.removeItem("listingCheckoutPending");
 
-      if (completed) return;
+      if (completed) {
+        logExit("post-insert finish skipped because already completed");
+        return;
+      }
 
       const destination = createdListingId
         ? `/listing/${createdListingId}`
         : "/my-listings";
-      finish(destination, createdListingId ? "success" : "warning");
+      finish(destination, createdListingId ? "success" : "warning", "final destination after verification/listing processing");
     };
 
     // Wait briefly for auth to restore from the Stripe redirect handoff,
     // then run regardless (createPendingListing only fires if user exists).
-    const startDelay = window.setTimeout(run, 600);
+    startDelay = window.setTimeout(run, 600);
 
     return () => {
       cancelled = true;
-      window.clearTimeout(startDelay);
-      if (fallbackTimer) window.clearTimeout(fallbackTimer);
+      handledRef.current = false;
+      if (startDelay) window.clearTimeout(startDelay);
+      window.clearTimeout(fallbackTimer);
+      window.clearTimeout(missingParamsTimer);
       console.log("[ListingSuccess] Loader unmounted");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [navigate, paymentStatus, sessionId, listingIdParam]);
 
   // Minimal, non-blocking placeholder (no header/footer, no overlay layers).
   return (

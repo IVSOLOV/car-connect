@@ -428,8 +428,9 @@ const ListingSuccess = () => {
             <button
               type="button"
               aria-label="Close"
+              onPointerDown={() => console.log("[btn:close] pointerdown")}
               onClick={() => {
-                console.log("button onClick fired", "close");
+                console.log("[btn:close] onClick fired");
                 goToMyListings("close");
               }}
               className="absolute top-3 right-3 z-10 inline-flex pointer-events-auto items-center justify-center h-9 w-9 rounded-full bg-muted/60 hover:bg-muted text-foreground transition-colors"
@@ -455,13 +456,23 @@ const ListingSuccess = () => {
                   type="button"
                   size="lg"
                   className="w-full sm:w-auto sm:min-w-[260px] h-12 text-base pointer-events-auto"
+                  onPointerDown={() => console.log("[btn:see-my-listings] pointerdown")}
                   onClick={() => {
-                    console.log("button onClick fired", "button");
+                    console.log("[btn:see-my-listings] onClick fired");
                     goToMyListings("button");
                   }}
                 >
                   See My Listings
                 </Button>
+              </div>
+
+              <div className="mt-6 rounded-md border border-dashed border-muted-foreground/40 bg-muted/30 p-3 text-left text-xs font-mono text-muted-foreground space-y-1">
+                <div className="font-semibold text-foreground">Debug</div>
+                <div>path: {debugInfo.path}</div>
+                <div>last click: {debugInfo.lastClick}</div>
+                <div>nav attempted: {debugInfo.navAttempted}</div>
+                <div>path after: {debugInfo.pathAfter}</div>
+                <div>fallback: {debugInfo.fallbackTriggered}</div>
               </div>
             </CardContent>
           </Card>

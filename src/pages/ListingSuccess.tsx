@@ -105,6 +105,7 @@ const ListingSuccess = () => {
 
       // Clear locks AFTER navigation (next tick + delayed sweeps)
       scheduleGlobalInteractionUnlock("ListingSuccess post-navigate");
+      console.log("Listing success flow completed safely");
 
       // Non-blocking toast banner for 4s
       if (variant === "success") {

@@ -4,6 +4,8 @@ import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
 import { scheduleGlobalInteractionUnlock } from "@/lib/interactionReset";
 
+const MANUAL_EXIT_UNTIL_KEY = "listing_success_manual_exit_until";
+
 const DeepLinkHandler = () => {
   const navigate = useNavigate();
 
@@ -36,6 +38,17 @@ const DeepLinkHandler = () => {
           ? `/${`${url.hostname}${url.pathname}`.replace(/^\/+/, "").replace(/\/$/, "")}`
           : url.pathname.replace(/\/$/, "") || "/";
         const destination = `${routePath}${url.search}`;
+
+        if (routePath === "/listing-success" || url.pathname.replace(/\/$/, "") === "/listing-success") {
+          const manualExitUntil = Number(localStorage.getItem(MANUAL_EXIT_UNTIL_KEY) || "0");
+          if (manualExitUntil > Date.now()) {
+            console.log("[DeepLink] Exit path: listing-success ignored because manual navigation to /my-listings is active", {
+              destination,
+              currentPath: window.location.pathname,
+            });
+            return;
+          }
+        }
 
         // Defensive: clear any leftover body/root locks across the native handoff.
         scheduleGlobalInteractionUnlock("DeepLink before navigation");

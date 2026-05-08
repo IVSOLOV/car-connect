@@ -1,5 +1,6 @@
-import { useEffect, useRef, useCallback, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import type * as React from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import {
 
 const PROCESSED_KEY_PREFIX = "listing_success_processed_";
 const TOAST_KEY_PREFIX = "listing_success_toast_";
+const MANUAL_EXIT_UNTIL_KEY = "listing_success_manual_exit_until";
 const processedSessionsInMemory = new Set<string>();
 const toastShownInMemory = new Set<string>();
 
@@ -108,8 +110,11 @@ const snapshotEnv = (label: string) => {
   }
 };
 
+const clearAllInteractionLocks = () => {
+  clearGlobalInteractionLocks("ListingSuccess hard redirect");
+};
+
 const ListingSuccess = () => {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { checkSubscription } = useListingSubscription();
@@ -121,9 +126,11 @@ const ListingSuccess = () => {
   const [debugInfo, setDebugInfo] = useState({
     path: typeof window !== "undefined" ? window.location.pathname : "(ssr)",
     lastClick: "(none)",
+    pointerDown: "not fired" as "not fired" | "fired",
+    hardRedirect: "not called" as "not called" | "called",
     navAttempted: "no" as "no" | "yes",
     pathAfter: "(pending)",
-    fallbackTriggered: "no" as "no" | "yes",
+    fallbackTriggered: "n/a",
   });
 
   useEffect(() => {
@@ -146,37 +153,42 @@ const ListingSuccess = () => {
     };
   }, []);
 
-  const goToMyListings = useCallback(
-    (source: string) => {
-      console.log("=== Go to My Listings clicked ===", { source, time: Date.now() });
-      snapshotEnv(`before-nav-${source}`);
-      setDebugInfo((d) => ({ ...d, lastClick: source, navAttempted: "yes", pathAfter: "(pending)", fallbackTriggered: "no" }));
-      clearGlobalInteractionLocks(`ListingSuccess ${source}`);
-      userLeavingSuccessRef.current = true;
-      try {
-        toast.dismiss();
-      } catch {
-        /* ignore */
-      }
-      console.log("[ListingSuccess] navigate('/my-listings') called", { source });
-      navigate("/my-listings", { replace: true });
+  const hardGoToMyListings = (
+    source: string,
+    event?: React.PointerEvent | React.MouseEvent
+  ) => {
+    event?.preventDefault();
+    event?.stopPropagation();
 
-      window.setTimeout(() => {
-        const path = window.location.pathname;
-        console.log("[ListingSuccess] path after 300ms", { source, path, search: window.location.search });
-        snapshotEnv(`after-nav-${source}`);
-        const stuck = path.includes("listing-success");
-        setDebugInfo((d) => ({ ...d, pathAfter: path, fallbackTriggered: stuck ? "yes" : "no" }));
-        if (stuck) {
-          console.warn("[ListingSuccess] FALLBACK window.location.href triggered", { source, path });
-          window.location.href = "/my-listings";
-        } else {
-          console.log("[ListingSuccess] navigation succeeded, fallback NOT triggered", { source });
-        }
-      }, 300);
-    },
-    [navigate]
-  );
+    console.log("Hard redirect to My Listings fired", source);
+    snapshotEnv(`hard-redirect-${source}`);
+    setDebugInfo((d) => ({
+      ...d,
+      path: window.location.pathname,
+      lastClick: source,
+      pointerDown: "fired",
+      hardRedirect: "called",
+      navAttempted: "yes",
+      pathAfter: "window.location.replace('/my-listings') called",
+      fallbackTriggered: "not used",
+    }));
+    userLeavingSuccessRef.current = true;
+    try {
+      toast.dismiss();
+    } catch {
+      /* ignore */
+    }
+
+    try {
+      localStorage.setItem(MANUAL_EXIT_UNTIL_KEY, String(Date.now() + 10000));
+    } catch {
+      /* ignore */
+    }
+
+    clearAllInteractionLocks?.();
+
+    window.location.replace("/my-listings");
+  };
 
   useEffect(() => {
     const logPointerDown = (event: PointerEvent) => {
@@ -428,11 +440,7 @@ const ListingSuccess = () => {
             <button
               type="button"
               aria-label="Close"
-              onPointerDown={() => console.log("[btn:close] pointerdown")}
-              onClick={() => {
-                console.log("[btn:close] onClick fired");
-                goToMyListings("close");
-              }}
+              onPointerDown={(e) => hardGoToMyListings("close", e)}
               className="absolute top-3 right-3 z-10 inline-flex pointer-events-auto items-center justify-center h-9 w-9 rounded-full bg-muted/60 hover:bg-muted text-foreground transition-colors"
             >
               <X className="h-5 w-5" />
@@ -456,11 +464,7 @@ const ListingSuccess = () => {
                   type="button"
                   size="lg"
                   className="w-full sm:w-auto sm:min-w-[260px] h-12 text-base pointer-events-auto"
-                  onPointerDown={() => console.log("[btn:see-my-listings] pointerdown")}
-                  onClick={() => {
-                    console.log("[btn:see-my-listings] onClick fired");
-                    goToMyListings("button");
-                  }}
+                  onPointerDown={(e) => hardGoToMyListings("button", e)}
                 >
                   See My Listings
                 </Button>
@@ -470,6 +474,8 @@ const ListingSuccess = () => {
                 <div className="font-semibold text-foreground">Debug</div>
                 <div>path: {debugInfo.path}</div>
                 <div>last click: {debugInfo.lastClick}</div>
+                <div>pointerDown fired: {debugInfo.pointerDown}</div>
+                <div>hard redirect called: {debugInfo.hardRedirect}</div>
                 <div>nav attempted: {debugInfo.navAttempted}</div>
                 <div>path after: {debugInfo.pathAfter}</div>
                 <div>fallback: {debugInfo.fallbackTriggered}</div>

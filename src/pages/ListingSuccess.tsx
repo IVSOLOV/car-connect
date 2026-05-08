@@ -78,6 +78,36 @@ type UntypedSupabase = {
 
 const db = supabase as unknown as UntypedSupabase;
 
+const snapshotEnv = (label: string) => {
+  try {
+    const body = document.body;
+    const html = document.documentElement;
+    const root = document.getElementById("root");
+    const snap = {
+      label,
+      pathname: window.location.pathname,
+      search: window.location.search,
+      href: window.location.href,
+      bodyPointerEvents: getComputedStyle(body).pointerEvents,
+      bodyOverflow: getComputedStyle(body).overflow,
+      bodyInert: body.hasAttribute("inert"),
+      htmlPointerEvents: getComputedStyle(html).pointerEvents,
+      htmlOverflow: getComputedStyle(html).overflow,
+      rootPointerEvents: root ? getComputedStyle(root).pointerEvents : "(no root)",
+      rootInert: root ? root.hasAttribute("inert") : false,
+      activeElement:
+        document.activeElement instanceof HTMLElement
+          ? `${document.activeElement.tagName}#${document.activeElement.id || ""}.${document.activeElement.className || ""}`.slice(0, 120)
+          : "none",
+    };
+    console.log("[ListingSuccess][env]", snap);
+    return snap;
+  } catch (err) {
+    console.warn("[ListingSuccess][env] snapshot failed", err);
+    return null;
+  }
+};
+
 const ListingSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -86,14 +116,41 @@ const ListingSuccess = () => {
   const handledRef = useRef(false);
   const userRef = useRef(user);
   const userLeavingSuccessRef = useRef(false);
+  const effectRunCountRef = useRef(0);
+
+  const [debugInfo, setDebugInfo] = useState({
+    path: typeof window !== "undefined" ? window.location.pathname : "(ssr)",
+    lastClick: "(none)",
+    navAttempted: "no" as "no" | "yes",
+    pathAfter: "(pending)",
+    fallbackTriggered: "no" as "no" | "yes",
+  });
 
   useEffect(() => {
     userRef.current = user;
+    console.log("[ListingSuccess][effect:user] user changed", { userId: user?.id ?? null });
   }, [user]);
+
+  useEffect(() => {
+    console.log("[ListingSuccess] MOUNTED", {
+      path: window.location.pathname,
+      search: window.location.search,
+      href: window.location.href,
+    });
+    snapshotEnv("mount");
+    return () => {
+      console.log("[ListingSuccess] UNMOUNTED", {
+        path: window.location.pathname,
+        userLeavingSuccess: userLeavingSuccessRef.current,
+      });
+    };
+  }, []);
 
   const goToMyListings = useCallback(
     (source: string) => {
-      console.log("Go to My Listings clicked", source);
+      console.log("=== Go to My Listings clicked ===", { source, time: Date.now() });
+      snapshotEnv(`before-nav-${source}`);
+      setDebugInfo((d) => ({ ...d, lastClick: source, navAttempted: "yes", pathAfter: "(pending)", fallbackTriggered: "no" }));
       clearGlobalInteractionLocks(`ListingSuccess ${source}`);
       userLeavingSuccessRef.current = true;
       try {
@@ -101,18 +158,20 @@ const ListingSuccess = () => {
       } catch {
         /* ignore */
       }
-      console.log("navigation attempted", { source, destination: "/my-listings" });
+      console.log("[ListingSuccess] navigate('/my-listings') called", { source });
       navigate("/my-listings", { replace: true });
 
       window.setTimeout(() => {
-        console.log("current path after navigation", {
-          source,
-          pathname: window.location.pathname,
-          search: window.location.search,
-        });
-        if (window.location.pathname.includes("listing-success")) {
-          console.warn("Navigation fallback forcing /my-listings", { source });
+        const path = window.location.pathname;
+        console.log("[ListingSuccess] path after 300ms", { source, path, search: window.location.search });
+        snapshotEnv(`after-nav-${source}`);
+        const stuck = path.includes("listing-success");
+        setDebugInfo((d) => ({ ...d, pathAfter: path, fallbackTriggered: stuck ? "yes" : "no" }));
+        if (stuck) {
+          console.warn("[ListingSuccess] FALLBACK window.location.href triggered", { source, path });
           window.location.href = "/my-listings";
+        } else {
+          console.log("[ListingSuccess] navigation succeeded, fallback NOT triggered", { source });
         }
       }, 300);
     },
@@ -123,12 +182,13 @@ const ListingSuccess = () => {
     const logPointerDown = (event: PointerEvent) => {
       const target = event.target;
       const element = target instanceof Element ? target : null;
-      console.log("document pointerdown target", {
+      console.log("[doc] pointerdown", {
         tag: element?.tagName?.toLowerCase() || "unknown",
         id: element?.id || "",
-        className: element instanceof HTMLElement ? element.className : "",
-        text: element?.textContent?.trim().slice(0, 80) || "",
+        className: element instanceof HTMLElement ? element.className.toString().slice(0, 120) : "",
+        text: element?.textContent?.trim().slice(0, 60) || "",
         path: window.location.pathname,
+        defaultPrevented: event.defaultPrevented,
       });
     };
 

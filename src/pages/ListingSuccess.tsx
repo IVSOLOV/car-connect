@@ -445,7 +445,7 @@ const ListingSuccess = () => {
   }, [user, loading, hasWaited]);
 
   const DebugPanel = () => (
-    <div className="fixed left-2 right-2 top-[calc(env(safe-area-inset-top,0px)+4.75rem)] z-[2147483646] max-h-[38vh] overflow-y-auto rounded-lg border border-border bg-background/95 p-3 text-left text-[11px] leading-tight text-foreground shadow-lg backdrop-blur sm:left-auto sm:right-4 sm:w-[26rem]">
+    <div className="pointer-events-auto fixed left-2 right-2 top-[calc(env(safe-area-inset-top,0px)+4.75rem)] z-[2147483646] max-h-[38vh] overflow-y-auto rounded-lg border border-border bg-background/95 p-3 text-left text-[11px] leading-tight text-foreground shadow-lg backdrop-blur sm:left-auto sm:right-4 sm:w-[26rem]">
       <div className="mb-2 flex items-center justify-between gap-2">
         <strong className="text-primary">ListingSuccess iOS Debug</strong>
         <button type="button" className="rounded border border-border px-2 py-1 text-[10px]" onClick={() => refreshDebugSnapshot("manual refresh")}>Refresh</button>
@@ -480,7 +480,7 @@ const ListingSuccess = () => {
       type="button"
       onClick={emergencyReset}
       onPointerDown={() => console.log("[ListingSuccess] Emergency Reset UI pointerdown")}
-      className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] left-1/2 z-[2147483647] -translate-x-1/2 rounded-full border border-border bg-destructive px-5 py-3 text-sm font-bold text-destructive-foreground shadow-lg"
+      className="pointer-events-auto fixed bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] left-1/2 z-[2147483647] -translate-x-1/2 rounded-full border border-border bg-destructive px-5 py-3 text-sm font-bold text-destructive-foreground shadow-lg"
     >
       Reset UI
     </button>
@@ -489,7 +489,7 @@ const ListingSuccess = () => {
   // Verifying with Stripe
   if (verifyState === "verifying") {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+      <div className="pointer-events-auto min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <DebugPanel />
         <EmergencyResetButton />
         <LoadingSpinner />
@@ -502,7 +502,7 @@ const ListingSuccess = () => {
   // Once creation completes (success or error), fall through so buttons work.
   if (isCreatingListing && !listingCreated) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+      <div className="pointer-events-auto min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <DebugPanel />
         <EmergencyResetButton />
         <LoadingSpinner />
@@ -514,7 +514,7 @@ const ListingSuccess = () => {
   // Payment failed / canceled / unverified
   if (verifyState === "failed") {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="pointer-events-auto min-h-screen bg-background flex flex-col">
         <SEO title="Payment Issue | DiRent" description="Payment was not completed" />
         <Header />
         <DebugPanel />
@@ -568,7 +568,7 @@ const ListingSuccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="pointer-events-auto min-h-screen bg-background flex flex-col">
       <SEO title="Success! | DiRent" description="Your subscription is active" />
       <Header />
       <DebugPanel />

@@ -153,16 +153,6 @@ const ListingSuccess = () => {
 
     console.log("Hard redirect to My Listings fired", source);
     snapshotEnv(`hard-redirect-${source}`);
-    setDebugInfo((d) => ({
-      ...d,
-      path: window.location.pathname,
-      lastClick: source,
-      pointerDown: "fired",
-      hardRedirect: "called",
-      navAttempted: "yes",
-      pathAfter: "window.location.replace('/my-listings') called",
-      fallbackTriggered: "not used",
-    }));
     userLeavingSuccessRef.current = true;
     try {
       toast.dismiss();
@@ -172,6 +162,7 @@ const ListingSuccess = () => {
 
     try {
       localStorage.setItem(MANUAL_EXIT_UNTIL_KEY, String(Date.now() + 10000));
+      sessionStorage.setItem("listingSuccessHandled", "true");
     } catch {
       /* ignore */
     }

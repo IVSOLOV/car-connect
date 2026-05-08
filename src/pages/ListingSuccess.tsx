@@ -133,6 +133,8 @@ const ListingSuccess = () => {
       }
       completed = true;
       if (startDelay) window.clearTimeout(startDelay);
+      window.clearTimeout(fallbackTimer);
+      window.clearTimeout(missingParamsTimer);
       updateDebug({ navigationAttempted: true, exitReason: reason });
       console.log("[ListingSuccess] Navigating to listing or My Listings", {
         destination,
@@ -197,6 +199,8 @@ const ListingSuccess = () => {
       }
       completed = true;
       if (startDelay) window.clearTimeout(startDelay);
+      window.clearTimeout(fallbackTimer);
+      window.clearTimeout(missingParamsTimer);
       updateDebug({ navigationAttempted: true, exitReason: reason });
       console.warn("[ListingSuccess] Checkout failed/canceled:", reason);
       localStorage.removeItem("listingCheckoutPending");

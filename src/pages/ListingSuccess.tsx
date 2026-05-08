@@ -13,11 +13,37 @@ import {
 /**
  * Post-Stripe redirect handler. INVISIBLE to the user.
  * Always navigates to /my-listings first, then shows a toast.
- * Background work runs after navigation and never blocks UI.
+ * Listing creation is IDEMPOTENT keyed on Stripe checkout_session_id:
+ *   - in-memory Set guard (per app session)
+ *   - localStorage guard `listing_success_processed_<session_id>`
+ *   - DB unique index on listings.stripe_checkout_session_id
  */
-const SUCCESS_LOCK_KEY = "listingCheckoutSuccessLock";
 
-type DbError = { message?: string } | null;
+const PROCESSED_KEY_PREFIX = "listing_success_processed_";
+// Module-level in-memory lock - survives component remounts within the same JS session.
+const processedSessionsInMemory = new Set<string>();
+
+const isSessionProcessed = (sessionId: string | null): boolean => {
+  if (!sessionId) return false;
+  if (processedSessionsInMemory.has(sessionId)) return true;
+  try {
+    return localStorage.getItem(`${PROCESSED_KEY_PREFIX}${sessionId}`) !== null;
+  } catch {
+    return false;
+  }
+};
+
+const markSessionProcessed = (sessionId: string | null) => {
+  if (!sessionId) return;
+  processedSessionsInMemory.add(sessionId);
+  try {
+    localStorage.setItem(`${PROCESSED_KEY_PREFIX}${sessionId}`, String(Date.now()));
+  } catch {
+    /* ignore */
+  }
+};
+
+type DbError = { message?: string; code?: string } | null;
 type InsertOnlyResult = { error: DbError };
 type InsertSelectResult<T> = { data: T | null; error: DbError };
 type InsertSelectBuilder<T> = PromiseLike<InsertOnlyResult> & {
@@ -26,7 +52,10 @@ type InsertSelectBuilder<T> = PromiseLike<InsertOnlyResult> & {
 type UntypedTable<T> = {
   insert: (values: Record<string, unknown>) => InsertSelectBuilder<T>;
   select: (columns: string) => {
-    eq: (column: string, value: string) => { single: () => Promise<InsertSelectResult<T>> };
+    eq: (column: string, value: string) => {
+      maybeSingle: () => Promise<InsertSelectResult<T>>;
+      single: () => Promise<InsertSelectResult<T>>;
+    };
   };
 };
 type UntypedSupabase = {
@@ -57,60 +86,42 @@ const ListingSuccess = () => {
       searchParams.get("session") ||
       searchParams.get("checkout_session");
 
-    console.log("[ListingSuccess] Mounted", { paymentStatus, hasSessionId: Boolean(sessionId) });
+    console.log("[ListingSuccess] Mounted", {
+      paymentStatus,
+      hasSessionId: Boolean(sessionId),
+      sessionId: sessionId || "(none)",
+    });
 
-    // Clear any interaction locks immediately and on next ticks.
     clearGlobalInteractionLocks("ListingSuccess mount");
     scheduleGlobalInteractionUnlock("ListingSuccess mount");
 
     const canceled = paymentStatus === "canceled";
+    const alreadyProcessed = !canceled && isSessionProcessed(sessionId);
 
-    // ALWAYS navigate to /my-listings first - it's a known-good route.
+    if (alreadyProcessed) {
+      console.log(
+        "Duplicate checkout session detected — skipping listing creation",
+        { sessionId }
+      );
+    }
+
+    // ALWAYS navigate to /my-listings first.
     navigate("/my-listings", { replace: true });
     console.log("Navigated to /my-listings");
 
-    // Show toast AFTER navigation, on next tick, so it renders over the new page.
+    // Toast on next tick.
     window.setTimeout(() => {
       if (canceled) {
-        toast.warning("Checkout was canceled.", {
-          duration: 4000,
-          onDismiss: () => {
-            console.log("Success toast dismissed");
-            console.log(`Current route after toast dismissed: ${window.location.pathname}`);
-            clearGlobalInteractionLocks("ListingSuccess toast dismissed");
-            console.log("No overlay remains");
-          },
-          onAutoClose: () => {
-            console.log("Success toast dismissed");
-            console.log(`Current route after toast dismissed: ${window.location.pathname}`);
-            clearGlobalInteractionLocks("ListingSuccess toast auto-close");
-            console.log("No overlay remains");
-          },
-        });
+        toast.warning("Checkout was canceled.", { duration: 4000 });
       } else {
         toast.success(
           "Congratulations! Your listing was submitted for review and your 30-day free trial has started.",
-          {
-            duration: 4000,
-            onDismiss: () => {
-              console.log("Success toast dismissed");
-              console.log(`Current route after toast dismissed: ${window.location.pathname}`);
-              clearGlobalInteractionLocks("ListingSuccess toast dismissed");
-              console.log("No overlay remains");
-            },
-            onAutoClose: () => {
-              console.log("Success toast dismissed");
-              console.log(`Current route after toast dismissed: ${window.location.pathname}`);
-              clearGlobalInteractionLocks("ListingSuccess toast auto-close");
-              console.log("No overlay remains");
-            },
-          }
+          { duration: 4000 }
         );
       }
       console.log("Success toast shown");
     }, 80);
 
-    // Re-clear locks after navigation completes.
     scheduleGlobalInteractionUnlock("ListingSuccess post-navigate");
 
     if (canceled) {
@@ -120,9 +131,20 @@ const ListingSuccess = () => {
       return;
     }
 
-    // Background verification + listing creation. NEVER blocks the UI.
+    if (alreadyProcessed) {
+      // Clean any stale pending payload but DO NOT insert again.
+      localStorage.removeItem("listingCheckoutPending");
+      localStorage.removeItem("pendingListing");
+      console.log("Listing success flow completed safely (idempotent skip)");
+      return;
+    }
+
+    // Mark immediately to block concurrent remounts/deep-link re-fires.
+    markSessionProcessed(sessionId);
+
     const runBackground = async () => {
       try {
+        // 1) Verify checkout (also persists subscription server-side).
         if (sessionId) {
           try {
             const { data, error } = await supabase.functions.invoke(
@@ -132,12 +154,6 @@ const ListingSuccess = () => {
             if (error) throw error;
             if (!data?.paid) {
               console.warn("[ListingSuccess][bg] Verification reported unpaid");
-            } else {
-              try {
-                sessionStorage.setItem(SUCCESS_LOCK_KEY, sessionId);
-              } catch {
-                /* ignore */
-              }
             }
           } catch (err) {
             console.error("[ListingSuccess][bg] Verification error", err);
@@ -151,8 +167,26 @@ const ListingSuccess = () => {
           );
         }
 
+        // 2) Create the listing - idempotent on stripe_checkout_session_id.
         const pendingListingData = localStorage.getItem("pendingListing");
-        if (currentUser && pendingListingData) {
+        if (currentUser && pendingListingData && sessionId) {
+          // DB-level pre-check.
+          const { data: existing } = await db
+            .from<{ id: string }>("listings")
+            .select("id")
+            .eq("stripe_checkout_session_id", sessionId)
+            .maybeSingle();
+
+          if (existing?.id) {
+            console.log(
+              "Duplicate checkout session detected — skipping listing creation",
+              { sessionId, existingListingId: existing.id }
+            );
+            localStorage.removeItem("listingCheckoutPending");
+            localStorage.removeItem("pendingListing");
+            return;
+          }
+
           try {
             const listing = JSON.parse(pendingListingData);
             const uploadedImageUrls: string[] = listing.imageUrls || [];
@@ -176,11 +210,22 @@ const ListingSuccess = () => {
                 images: uploadedImageUrls,
                 delivery_available: listing.deliveryAvailable || false,
                 approval_status: "pending",
+                stripe_checkout_session_id: sessionId,
               })
               .select("id")
               .single();
 
             if (error) {
+              // Unique violation (23505) = another insert won the race - that's fine.
+              if (error.code === "23505") {
+                console.log(
+                  "Duplicate checkout session detected — skipping listing creation",
+                  { sessionId, reason: "unique_violation" }
+                );
+                localStorage.removeItem("listingCheckoutPending");
+                localStorage.removeItem("pendingListing");
+                return;
+              }
               console.error("[ListingSuccess][bg] Error creating listing:", error);
             } else if (data?.id) {
               if (listing.licensePlate?.trim()) {
@@ -214,6 +259,8 @@ const ListingSuccess = () => {
               }).catch((err) =>
                 console.error("[ListingSuccess][bg] Failed to send admin notification:", err)
               );
+
+              console.log("Listing created/finalized for checkout session:", sessionId);
             }
           } catch (err) {
             console.error("[ListingSuccess][bg] Error processing pending listing:", err);
@@ -233,7 +280,6 @@ const ListingSuccess = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Render nothing - user should never see this route.
   return null;
 };
 

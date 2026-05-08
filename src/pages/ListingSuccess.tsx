@@ -490,6 +490,8 @@ const ListingSuccess = () => {
   if (verifyState === "verifying") {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <DebugPanel />
+        <EmergencyResetButton />
         <LoadingSpinner />
         <p className="text-muted-foreground animate-pulse">Confirming your payment...</p>
       </div>
@@ -501,6 +503,8 @@ const ListingSuccess = () => {
   if (isCreatingListing && !listingCreated) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <DebugPanel />
+        <EmergencyResetButton />
         <LoadingSpinner />
         <p className="text-muted-foreground animate-pulse">Creating your listing...</p>
       </div>
@@ -513,6 +517,8 @@ const ListingSuccess = () => {
       <div className="min-h-screen bg-background flex flex-col">
         <SEO title="Payment Issue | DiRent" description="Payment was not completed" />
         <Header />
+        <DebugPanel />
+        <EmergencyResetButton />
         <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
           <div className="max-w-lg mx-auto">
             <Card className="border-destructive/20 bg-card/50 backdrop-blur">
@@ -532,7 +538,10 @@ const ListingSuccess = () => {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <Button
-                    onClick={() => navigate("/create-listing")}
+                    onClick={() => {
+                      logButtonClick("Back to Listing clicked", "/create-listing");
+                      navigate("/create-listing");
+                    }}
                     className="flex-1 gap-2"
                   >
                     <Car className="h-4 w-4" />
@@ -540,7 +549,10 @@ const ListingSuccess = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => {
+                      logButtonClick("Browse Cars clicked", "/dashboard");
+                      navigate("/dashboard");
+                    }}
                     className="flex-1"
                   >
                     Browse Cars
@@ -559,6 +571,8 @@ const ListingSuccess = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <SEO title="Success! | DiRent" description="Your subscription is active" />
       <Header />
+      <DebugPanel />
+      <EmergencyResetButton />
 
       <main className="container mx-auto px-4 py-8 pt-36 sm:pt-24">
         <div className="max-w-lg mx-auto">

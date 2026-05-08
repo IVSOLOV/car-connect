@@ -60,6 +60,24 @@ const getPointFromEvent = (event: PointerEvent | TouchEvent) => {
   return { x: Math.round((event as PointerEvent).clientX), y: Math.round((event as PointerEvent).clientY) };
 };
 
+const diagnoseInteractionBlocker = (
+  snapshot: ReturnType<typeof getInteractionSnapshot>,
+  verifyState: VerifyState,
+  isCreatingListing: boolean,
+  listingCreated: boolean,
+) => {
+  const bodyLocked = snapshot.bodyPointerEvents === "none";
+  const htmlLocked = snapshot.htmlPointerEvents === "none";
+  const rootLocked = snapshot.rootPointerEvents === "none" || snapshot.rootInert;
+  const reactOverlay = verifyState === "verifying" || (isCreatingListing && !listingCreated);
+  const fixedBlocker = snapshot.activeOverlays.find((overlay) => overlay.includes("fixed") && overlay.includes("pe=auto"));
+
+  if (bodyLocked || htmlLocked || rootLocked) return "body/html/root lock";
+  if (reactOverlay) return "React loading overlay";
+  if (fixedBlocker) return "invisible overlay/CSS layer possible";
+  return "none detected; if clicks log but no route changes, navigation handler";
+};
+
 const ListingSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

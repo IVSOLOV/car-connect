@@ -358,16 +358,19 @@ const ListingSuccess = () => {
         }}
       >
         <div className="max-w-2xl mx-auto">
-          <Card className="relative">
+          <Card className="relative pointer-events-auto">
             <button
               type="button"
               aria-label="Close"
-              onClick={() => goToMyListings("Close success")}
-              className="absolute top-3 right-3 z-10 inline-flex items-center justify-center h-9 w-9 rounded-full bg-muted/60 hover:bg-muted text-foreground transition-colors"
+              onClick={() => {
+                console.log("button onClick fired", "close");
+                goToMyListings("close");
+              }}
+              className="absolute top-3 right-3 z-10 inline-flex pointer-events-auto items-center justify-center h-9 w-9 rounded-full bg-muted/60 hover:bg-muted text-foreground transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
-            <CardContent className="py-10 px-6 sm:px-10 text-center space-y-6">
+            <CardContent className="py-10 px-6 sm:px-10 text-center space-y-6 pointer-events-auto">
               <div className="flex justify-center">
                 <div className="rounded-full bg-primary/10 p-5">
                   <CheckCircle2 className="h-14 w-14 text-primary" strokeWidth={2} />
@@ -383,9 +386,13 @@ const ListingSuccess = () => {
               </p>
               <div className="pt-2">
                 <Button
+                  type="button"
                   size="lg"
-                  className="w-full sm:w-auto sm:min-w-[260px] h-12 text-base"
-                  onClick={() => goToMyListings("See My Listings")}
+                  className="w-full sm:w-auto sm:min-w-[260px] h-12 text-base pointer-events-auto"
+                  onClick={() => {
+                    console.log("button onClick fired", "button");
+                    goToMyListings("button");
+                  }}
                 >
                   See My Listings
                 </Button>

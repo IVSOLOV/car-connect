@@ -39,7 +39,7 @@ const DeepLinkHandler = () => {
           : url.pathname.replace(/\/$/, "") || "/";
         const destination = `${routePath}${url.search}`;
 
-        if (routePath === "/listing-success") {
+        if (routePath === "/listing-success" || url.pathname.replace(/\/$/, "") === "/listing-success") {
           const manualExitUntil = Number(localStorage.getItem(MANUAL_EXIT_UNTIL_KEY) || "0");
           if (manualExitUntil > Date.now()) {
             console.log("[DeepLink] Exit path: listing-success ignored because manual navigation to /my-listings is active", {

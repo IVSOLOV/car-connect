@@ -24,6 +24,17 @@ import LoadingSpinner from "@/components/LoadingSpinner";
  *    before and after navigation so iOS isn't left frozen.
  */
 const SUCCESS_LOCK_KEY = "listingCheckoutSuccessLock";
+const VERIFY_TIMEOUT_MS = 9000;
+
+type VerificationResult =
+  | { status: "success" }
+  | { status: "failed" }
+  | { status: "timeout" };
+
+const timeout = (ms: number) =>
+  new Promise<{ status: "timeout" }>((resolve) => {
+    window.setTimeout(() => resolve({ status: "timeout" }), ms);
+  });
 
 const ListingSuccess = () => {
   const navigate = useNavigate();
@@ -37,7 +48,7 @@ const ListingSuccess = () => {
 
   // Always clear interaction locks the moment this route mounts.
   useEffect(() => {
-    console.log("[ListingSuccess] Stripe success deep link received", {
+    console.log("[ListingSuccess] Listing success handler mounted", {
       pathname: window.location.pathname,
       search: window.location.search,
       paymentStatus,
@@ -54,34 +65,59 @@ const ListingSuccess = () => {
 
     let cancelled = false;
 
-    const finish = (destination: string) => {
+    const finish = (
+      destination: string,
+      variant: "success" | "warning" = "success",
+    ) => {
       if (cancelled) return;
-      console.log("[ListingSuccess] Navigating to", destination);
+      console.log("[ListingSuccess] Navigating to listing or My Listings", {
+        destination,
+        variant,
+      });
 
       // Clear locks BEFORE navigation
       clearGlobalInteractionLocks("ListingSuccess pre-navigate");
 
       navigate(destination, { replace: true });
+      console.log("[ListingSuccess] Loader unmounted");
 
       // Clear locks AFTER navigation (next tick + delayed sweeps)
       scheduleGlobalInteractionUnlock("ListingSuccess post-navigate");
 
       // Non-blocking toast banner for 4s
-      console.log("[ListingSuccess] Success toast shown");
-      toast.success(
-        "Success! Your listing has been submitted for review and your 30-day free trial has started.",
-        {
-          duration: 4000,
-          onAutoClose: () => {
-            console.log("[ListingSuccess] Success toast dismissed");
-            clearGlobalInteractionLocks("ListingSuccess toast dismissed");
-          },
-          onDismiss: () => {
-            console.log("[ListingSuccess] Success toast dismissed (manual)");
-            clearGlobalInteractionLocks("ListingSuccess toast dismissed");
-          },
-        }
-      );
+      if (variant === "success") {
+        console.log("[ListingSuccess] Success toast shown");
+        toast.success(
+          "Success! Your listing has been submitted for review and your 30-day free trial has started.",
+          {
+            duration: 4000,
+            onAutoClose: () => {
+              console.log("[ListingSuccess] Success toast dismissed");
+              clearGlobalInteractionLocks("ListingSuccess toast dismissed");
+            },
+            onDismiss: () => {
+              console.log("[ListingSuccess] Success toast dismissed (manual)");
+              clearGlobalInteractionLocks("ListingSuccess toast dismissed");
+            },
+          }
+        );
+      } else {
+        console.log("[ListingSuccess] Warning toast shown");
+        toast.warning(
+          "Payment completed. Your listing is being finalized and should appear shortly.",
+          {
+            duration: 4000,
+            onAutoClose: () => {
+              console.log("[ListingSuccess] Warning toast dismissed");
+              clearGlobalInteractionLocks("ListingSuccess warning toast dismissed");
+            },
+            onDismiss: () => {
+              console.log("[ListingSuccess] Warning toast dismissed (manual)");
+              clearGlobalInteractionLocks("ListingSuccess warning toast dismissed");
+            },
+          }
+        );
+      }
     };
 
     const handleFailure = (reason: string) => {

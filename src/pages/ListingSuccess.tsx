@@ -125,7 +125,9 @@ const ListingSuccess = () => {
     };
 
     const handleFailure = (reason: string) => {
-      if (cancelled) return;
+      if (cancelled || completed) return;
+      completed = true;
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
       console.warn("[ListingSuccess] Checkout failed/canceled:", reason);
       localStorage.removeItem("listingCheckoutPending");
       localStorage.removeItem("pendingListing");
@@ -137,6 +139,7 @@ const ListingSuccess = () => {
         { duration: 4000 }
       );
       navigate("/create-listing", { replace: true });
+      console.log("[ListingSuccess] Loader unmounted");
       scheduleGlobalInteractionUnlock("ListingSuccess failure post-navigate");
     };
 
@@ -145,7 +148,7 @@ const ListingSuccess = () => {
         console.warn("[ListingSuccess] Verification timeout fallback triggered");
         clearGlobalInteractionLocks("ListingSuccess hard timeout fallback");
         finish("/my-listings", "warning");
-      }, 8800);
+      }, VERIFY_TIMEOUT_MS);
 
       // Handle explicit failure/cancel
       if (paymentStatus === "canceled") {
@@ -168,7 +171,7 @@ const ListingSuccess = () => {
                 console.error("[ListingSuccess] Verification failed", err);
                 return { status: "failed" as const };
               }),
-            timeout(8500),
+            timeout(VERIFY_TIMEOUT_MS - 500),
           ]);
           if (cancelled) return;
           if (verificationResult.status === "timeout") {

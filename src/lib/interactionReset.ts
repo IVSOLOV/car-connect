@@ -17,6 +17,9 @@ export const getInteractionSnapshot = () => {
       htmlPointerEvents: "unknown",
       rootPointerEvents: "unknown",
       bodyOverflow: "unknown",
+      htmlOverflow: "unknown",
+      bodyTouchAction: "unknown",
+      rootInert: false,
       activeOverlays: [] as string[],
       elementStack: [] as string[],
     };

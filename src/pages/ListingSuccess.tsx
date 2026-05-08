@@ -110,6 +110,10 @@ const snapshotEnv = (label: string) => {
   }
 };
 
+const clearAllInteractionLocks = () => {
+  clearGlobalInteractionLocks("ListingSuccess hard redirect");
+};
+
 const ListingSuccess = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -149,37 +153,42 @@ const ListingSuccess = () => {
     };
   }, []);
 
-  const goToMyListings = useCallback(
-    (source: string) => {
-      console.log("=== Go to My Listings clicked ===", { source, time: Date.now() });
-      snapshotEnv(`before-nav-${source}`);
-      setDebugInfo((d) => ({ ...d, lastClick: source, navAttempted: "yes", pathAfter: "(pending)", fallbackTriggered: "no" }));
-      clearGlobalInteractionLocks(`ListingSuccess ${source}`);
-      userLeavingSuccessRef.current = true;
-      try {
-        toast.dismiss();
-      } catch {
-        /* ignore */
-      }
-      console.log("[ListingSuccess] navigate('/my-listings') called", { source });
-      navigate("/my-listings", { replace: true });
+  const hardGoToMyListings = (
+    source: string,
+    event?: React.PointerEvent | React.MouseEvent
+  ) => {
+    event?.preventDefault();
+    event?.stopPropagation();
 
-      window.setTimeout(() => {
-        const path = window.location.pathname;
-        console.log("[ListingSuccess] path after 300ms", { source, path, search: window.location.search });
-        snapshotEnv(`after-nav-${source}`);
-        const stuck = path.includes("listing-success");
-        setDebugInfo((d) => ({ ...d, pathAfter: path, fallbackTriggered: stuck ? "yes" : "no" }));
-        if (stuck) {
-          console.warn("[ListingSuccess] FALLBACK window.location.href triggered", { source, path });
-          window.location.href = "/my-listings";
-        } else {
-          console.log("[ListingSuccess] navigation succeeded, fallback NOT triggered", { source });
-        }
-      }, 300);
-    },
-    [navigate]
-  );
+    console.log("Hard redirect to My Listings fired", source);
+    snapshotEnv(`hard-redirect-${source}`);
+    setDebugInfo((d) => ({
+      ...d,
+      path: window.location.pathname,
+      lastClick: source,
+      pointerDown: "fired",
+      hardRedirect: "called",
+      navAttempted: "yes",
+      pathAfter: "window.location.replace('/my-listings') called",
+      fallbackTriggered: "not used",
+    }));
+    userLeavingSuccessRef.current = true;
+    try {
+      toast.dismiss();
+    } catch {
+      /* ignore */
+    }
+
+    try {
+      localStorage.setItem(MANUAL_EXIT_UNTIL_KEY, String(Date.now() + 10000));
+    } catch {
+      /* ignore */
+    }
+
+    clearAllInteractionLocks?.();
+
+    window.location.replace("/my-listings");
+  };
 
   useEffect(() => {
     const logPointerDown = (event: PointerEvent) => {

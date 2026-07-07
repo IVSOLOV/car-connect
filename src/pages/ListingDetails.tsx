@@ -76,6 +76,20 @@ interface Message {
   created_at: string;
 }
 
+const PUBLIC_SITE_URL = "https://dirrental.com";
+
+const getShareUrl = () => {
+  const origin = window.location.origin;
+  // On native (capacitor://) or Lovable preview, use the public production domain
+  // so copied/shared links are valid outside the app.
+  const isWebPublic =
+    /^https?:/.test(origin) &&
+    !/lovableproject\.com$/.test(window.location.hostname) &&
+    !/lovableproject-dev\.com$/.test(window.location.hostname);
+  const base = isWebPublic ? origin : PUBLIC_SITE_URL;
+  return `${base}${window.location.pathname}${window.location.search}`;
+};
+
 const ListingDetails = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();

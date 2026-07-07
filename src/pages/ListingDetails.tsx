@@ -76,6 +76,20 @@ interface Message {
   created_at: string;
 }
 
+const PUBLIC_SITE_URL = "https://dirrental.com";
+
+const getShareUrl = () => {
+  const origin = window.location.origin;
+  // On native (capacitor://) or Lovable preview, use the public production domain
+  // so copied/shared links are valid outside the app.
+  const isWebPublic =
+    /^https?:/.test(origin) &&
+    !/lovableproject\.com$/.test(window.location.hostname) &&
+    !/lovableproject-dev\.com$/.test(window.location.hostname);
+  const base = isWebPublic ? origin : PUBLIC_SITE_URL;
+  return `${base}${window.location.pathname}${window.location.search}`;
+};
+
 const ListingDetails = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -523,7 +537,7 @@ const ListingDetails = () => {
                                 await navigator.share({
                                   title: title,
                                   text: `Check out this ${title} for rent!`,
-                                  url: window.location.href,
+                                  url: getShareUrl(),
                                 });
                               } catch (err) {
                                 // User cancelled or error
@@ -539,13 +553,14 @@ const ListingDetails = () => {
                           size="sm"
                           className="justify-start"
                           onClick={async () => {
+                            const shareUrl = getShareUrl();
                             try {
                               if (navigator.clipboard && navigator.clipboard.writeText) {
-                                await navigator.clipboard.writeText(window.location.href);
+                                await navigator.clipboard.writeText(shareUrl);
                               } else {
                                 // Fallback for Capacitor/older WebViews
                                 const textArea = document.createElement("textarea");
-                                textArea.value = window.location.href;
+                                textArea.value = shareUrl;
                                 textArea.style.position = "fixed";
                                 textArea.style.left = "-9999px";
                                 document.body.appendChild(textArea);
@@ -567,7 +582,7 @@ const ListingDetails = () => {
                           size="sm"
                           className="justify-start"
                           onClick={() => {
-                            window.location.href = `sms:&body=Check out this ${encodeURIComponent(title)} for rent! ${encodeURIComponent(window.location.href)}`;
+                            window.location.href = `sms:&body=Check out this ${encodeURIComponent(title)} for rent! ${encodeURIComponent(getShareUrl())}`;
                           }}
                         >
                           <MessageSquare className="mr-2 h-4 w-4" />
@@ -578,7 +593,7 @@ const ListingDetails = () => {
                           size="sm"
                           className="justify-start"
                           onClick={() => {
-                            window.location.href = `mailto:?subject=${encodeURIComponent(`Check out this ${title}`)}&body=${encodeURIComponent(`I found this car rental you might like:\n\n${title}\n${window.location.href}`)}`;
+                            window.location.href = `mailto:?subject=${encodeURIComponent(`Check out this ${title}`)}&body=${encodeURIComponent(`I found this car rental you might like:\n\n${title}\n${getShareUrl()}`)}`;
                           }}
                         >
                           <Mail className="mr-2 h-4 w-4" />
